@@ -1,0 +1,87 @@
+{
+  "count": 2000,
+  "first": [
+    [
+      "o / va",
+      "و",
+      "and",
+      1
+    ],
+    [
+      "boodan",
+      "بودن",
+      "to be",
+      2
+    ],
+    [
+      "az",
+      "از",
+      "from",
+      3
+    ],
+    [
+      "be",
+      "به",
+      "to",
+      4
+    ],
+    [
+      "ke",
+      "که",
+      "that / which",
+      5
+    ],
+    [
+      "een",
+      "این",
+      "this",
+      6
+    ],
+    [
+      "dar",
+      "در",
+      "in",
+      7
+    ],
+    [
+      "baa",
+      "با",
+      "with",
+      8
+    ],
+    [
+      "shodan",
+      "شدن",
+      "to become",
+      9
+    ],
+    [
+      "baraaye",
+      "برای",
+      "for",
+      10
+    ]
+  ],
+  "last": [
+    [
+      "mobaarez",
+      "مبارز",
+      "fighter",
+      2078
+    ],
+    [
+      "paarlemaan",
+      "پارلمان",
+      "parliament",
+      2079
+    ],
+    [
+      "behdaashti",
+      "بهداشتی",
+      "hygienic",
+      2080
+    ]
+  ],
+  "max_source_rank": 2080,
+  "source": "Miller & Aghajanian-Stewart via Wiktionary"
+}
