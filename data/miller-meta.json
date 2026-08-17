@@ -64,24 +64,25 @@
   ],
   "last": [
     [
-      "mobaarez",
-      "مبارز",
-      "fighter",
-      2078
+      "itaaliyaayi",
+      "ایتالیایی",
+      "Italian",
+      2199
     ],
     [
-      "paarlemaan",
-      "پارلمان",
-      "parliament",
-      2079
+      "vezaaratkhaane",
+      "وزارتخانه",
+      "ministry",
+      2200
     ],
     [
-      "behdaashti",
-      "بهداشتی",
-      "hygienic",
-      2080
+      "joghraafyaayi",
+      "جغرافیایی",
+      "geographical",
+      2201
     ]
   ],
-  "max_source_rank": 2080,
-  "source": "Miller & Aghajanian-Stewart via Wiktionary"
+  "max_source_rank": 2201,
+  "source": "Miller & Aghajanian-Stewart via Wiktionary",
+  "single_words_only": true
 }
