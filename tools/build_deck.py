@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import json
-import os
 import re
 import unicodedata
 from pathlib import Path
@@ -13,16 +12,28 @@ MAX_RANK = 3000
 OUT_DIR = Path("data")
 CHUNK = 250
 
-PAGES = [
-    ("1-1000", 1),
-    ("1001-2000", 1001),
-    ("2001-3000", 2001),
-]
-
+PAGES = ["1-1000", "1001-2000", "2001-3000"]
 BASE = "https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Persian/Miller_Aghajanian-Stewart_2009/{}"
-HEADERS = {"User-Agent": "farsiflash static deck builder/1.0 (+https://github.com/flesentine/farsiflash)"}
+HEADERS = {"User-Agent": "farsiflash static deck builder/1.1 (+https://github.com/flesentine/farsiflash)"}
 
-# Learner-friendly overrides for the most common items.
+# The Wiktionary import has a handful of RTL/lam-alef transcription glitches.
+# Normalize only entries we can identify unambiguously.
+SPELLING_FIXES = {
+    "اعالم": "اعلام",
+    "اطالع": "اطلاع",
+    "کامال": "کاملا",
+    "اختالف": "اختلاف",
+    "استقالل": "استقلال",
+    "انقالب": "انقلاب",
+    "کاال": "کالا",
+    "مالحظه": "ملاحظه",
+    "حاال": "حالا",
+    "تالش": "تلاش",
+    "دالر": "دلار",
+    "میالدی": "میلادی",
+}
+
+# Learner-friendly romanizations for especially common words.
 ROMAN_OVERRIDES = {
     "و":"o / va","بودن":"boodan","از":"az","به":"be","که":"ke","این":"een","در":"dar",
     "با":"baa","شدن":"shodan","برای":"baraaye","خود":"khod","یک":"yek","آن":"aan / oon",
@@ -35,8 +46,11 @@ ROMAN_OVERRIDES = {
     "شما":"shomaa","ولی":"vali","آمدن":"aamadan","بعد":"ba'd","چون":"chon","چه":"che",
     "او":"oo","هیچ":"hich","دانستن":"daanestan","بهتر":"behtar","جمله":"jomle","یعنی":"ya'ni",
     "بار":"baar","نفر":"nafar","بالا":"baalaa","اگر":"agar","ماه":"maah","رو":"roo / ro",
-    "وقت":"vaght","وقتی":"vaghti","شب":"shab","اینجا":"eenjaa","چگونه":"chegoone"
+    "وقت":"vaght","وقتی":"vaghti","شب":"shab","اینجا":"eenjaa","چگونه":"chegoone",
+    "جهان":"jahaan","جوان":"javaan","جامعه":"jaame'e","جهت":"jehat","اجرا":"ejraa",
+    "مجلس":"majles","ایجاد":"ijaad","وجود":"vojood","جا":"jaa","نتیجه":"natije"
 }
+
 GLOSS_OVERRIDES = {
     "و":"and","بودن":"to be","از":"from","به":"to","که":"that / which","این":"this","در":"in",
     "با":"with","شدن":"to become","برای":"for","خود":"self","یک":"one / a","آن":"that",
@@ -48,18 +62,31 @@ GLOSS_OVERRIDES = {
     "رو":"on / face; colloquial object marker","هیچ":"none / any","دانستن":"to know",
     "آمدن":"to come","یعنی":"meaning / that is","من":"I / me","چه":"what","بعد":"after / then",
     "ولی":"but","شما":"you","کس":"person / anyone","چون":"because / like","جا":"place",
-    "ممکن":"possible","او":"he / she","همه":"all / everyone","بسیار":"very / a lot"
+    "ممکن":"possible","او":"he / she","همه":"all / everyone","بسیار":"very / a lot",
+    "کند":"does / slow","داشته":"had / having","داده":"given / data","قرار":"agreement / arrangement",
+    "حال":"state / condition","صورت":"face / form","بار":"time / load","نه":"no / not; nine"
 }
-# Names/places are real corpus items, but they are not useful as learner flashcards.
+
+# Proper names/places are real corpus items but poor use of a 2,000-card learner deck.
 BAN_EXACT = {
     "علی","محمد","رضا","حسین","حسن","محمود","احمد","حمید","مریم","منصور","نیما",
     "واشنگتن","لندن","تهران","اصفهان","خراسان","همدان","لبنان","مصر","انگلستان",
     "اردن","ترکمنستان","آمریکا","ترکیه","عراق","افغانستان","پاکستان","فرانسه","آلمان",
-    "روسیه","چین","ژاپن","اسرائیل","سوریه","فلسطین"
+    "روسیه","چین","ژاپن","اسرائیل","سوریه","فلسطین","هند"
 }
 
+def strip_marks(s: str) -> str:
+    # Persian is normally readable without short-vowel marks; stripping them also removes
+    # a few misplaced combining marks present in the imported source.
+    n = unicodedata.normalize("NFD", s)
+    return "".join(ch for ch in n if unicodedata.category(ch) != "Mn")
+
 def normalize_fa(s: str) -> str:
-    return (s or "").replace("ي","ی").replace("ك","ک").replace("\u200d","").replace("\u200e","").replace("\u200f","").replace("\ufeff","").strip()
+    s = (s or "").replace("ي","ی").replace("ك","ک")
+    s = s.replace("\u200d","").replace("\u200e","").replace("\u200f","").replace("\ufeff","")
+    s = strip_marks(s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return SPELLING_FIXES.get(s, s)
 
 def dedupe_key(s: str) -> str:
     return re.sub(r"[\s\u200c]+", "", normalize_fa(s))
@@ -74,14 +101,19 @@ def romanize_ipa(raw: str, fa: str) -> str:
     s = (raw or "").split(",")[0].strip()
     s = unicodedata.normalize("NFD", s)
     s = "".join(ch for ch in s if unicodedata.category(ch) != "Mn")
+
+    # Protect affricates so their learner-friendly j/ch output is not later re-read as IPA j (= y).
+    s = s.replace("dʒ", "§J§").replace("ʤ", "§J§")
+    s = s.replace("tʃ", "§CH§").replace("ʧ", "§CH§")
     repl = [
-        ("tʃ","ch"),("dʒ","j"),("ʧ","ch"),("ʤ","j"),("ʃ","sh"),("ʒ","zh"),
-        ("ɣ","gh"),("x","kh"),("ɡ","g"),("ʔ","'"),("Ɂ","'"),("j","y"),
-        ("ɒ","aa"),("ɑ","aa"),("æ","a"),("u","oo"),("ə","e"),("ɹ","r"),("ɾ","r"),
-        ("θ","s"),("ð","z"),("ŋ","ng"),("ɪ","i"),("ɛ","e"),("ɔ","o")
+        ("ʃ","sh"),("ʒ","zh"),("ɣ","gh"),("x","kh"),("ɡ","g"),
+        ("ʔ","'"),("Ɂ","'"),("j","y"),("ɒ","aa"),("ɑ","aa"),("æ","a"),
+        ("u","oo"),("ə","e"),("ɹ","r"),("ɾ","r"),("θ","s"),("ð","z"),
+        ("ŋ","ng"),("ɪ","i"),("ɛ","e"),("ɔ","o")
     ]
     for a,b in repl:
         s = s.replace(a,b)
+    s = s.replace("§J§", "j").replace("§CH§", "ch")
     s = re.sub(r"[ːˈˌʰʱ̥̃˞.]", "", s)
     s = re.sub(r"\s+", " ", s).strip()
     return s.replace("č","ch").replace("š","sh").replace("ž","zh")
@@ -95,8 +127,7 @@ def clean_gloss(gloss: str, fa: str) -> str:
     return g
 
 def fetch_page(label: str):
-    url = BASE.format(label)
-    r = requests.get(url, headers=HEADERS, timeout=40)
+    r = requests.get(BASE.format(label), headers=HEADERS, timeout=40)
     r.raise_for_status()
     return BeautifulSoup(r.text, "html.parser")
 
@@ -108,9 +139,8 @@ def find_frequency_table(soup):
     raise RuntimeError("frequency table not found")
 
 def parse_table(soup):
-    table = find_frequency_table(soup)
     rows = []
-    for tr in table.find_all("tr"):
+    for tr in find_frequency_table(soup).find_all("tr"):
         cells = tr.find_all(["th","td"], recursive=False)
         if len(cells) < 4:
             continue
@@ -137,9 +167,10 @@ def useful(row):
     fa, gloss, pos = row["fa"], row["gloss"], row["pos"]
     if not fa or not gloss or not row["pron"]:
         return False
-    if fa in BAN_EXACT:
+    if fa in BAN_EXACT or only_proper(pos):
         return False
-    if only_proper(pos):
+    # User asked for words, not compound expressions. This also avoids awkward source-order phrases.
+    if re.search(r"\s", fa):
         return False
     if re.search(r"[A-Za-z]", fa):
         return False
@@ -149,12 +180,10 @@ def useful(row):
 
 def build():
     all_rows = []
-    for label,_ in PAGES:
+    for label in PAGES:
         all_rows.extend(parse_table(fetch_page(label)))
     by_rank = {r["rank"]:r for r in all_rows}
-    seen = set()
-    deck = []
-    skipped = []
+    seen, deck, skipped = set(), [], []
     for rank in range(1, MAX_RANK + 1):
         r = by_rank.get(rank)
         if not r:
@@ -164,12 +193,7 @@ def build():
             skipped.append((rank,r["fa"],r["pos"],r["gloss"]))
             continue
         seen.add(key)
-        deck.append([
-            romanize_ipa(r["pron"], r["fa"]),
-            r["fa"],
-            clean_gloss(r["gloss"], r["fa"]),
-            rank
-        ])
+        deck.append([romanize_ipa(r["pron"], r["fa"]), r["fa"], clean_gloss(r["gloss"], r["fa"]), rank])
         if len(deck) == TOTAL:
             break
     if len(deck) != TOTAL:
@@ -190,7 +214,8 @@ def write_chunks(deck):
         "first": deck[:10],
         "last": deck[-3:],
         "max_source_rank": max(x[3] for x in deck),
-        "source": "Miller & Aghajanian-Stewart via Wiktionary"
+        "source": "Miller & Aghajanian-Stewart via Wiktionary",
+        "single_words_only": True,
     }
     (OUT_DIR / "miller-meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
