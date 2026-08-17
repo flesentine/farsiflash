@@ -45,7 +45,8 @@ ROMAN_OVERRIDES = {
     "بار":"baar","نفر":"nafar","بالا":"baalaa","اگر":"agar","ماه":"maah","رو":"roo / ro",
     "وقت":"vaght","وقتی":"vaghti","شب":"shab","اینجا":"eenjaa","چگونه":"chegoone",
     "جهان":"jahaan","جوان":"javaan","جامعه":"jaame'e","جهت":"jehat","اجرا":"ejraa",
-    "مجلس":"majles","ایجاد":"ijaad","وجود":"vojood","جا":"jaa","نتیجه":"natije"
+    "مجلس":"majles","ایجاد":"ijaad","وجود":"vojood","جا":"jaa","نتیجه":"natije",
+    "جرم":"jorm / jerm"
 }
 
 GLOSS_OVERRIDES = {
@@ -61,7 +62,8 @@ GLOSS_OVERRIDES = {
     "ولی":"but","شما":"you","کس":"person / anyone","چون":"because / like","جا":"place",
     "ممکن":"possible","او":"he / she","همه":"all / everyone","بسیار":"very / a lot",
     "کند":"does / slow","داشته":"had / having","داده":"given / data","قرار":"agreement / arrangement",
-    "حال":"state / condition","صورت":"face / form","بار":"time / load","نه":"no / not; nine"
+    "حال":"state / condition","صورت":"face / form","بار":"time / load","نه":"no / not; nine",
+    "جرم":"crime / offense; mass (physics)"
 }
 
 BAN_EXACT = {
