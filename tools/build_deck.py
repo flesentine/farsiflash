@@ -14,10 +14,8 @@ CHUNK = 250
 
 PAGES = ["1-1000", "1001-2000", "2001-3000"]
 BASE = "https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Persian/Miller_Aghajanian-Stewart_2009/{}"
-HEADERS = {"User-Agent": "farsiflash static deck builder/1.1 (+https://github.com/flesentine/farsiflash)"}
+HEADERS = {"User-Agent": "farsiflash static deck builder/1.2 (+https://github.com/flesentine/farsiflash)"}
 
-# The Wiktionary import has a handful of RTL/lam-alef transcription glitches.
-# Normalize only entries we can identify unambiguously.
 SPELLING_FIXES = {
     "اعالم": "اعلام",
     "اطالع": "اطلاع",
@@ -33,7 +31,6 @@ SPELLING_FIXES = {
     "میالدی": "میلادی",
 }
 
-# Learner-friendly romanizations for especially common words.
 ROMAN_OVERRIDES = {
     "و":"o / va","بودن":"boodan","از":"az","به":"be","که":"ke","این":"een","در":"dar",
     "با":"baa","شدن":"shodan","برای":"baraaye","خود":"khod","یک":"yek","آن":"aan / oon",
@@ -67,7 +64,6 @@ GLOSS_OVERRIDES = {
     "حال":"state / condition","صورت":"face / form","بار":"time / load","نه":"no / not; nine"
 }
 
-# Proper names/places are real corpus items but poor use of a 2,000-card learner deck.
 BAN_EXACT = {
     "علی","محمد","رضا","حسین","حسن","محمود","احمد","حمید","مریم","منصور","نیما",
     "واشنگتن","لندن","تهران","اصفهان","خراسان","همدان","لبنان","مصر","انگلستان",
@@ -75,16 +71,14 @@ BAN_EXACT = {
     "روسیه","چین","ژاپن","اسرائیل","سوریه","فلسطین","هند"
 }
 
-def strip_marks(s: str) -> str:
-    # Persian is normally readable without short-vowel marks; stripping them also removes
-    # a few misplaced combining marks present in the imported source.
-    n = unicodedata.normalize("NFD", s)
-    return "".join(ch for ch in n if unicodedata.category(ch) != "Mn")
+# Remove ordinary short-vowel/tanwin marks only. Do NOT Unicode-decompose Persian text:
+# doing that would destroy letters such as آ and ئ whose marks are part of the letter.
+VOWEL_MARKS = re.compile(r"[\u064B-\u0652\u0670]")
 
 def normalize_fa(s: str) -> str:
     s = (s or "").replace("ي","ی").replace("ك","ک")
     s = s.replace("\u200d","").replace("\u200e","").replace("\u200f","").replace("\ufeff","")
-    s = strip_marks(s)
+    s = VOWEL_MARKS.sub("", s)
     s = re.sub(r"\s+", " ", s).strip()
     return SPELLING_FIXES.get(s, s)
 
@@ -101,8 +95,6 @@ def romanize_ipa(raw: str, fa: str) -> str:
     s = (raw or "").split(",")[0].strip()
     s = unicodedata.normalize("NFD", s)
     s = "".join(ch for ch in s if unicodedata.category(ch) != "Mn")
-
-    # Protect affricates so their learner-friendly j/ch output is not later re-read as IPA j (= y).
     s = s.replace("dʒ", "§J§").replace("ʤ", "§J§")
     s = s.replace("tʃ", "§CH§").replace("ʧ", "§CH§")
     repl = [
@@ -169,7 +161,6 @@ def useful(row):
         return False
     if fa in BAN_EXACT or only_proper(pos):
         return False
-    # User asked for words, not compound expressions. This also avoids awkward source-order phrases.
     if re.search(r"\s", fa):
         return False
     if re.search(r"[A-Za-z]", fa):
