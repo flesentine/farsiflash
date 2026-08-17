@@ -40,55 +40,25 @@ main{display:grid;place-items:center;min-height:0}
   <div class="progress"><span id="known">0</span> known · <span id="leftCount">2000</span> left</div>
   <div class="header-actions"><a class="tiny" href="https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Persian/Miller_Aghajanian-Stewart_2009_(index)" target="_blank" rel="noopener" title="Frequency source">source</a><button class="tiny" id="reset" aria-label="Reset all progress">reset</button></div>
 </header>
-<main id="main"><div class="loading"><strong>Farsi 2000</strong><span>loading words…</span></div></main>
+<main id="main"><div class="loading"><strong>Farsi 2000</strong><span>loading…</span></div></main>
 <div class="actions"><button class="grade again" id="again" aria-label="Again, I do not know this word">← Again</button><button class="undo" id="undo" aria-label="Undo last answer">Undo</button><button class="grade know" id="knowBtn" aria-label="Know, I know this word">Know →</button></div>
 </div>
 
-<!-- Old static chunks are loaded only once for progress migration. The live deck is built from the Miller/Aghajanian-Stewart frequency data via Wiktionary. -->
+<!-- Old chunks are retained only to migrate saved progress from the first deck. -->
 <script src="data/00.js"></script><script src="data/01.js"></script><script src="data/02.js"></script><script src="data/03.js"></script><script src="data/04.js"></script><script src="data/05.js"></script><script src="data/06.js"></script><script src="data/07.js"></script>
+<!-- The cleaned Miller/Aghajanian-Stewart deck is shipped locally. No runtime network request is required. -->
+<script src="data/miller-00.js"></script><script src="data/miller-01.js"></script><script src="data/miller-02.js"></script><script src="data/miller-03.js"></script><script src="data/miller-04.js"></script><script src="data/miller-05.js"></script><script src="data/miller-06.js"></script><script src="data/miller-07.js"></script>
 <script>
 const OLD_D=(window.FARSI_CHUNKS||[]).flat();
+const STATIC_D=(window.FARSI_MILLER_CHUNKS||[]).flat();
 window.FARSI_CHUNKS=[];
-const TOTAL=2000,STATE_KEY="farsi2000-v4",DECK_KEY="farsi2000-miller-clean-v1",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
+window.FARSI_MILLER_CHUNKS=[];
+const TOTAL=2000,STATE_KEY="farsi2000-v4",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
 const $=id=>document.getElementById(id);
 const E={main:$("main"),known:$("known"),leftCount:$("leftCount"),reset:$("reset"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
-let D=[],K=new Set(),miss={},Q=[],i=0,flip=false,down=false,start=0,dx=0,suppress=false,last=null,faVoice=null;
-
-const GLOSS_OVERRIDES={
-"و":"and","بودن":"to be","از":"from","به":"to","که":"that / which","این":"this","در":"in","با":"with","شدن":"to become","برای":"for","خود":"self","یک":"one / a","آن":"that","خواستن":"to want","تا":"until / to","داشتن":"to have","کردن":"to do","کرد":"did","بایستن":"must / should","اول":"first","بر":"on","سال":"year","توانستن":"to be able / can","رسیدن":"to arrive / reach","پس":"then / so","هر":"each / every","کار":"work","بیش":"more","دیگر":"other / another","روز":"day","اما":"but","ما":"we / us","گرفتن":"to take / get","پیش":"before / near","هم":"also / too","گفتن":"to say","دو":"two","یا":"or","دادن":"to give","رو":"on / face; colloq. object marker","هیچ":"none / any","دانستن":"to know","آمدن":"to come","یعنی":"meaning / that is","من":"I / me","چه":"what","بعد":"after / then","ولی":"but","شما":"you","کس":"person / anyone","چون":"because / like","جا":"place","ممکن":"possible"
-};
-const ROMAN_OVERRIDES={
-"و":"o / va","بودن":"boodan","از":"az","به":"be","که":"ke","این":"een","در":"dar","با":"baa","شدن":"shodan","برای":"baraaye","خود":"khod","یک":"yek","آن":"aan / oon","خواستن":"khaastan","تا":"taa","داشتن":"daashtan","کردن":"kardan","کرد":"kard","بایستن":"baayestan","اول":"avval","بر":"bar","سال":"saal","توانستن":"tavaanestan","رسیدن":"residan","پس":"pas","هر":"har","کار":"kaar","بیش":"bish","دیگر":"digar","روز":"rooz","اما":"ammaa","ما":"maa","کشور":"keshvar","گرفتن":"gereftan","پیش":"pish","هم":"ham","گفتن":"goftan","بزرگ":"bozorg","دو":"do","شهر":"shahr","یا":"yaa","دادن":"daadan","ایران":"iraan","نیز":"niz","میان":"miyaan","صورت":"soorat","راه":"raah","من":"man","شما":"shomaa","ولی":"vali","آمدن":"aamadan","بعد":"ba'd","چون":"chon"
-};
-const BAN_EXACT=new Set(["علی","محمد","رضا","حسین","حسن","محمود","احمد","حمید","مریم","منصور","نیما","واشنگتن","لندن","تهران","اصفهان","خراسان","همدان","لبنان","مصر","انگلستان","اردن","ترکمنستان"]);
+let D=STATIC_D.map(([roman,fa,en,rank])=>({roman,fa,en,rank})),K=new Set(),miss={},Q=[],i=0,flip=false,down=false,start=0,dx=0,suppress=false,last=null,faVoice=null;
 
 function parseJSON(raw,fallback){try{return JSON.parse(raw)}catch{return fallback}}
-function normalizeFa(s){return (s||"").replace(/[\u200d\u200e\u200f\ufeff]/g,"").replace(/\s+/g," ").trim()}
-function faKey(s){return normalizeFa(s).replace(/[\u200c\s]/g,"")}
-function friendlyRoman(raw,fa){if(ROMAN_OVERRIDES[fa])return ROMAN_OVERRIDES[fa];let s=(raw||"").split(",")[0].trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"");const pairs=[["ʧ","ch"],["ʤ","j"],["ʃ","sh"],["ʒ","zh"],["ɣ","gh"],["æ","a"],["ɑ","aa"],["ɒ","aa"],["x","kh"],["j","y"],["ɡ","g"],["u","oo"],["i","ee"],["ʔ","'"],["Ɂ","'"],["ə","e"],["ɹ","r"],["ː",""]];for(const [a,b] of pairs)s=s.split(a).join(b);return s.replace(/[.ˈˌʰʱ̥́]/g,"").replace(/\s+/g," ").trim()}
-function cleanGloss(def,fa){if(GLOSS_OVERRIDES[fa])return GLOSS_OVERRIDES[fa];return (def||"").replace(/\s+/g," ").replace(/^q\s*$/i,"every / any").trim()}
-function api(lang,page){return `https://${lang}.wiktionary.org/w/api.php?action=parse&format=json&formatversion=2&origin=*&prop=text&page=${encodeURIComponent(page)}`}
-async function fetchHTML(lang,page){const r=await fetch(api(lang,page));if(!r.ok)throw new Error(`source ${r.status}`);const j=await r.json();if(!j.parse?.text)throw new Error("source parse failed");return new DOMParser().parseFromString(j.parse.text,"text/html")}
-
-function parseHungarian(doc){const lists=[...doc.querySelectorAll("ol")].sort((a,b)=>b.querySelectorAll(":scope > li").length-a.querySelectorAll(":scope > li").length);const list=lists[0];if(!list)throw new Error("word list not found");const out=[];[...list.querySelectorAll(":scope > li")].forEach((li,idx)=>{const a=li.querySelector("a");if(!a)return;const fa=normalizeFa(a.textContent);const full=li.textContent.trim();let pron=full.slice(full.indexOf(a.textContent)+a.textContent.length).trim();out[idx+1]={rank:idx+1,fa,pron};});return out}
-function parseEnglish(doc){const out={};for(const tr of doc.querySelectorAll("table tr")){const c=[...tr.querySelectorAll("th,td")];if(c.length<4)continue;const rank=parseInt(c[0].textContent.trim(),10);if(!Number.isFinite(rank))continue;out[rank]={def:c[3]?.textContent.trim()||"",pos:c[4]?.textContent.trim()||""};}return out}
-function onlyProper(pos){const parts=(pos||"").toLowerCase().split(/[,;/]/).map(x=>x.trim()).filter(Boolean);return parts.length>0&&parts.every(x=>x==="proper noun"||x==="proper-noun")}
-function usefulEntry(x){if(!x.fa||!x.def||BAN_EXACT.has(x.fa))return false;if(onlyProper(x.pos)&&x.fa!=="ایران")return false;if(x.fa.length>42||x.def.length>120)return false;if(/[A-Za-z]/.test(x.fa))return false;return true}
-
-async function buildDeck(){
-  const huPage="Függelék:Perzsa szógyakorisági lista";
-  const base="Wiktionary:Frequency lists/Persian/Miller Aghajanian-Stewart 2009/";
-  const [hu,e1,e2,e3]=await Promise.all([fetchHTML("hu",huPage),fetchHTML("en",base+"1-1000"),fetchHTML("en",base+"1001-2000"),fetchHTML("en",base+"2001-3000")]);
-  const words=parseHungarian(hu),meta={...parseEnglish(e1),...parseEnglish(e2),...parseEnglish(e3)};
-  const seen=new Set(),deck=[];
-  for(let rank=1;rank<=3000&&deck.length<TOTAL;rank++){
-    const w=words[rank],m=meta[rank];if(!w||!m)continue;const fa=normalizeFa(w.fa);const x={rank,fa,roman:friendlyRoman(w.pron,fa),en:cleanGloss(m.def,fa),pos:m.pos};
-    const key=faKey(fa);if(seen.has(key)||!usefulEntry(x))continue;seen.add(key);deck.push(x);
-  }
-  if(deck.length<TOTAL)throw new Error(`only ${deck.length} clean words loaded`);
-  return deck;
-}
-
 function migrateState(){
   const v4=parseJSON(localStorage.getItem(STATE_KEY),null);if(v4&&Array.isArray(v4.known)){K=new Set(v4.known);miss=v4.miss||{};return}
   let old=null;for(const key of OLD_KEYS){const x=parseJSON(localStorage.getItem(key),null);if(x){old=x;break}}
@@ -126,15 +96,16 @@ E.again.onclick=()=>grade(false);E.knowBtn.onclick=()=>grade(true);E.undo.onclic
 document.onkeydown=e=>{if(e.code==="Space"||e.key==="Enter"||e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();turn()}else if(e.key==="ArrowLeft"){e.preventDefault();grade(false)}else if(e.key==="ArrowRight"){e.preventDefault();grade(true)}else if(e.key.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();speakFarsi()}else if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}};
 E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};localStorage.removeItem(STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
 
-(async()=>{
-  migrateState();
-  try{
-    const cached=parseJSON(localStorage.getItem(DECK_KEY),null);
-    if(Array.isArray(cached)&&cached.length===TOTAL)D=cached;
-    else{D=await buildDeck();localStorage.setItem(DECK_KEY,JSON.stringify(D))}
-    K=new Set([...K].filter(fa=>D.some(c=>c.fa===fa)));const cleanMiss={};for(const [fa,n] of Object.entries(miss))if(D.some(c=>c.fa===fa))cleanMiss[fa]=n;miss=cleanMiss;save();makeDeck();render();
-  }catch(err){console.error(err);E.main.innerHTML=`<div class="loading error"><strong>Couldn’t load the word list</strong><span>Check your connection and reload. Your progress is safe.</span></div>`}
-})();
+migrateState();
+if(D.length!==TOTAL){
+  console.error(`Static deck has ${D.length} cards; expected ${TOTAL}`);
+  E.main.innerHTML=`<div class="loading error"><strong>Couldn’t load the word list</strong><span>Please reload. Your progress is safe.</span></div>`;
+}else{
+  const words=new Set(D.map(c=>c.fa));
+  K=new Set([...K].filter(fa=>words.has(fa)));
+  const cleanMiss={};for(const [fa,n] of Object.entries(miss))if(words.has(fa))cleanMiss[fa]=n;miss=cleanMiss;
+  save();makeDeck();render();
+}
 </script>
 </body>
 </html>
