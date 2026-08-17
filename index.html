@@ -3,84 +3,138 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f3ee">
+<meta name="theme-color" content="#f4f1ea">
 <title>Farsi 2000</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f3ee;color:#171717;overflow:hidden;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f1ea;color:#1c1b19;overflow:hidden;user-select:none;-webkit-user-select:none}
 .app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;padding:max(16px,env(safe-area-inset-top)) 18px max(14px,env(safe-area-inset-bottom))}
-header{height:38px;display:flex;align-items:center;justify-content:space-between;font-size:13px;letter-spacing:.06em;color:#77736b}
-button{border:0;background:transparent;color:inherit;font:inherit;cursor:pointer}
-#reset{padding:8px}.progress{font-variant-numeric:tabular-nums}
+header{height:40px;display:flex;align-items:center;justify-content:space-between;font-size:13px;letter-spacing:.035em;color:#746f67}
+.header-actions{display:flex;align-items:center;gap:2px}button,a{font:inherit}button{border:0;background:transparent;color:inherit;cursor:pointer}.tiny{padding:8px;color:#746f67;text-decoration:none;border-radius:10px}.progress{font-variant-numeric:tabular-nums}
 main{display:grid;place-items:center;min-height:0}
 .stage{width:min(88vw,480px);height:min(66dvh,590px);perspective:1200px;position:relative;touch-action:none}
 .card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .28s cubic-bezier(.2,.75,.25,1),opacity .16s;cursor:pointer;outline:none}
-.card.flip{transform:rotateY(180deg)}.card.drag{transition:none}
-.card:focus-visible{box-shadow:0 0 0 3px #0002;border-radius:28px}
-.face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px;border-radius:28px;background:#fff;box-shadow:0 14px 50px #2a241919,0 1px 2px #2a241914;backface-visibility:hidden;text-align:center}
+.card.flip{transform:rotateY(180deg)}.card.drag{transition:none}.card:focus-visible{box-shadow:0 0 0 3px #0002;border-radius:22px}
+.face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:38px;border-radius:22px;background:#fff;border:1px solid #e8e3da;box-shadow:0 12px 42px #2a241912,0 1px 2px #2a241910;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-align:center}
 .back{transform:rotateY(180deg)}
-.roman,.english{font-size:clamp(40px,10vw,68px);line-height:1.05;font-weight:700;letter-spacing:-.035em;overflow-wrap:anywhere}
-.farsi{margin-top:22px;font-family:Tahoma,"Geeza Pro",sans-serif;font-size:clamp(34px,9vw,58px);line-height:1.35;direction:rtl;color:#5e5a53}
-.mini{position:absolute;bottom:28px;left:28px;right:28px;color:#8b877f;font-size:17px;line-height:1.45}
-.hint{position:absolute;top:22px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#aaa59c}
-.speak{position:absolute;z-index:12;top:14px;right:14px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#77736b;transition:background .12s,transform .08s}
+.roman,.english{font-size:clamp(40px,10vw,66px);line-height:1.05;font-weight:720;letter-spacing:-.035em;overflow-wrap:anywhere}
+.farsi{margin-top:24px;font-family:Tahoma,"Geeza Pro","Noto Naskh Arabic",sans-serif;font-size:clamp(32px,8.4vw,54px);line-height:1.4;direction:rtl;color:#686159}
+.mini{position:absolute;bottom:30px;left:28px;right:28px;color:#8a847a;font-size:16px;line-height:1.55}.mini [dir=rtl]{font-family:Tahoma,"Geeza Pro",sans-serif;font-size:20px}
+.hint{position:absolute;top:24px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#aaa398}
+.speak{position:absolute;z-index:12;top:16px;right:16px;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#625d55;background:#fff;border:1px solid #e7e1d7;box-shadow:0 2px 8px #2a241910;transition:background .12s,transform .08s,opacity .12s}
 .speak svg{width:21px;height:21px}.speak:active{transform:scale(.94)}
-.sw{position:absolute;top:50%;transform:translateY(-50%);z-index:5;pointer-events:none;opacity:0;font-size:12px;font-weight:800;letter-spacing:.12em}.sw.left{right:18px}.sw.right{left:18px}
-.actions{height:58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
-.grade{min-height:48px;padding:0 14px;border-radius:14px;font-size:13px;color:#77736b;transition:background .12s,transform .08s,opacity .12s}.grade:active{transform:scale(.97)}.grade:disabled{opacity:.28;cursor:default}.grade.again{text-align:left}.grade.know{text-align:right}
-.undo{min-width:70px;min-height:48px;padding:0 8px;font-size:12px;color:#77736b;opacity:0;pointer-events:none;transition:opacity .14s}.undo.show{opacity:1;pointer-events:auto}
-.done{text-align:center}.done h1{font-size:42px;margin:0 0 8px}
-@media(hover:hover){.grade:not(:disabled):hover,.undo.show:hover,.speak:hover{background:#0000000a}}
+.sw{position:absolute;top:50%;transform:translateY(-50%);z-index:20;pointer-events:none;opacity:0;font-size:12px;font-weight:800;letter-spacing:.11em;padding:8px 10px;border-radius:10px;background:#fffdd}.sw.left{right:18px;color:#a85e55}.sw.right{left:18px;color:#5d8065}
+.actions{height:64px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.grade{min-height:52px;padding:0 14px;border-radius:14px;font-size:14px;color:#6e6961;transition:background .12s,transform .08s}.grade:active{transform:scale(.97)}.grade.again{text-align:left}.grade.know{text-align:right}.grade.again:active{background:#a85e5510}.grade.know:active{background:#5d806510}
+.undo{min-width:70px;min-height:52px;padding:0 8px;font-size:12px;color:#777168;opacity:0;pointer-events:none;transition:opacity .14s}.undo.show{opacity:1;pointer-events:auto}
+.loading,.done{text-align:center;color:#746f67}.loading strong,.done h1{display:block;color:#1c1b19;font-size:32px;margin-bottom:10px}.loading span{font-size:13px}.error{max-width:420px;line-height:1.5}
+@media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:#00000009}}
 @media(prefers-reduced-motion:reduce){.card,.grade,.undo,.speak{transition:none!important}}
-@media(prefers-color-scheme:dark){body{background:#151513;color:#f4f1e9}.face{background:#242421;box-shadow:0 14px 50px #0005}.farsi{color:#c5c0b7}header,.grade,.undo,.mini,.speak{color:#8f8b83}.card:focus-visible{box-shadow:0 0 0 3px #fff3}@media(hover:hover){.grade:not(:disabled):hover,.undo.show:hover,.speak:hover{background:#ffffff0b}}}
+@media(prefers-color-scheme:dark){body{background:#161614;color:#f4f1e9}.face{background:#252522;border-color:#34342f;box-shadow:0 14px 50px #0005}.farsi{color:#c7c0b6}header,.grade,.undo,.mini,.tiny{color:#928c82}.speak{background:#2b2b27;border-color:#3a3933;color:#d1cbc0}.sw{background:#252522dd}.card:focus-visible{box-shadow:0 0 0 3px #fff3}@media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:#ffffff0b}}}
 </style>
 </head>
 <body>
 <div class="app">
-<header><div class="progress"><span id="known">0</span> known · <span id="leftCount">2000</span> left</div><button id="reset" aria-label="Reset all progress">reset</button></header>
-<main id="main">
-<div class="stage" id="stage">
-<div class="sw left" id="left">AGAIN ←</div><div class="sw right" id="right">KNOW →</div>
-<button class="speak" id="speak" aria-label="Hear Persian pronunciation" aria-keyshortcuts="A" title="Hear Persian pronunciation (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4.5 3.5a5 5 0 0 1 0 7M18 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-<div class="card" id="card" role="button" tabindex="0" aria-label="Flashcard. Tap, Space, Enter, Up, or Down to flip. Swipe or use Left and Right to grade from either side.">
-<section class="face"><div class="hint">tap to reveal</div><div class="roman" id="roman"></div><div class="farsi" id="fa" dir="rtl"></div></section>
-<section class="face back"><div class="hint">meaning</div><div class="english" id="en"></div><div class="mini"><span id="mr"></span><br><span id="mf" dir="rtl"></span></div></section>
-</div>
-</div>
-</main>
+<header>
+  <div class="progress"><span id="known">0</span> known · <span id="leftCount">2000</span> left</div>
+  <div class="header-actions"><a class="tiny" href="https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Persian/Miller_Aghajanian-Stewart_2009_(index)" target="_blank" rel="noopener" title="Frequency source">source</a><button class="tiny" id="reset" aria-label="Reset all progress">reset</button></div>
+</header>
+<main id="main"><div class="loading"><strong>Farsi 2000</strong><span>loading words…</span></div></main>
 <div class="actions"><button class="grade again" id="again" aria-label="Again, I do not know this word">← Again</button><button class="undo" id="undo" aria-label="Undo last answer">Undo</button><button class="grade know" id="knowBtn" aria-label="Know, I know this word">Know →</button></div>
 </div>
+
+<!-- Old static chunks are loaded only once for progress migration. The live deck is built from the Miller/Aghajanian-Stewart frequency data via Wiktionary. -->
 <script src="data/00.js"></script><script src="data/01.js"></script><script src="data/02.js"></script><script src="data/03.js"></script><script src="data/04.js"></script><script src="data/05.js"></script><script src="data/06.js"></script><script src="data/07.js"></script>
 <script>
-const D=(window.FARSI_CHUNKS||[]).flat(),KEY="farsi2000-v3";
-const LEGACY=["farsi2000-v1","farsi2000-v2"];
+const OLD_D=(window.FARSI_CHUNKS||[]).flat();
+window.FARSI_CHUNKS=[];
+const TOTAL=2000,STATE_KEY="farsi2000-v4",DECK_KEY="farsi2000-miller-clean-v1",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
 const $=id=>document.getElementById(id);
-const E={main:$("main"),stage:$("stage"),card:$("card"),roman:$("roman"),fa:$("fa"),en:$("en"),mr:$("mr"),mf:$("mf"),known:$("known"),leftCount:$("leftCount"),reset:$("reset"),left:$("left"),right:$("right"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo"),speak:$("speak")};
-function parse(raw){try{return JSON.parse(raw||"{}")}catch{return {}}}
-function load(){let s=parse(localStorage.getItem(KEY));if(!s.known){for(const k of LEGACY){const old=parse(localStorage.getItem(k));if(Array.isArray(old)){s={known:old,miss:{}};break}if(old&&Array.isArray(old.known)){s={known:old.known,miss:old.miss||{}};break}}}return s}
-let S=load(),K=new Set(S.known||[]),miss=S.miss||{},Q=[],i=0,flip=false,down=false,start=0,dx=0,suppress=false,last=null,faVoice=null;
-function save(){localStorage.setItem(KEY,JSON.stringify({known:[...K],miss}))}
-function makeDeck(){const unseen=D.map((x,n)=>[...x,n+1]).filter(x=>!K.has(x[3]));Q=[];for(const c of unseen){Q.push(c);const m=Math.min(miss[c[3]]||0,4);for(let r=0;r<m;r++)Q.push(c)}for(let n=Q.length-1;n>0;n--){const j=Math.floor(Math.random()*(n+1));[Q[n],Q[j]]=[Q[j],Q[n]]}}
-function setGradeEnabled(v){E.again.disabled=E.knowBtn.disabled=!v}
-function choosePersianVoice(){if(!("speechSynthesis" in window)){E.speak.hidden=true;return}const voices=speechSynthesis.getVoices();faVoice=voices.find(v=>/^fa(-|_)/i.test(v.lang))||voices.find(v=>/^fa/i.test(v.lang))||null}
-choosePersianVoice();if("speechSynthesis" in window&&"onvoiceschanged" in speechSynthesis)speechSynthesis.onvoiceschanged=choosePersianVoice;
-function speakFarsi(){if(!Q.length||!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(Q[i][1]);u.lang="fa-IR";if(faVoice)u.voice=faVoice;u.rate=.84;u.pitch=1;speechSynthesis.speak(u)}
-function render(){if("speechSynthesis" in window)speechSynthesis.cancel();if(!Q.length){makeDeck();if(!Q.length){E.main.innerHTML='<div class="done"><h1>2000 ✓</h1><p>You know the whole deck.</p></div>';E.known.textContent="2000";E.leftCount.textContent="0";E.speak.hidden=true;setGradeEnabled(false);return}}i=Math.min(i,Q.length-1);let c=Q[i];flip=false;E.card.classList.remove("flip");E.card.style.transform="";E.card.style.opacity=1;E.roman.textContent=c[0];E.fa.textContent=c[1];E.en.textContent=c[2];E.mr.textContent=c[0];E.mf.textContent=c[1];E.known.textContent=K.size;E.leftCount.textContent=2000-K.size;E.left.style.opacity=E.right.style.opacity=0;E.speak.hidden=!("speechSynthesis" in window);setGradeEnabled(true)}
+const E={main:$("main"),known:$("known"),leftCount:$("leftCount"),reset:$("reset"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
+let D=[],K=new Set(),miss={},Q=[],i=0,flip=false,down=false,start=0,dx=0,suppress=false,last=null,faVoice=null;
+
+const GLOSS_OVERRIDES={
+"و":"and","بودن":"to be","از":"from","به":"to","که":"that / which","این":"this","در":"in","با":"with","شدن":"to become","برای":"for","خود":"self","یک":"one / a","آن":"that","خواستن":"to want","تا":"until / to","داشتن":"to have","کردن":"to do","کرد":"did","بایستن":"must / should","اول":"first","بر":"on","سال":"year","توانستن":"to be able / can","رسیدن":"to arrive / reach","پس":"then / so","هر":"each / every","کار":"work","بیش":"more","دیگر":"other / another","روز":"day","اما":"but","ما":"we / us","گرفتن":"to take / get","پیش":"before / near","هم":"also / too","گفتن":"to say","دو":"two","یا":"or","دادن":"to give","رو":"on / face; colloq. object marker","هیچ":"none / any","دانستن":"to know","آمدن":"to come","یعنی":"meaning / that is","من":"I / me","چه":"what","بعد":"after / then","ولی":"but","شما":"you","کس":"person / anyone","چون":"because / like","جا":"place","ممکن":"possible"
+};
+const ROMAN_OVERRIDES={
+"و":"o / va","بودن":"boodan","از":"az","به":"be","که":"ke","این":"een","در":"dar","با":"baa","شدن":"shodan","برای":"baraaye","خود":"khod","یک":"yek","آن":"aan / oon","خواستن":"khaastan","تا":"taa","داشتن":"daashtan","کردن":"kardan","کرد":"kard","بایستن":"baayestan","اول":"avval","بر":"bar","سال":"saal","توانستن":"tavaanestan","رسیدن":"residan","پس":"pas","هر":"har","کار":"kaar","بیش":"bish","دیگر":"digar","روز":"rooz","اما":"ammaa","ما":"maa","کشور":"keshvar","گرفتن":"gereftan","پیش":"pish","هم":"ham","گفتن":"goftan","بزرگ":"bozorg","دو":"do","شهر":"shahr","یا":"yaa","دادن":"daadan","ایران":"iraan","نیز":"niz","میان":"miyaan","صورت":"soorat","راه":"raah","من":"man","شما":"shomaa","ولی":"vali","آمدن":"aamadan","بعد":"ba'd","چون":"chon"
+};
+const BAN_EXACT=new Set(["علی","محمد","رضا","حسین","حسن","محمود","احمد","حمید","مریم","منصور","نیما","واشنگتن","لندن","تهران","اصفهان","خراسان","همدان","لبنان","مصر","انگلستان","اردن","ترکمنستان"]);
+
+function parseJSON(raw,fallback){try{return JSON.parse(raw)}catch{return fallback}}
+function normalizeFa(s){return (s||"").replace(/[\u200d\u200e\u200f\ufeff]/g,"").replace(/\s+/g," ").trim()}
+function faKey(s){return normalizeFa(s).replace(/[\u200c\s]/g,"")}
+function friendlyRoman(raw,fa){if(ROMAN_OVERRIDES[fa])return ROMAN_OVERRIDES[fa];let s=(raw||"").split(",")[0].trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"");const pairs=[["ʧ","ch"],["ʤ","j"],["ʃ","sh"],["ʒ","zh"],["ɣ","gh"],["æ","a"],["ɑ","aa"],["ɒ","aa"],["x","kh"],["j","y"],["ɡ","g"],["u","oo"],["i","ee"],["ʔ","'"],["Ɂ","'"],["ə","e"],["ɹ","r"],["ː",""]];for(const [a,b] of pairs)s=s.split(a).join(b);return s.replace(/[.ˈˌʰʱ̥́]/g,"").replace(/\s+/g," ").trim()}
+function cleanGloss(def,fa){if(GLOSS_OVERRIDES[fa])return GLOSS_OVERRIDES[fa];return (def||"").replace(/\s+/g," ").replace(/^q\s*$/i,"every / any").trim()}
+function api(lang,page){return `https://${lang}.wiktionary.org/w/api.php?action=parse&format=json&formatversion=2&origin=*&prop=text&page=${encodeURIComponent(page)}`}
+async function fetchHTML(lang,page){const r=await fetch(api(lang,page));if(!r.ok)throw new Error(`source ${r.status}`);const j=await r.json();if(!j.parse?.text)throw new Error("source parse failed");return new DOMParser().parseFromString(j.parse.text,"text/html")}
+
+function parseHungarian(doc){const lists=[...doc.querySelectorAll("ol")].sort((a,b)=>b.querySelectorAll(":scope > li").length-a.querySelectorAll(":scope > li").length);const list=lists[0];if(!list)throw new Error("word list not found");const out=[];[...list.querySelectorAll(":scope > li")].forEach((li,idx)=>{const a=li.querySelector("a");if(!a)return;const fa=normalizeFa(a.textContent);const full=li.textContent.trim();let pron=full.slice(full.indexOf(a.textContent)+a.textContent.length).trim();out[idx+1]={rank:idx+1,fa,pron};});return out}
+function parseEnglish(doc){const out={};for(const tr of doc.querySelectorAll("table tr")){const c=[...tr.querySelectorAll("th,td")];if(c.length<4)continue;const rank=parseInt(c[0].textContent.trim(),10);if(!Number.isFinite(rank))continue;out[rank]={def:c[3]?.textContent.trim()||"",pos:c[4]?.textContent.trim()||""};}return out}
+function onlyProper(pos){const parts=(pos||"").toLowerCase().split(/[,;/]/).map(x=>x.trim()).filter(Boolean);return parts.length>0&&parts.every(x=>x==="proper noun"||x==="proper-noun")}
+function usefulEntry(x){if(!x.fa||!x.def||BAN_EXACT.has(x.fa))return false;if(onlyProper(x.pos)&&x.fa!=="ایران")return false;if(x.fa.length>42||x.def.length>120)return false;if(/[A-Za-z]/.test(x.fa))return false;return true}
+
+async function buildDeck(){
+  const huPage="Függelék:Perzsa szógyakorisági lista";
+  const base="Wiktionary:Frequency lists/Persian/Miller Aghajanian-Stewart 2009/";
+  const [hu,e1,e2,e3]=await Promise.all([fetchHTML("hu",huPage),fetchHTML("en",base+"1-1000"),fetchHTML("en",base+"1001-2000"),fetchHTML("en",base+"2001-3000")]);
+  const words=parseHungarian(hu),meta={...parseEnglish(e1),...parseEnglish(e2),...parseEnglish(e3)};
+  const seen=new Set(),deck=[];
+  for(let rank=1;rank<=3000&&deck.length<TOTAL;rank++){
+    const w=words[rank],m=meta[rank];if(!w||!m)continue;const fa=normalizeFa(w.fa);const x={rank,fa,roman:friendlyRoman(w.pron,fa),en:cleanGloss(m.def,fa),pos:m.pos};
+    const key=faKey(fa);if(seen.has(key)||!usefulEntry(x))continue;seen.add(key);deck.push(x);
+  }
+  if(deck.length<TOTAL)throw new Error(`only ${deck.length} clean words loaded`);
+  return deck;
+}
+
+function migrateState(){
+  const v4=parseJSON(localStorage.getItem(STATE_KEY),null);if(v4&&Array.isArray(v4.known)){K=new Set(v4.known);miss=v4.miss||{};return}
+  let old=null;for(const key of OLD_KEYS){const x=parseJSON(localStorage.getItem(key),null);if(x){old=x;break}}
+  const knownWords=[],missWords={};
+  if(Array.isArray(old)){for(const id of old){const fa=OLD_D[id-1]?.[1];if(fa)knownWords.push(fa)}}
+  else if(old&&Array.isArray(old.known)){for(const id of old.known){const fa=OLD_D[id-1]?.[1];if(fa)knownWords.push(fa)}for(const [id,n] of Object.entries(old.miss||{})){const fa=OLD_D[Number(id)-1]?.[1];if(fa)missWords[fa]=n}}
+  K=new Set(knownWords);miss=missWords;save();
+}
+function save(){localStorage.setItem(STATE_KEY,JSON.stringify({known:[...K],miss}))}
+function makeDeck(){const unseen=D.filter(c=>!K.has(c.fa));Q=[];for(const c of unseen){Q.push(c);const m=Math.min(miss[c.fa]||0,4);for(let r=0;r<m;r++)Q.push(c)}for(let n=Q.length-1;n>0;n--){const j=Math.floor(Math.random()*(n+1));[Q[n],Q[j]]=[Q[j],Q[n]]}}
+function current(){return Q[i]}
+
+function mountCard(){E.main.innerHTML=`<div class="stage" id="stage"><div class="sw left" id="left">AGAIN ←</div><div class="sw right" id="right">KNOW →</div><button class="speak" id="speak" aria-label="Hear Persian pronunciation" aria-keyshortcuts="A" title="Hear Persian (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4.5 3.5a5 5 0 0 1 0 7M18 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="card" id="card" role="button" tabindex="0" aria-label="Flashcard. Tap, Space, Enter, Up, or Down to flip. Left is Again; Right is Know."><section class="face"><div class="hint">tap · ↑ ↓ to flip</div><div class="roman" id="roman"></div><div class="farsi" id="fa" dir="rtl"></div></section><section class="face back"><div class="hint">meaning</div><div class="english" id="en"></div><div class="mini"><span id="mr"></span><br><span id="mf" dir="rtl"></span></div></section></div></div>`;
+  Object.assign(E,{stage:$("stage"),card:$("card"),roman:$("roman"),fa:$("fa"),en:$("en"),mr:$("mr"),mf:$("mf"),left:$("left"),right:$("right"),speak:$("speak")});
+  E.card.onclick=()=>{if(suppress){suppress=false;return}turn()};
+  E.stage.onpointerdown=e=>{if(!Q.length||e.target.closest(".speak"))return;down=true;start=e.clientX;dx=0;suppress=false;E.stage.setPointerCapture?.(e.pointerId);E.card.classList.add("drag")};
+  E.stage.onpointermove=e=>{if(!down)return;dx=e.clientX-start;if(Math.abs(dx)>6)suppress=true;let base=flip?"rotateY(180deg) ":"";E.card.style.transform=`${base} translateX(${dx}px) rotate(${dx/28}deg)`;let n=Math.min(Math.abs(dx)/110,1);E.left.style.opacity=dx<0?n:0;E.right.style.opacity=dx>0?n:0};
+  E.stage.onpointerup=endPointer;E.stage.onpointercancel=endPointer;
+  E.speak.onpointerdown=e=>e.stopPropagation();E.speak.onclick=e=>{e.stopPropagation();speakFarsi()};
+}
+function render(){
+  if(!Q.length){makeDeck();if(!Q.length){E.main.innerHTML='<div class="done"><h1>2000 ✓</h1><p>You know the whole deck.</p></div>';E.known.textContent=TOTAL;E.leftCount.textContent=0;return}}
+  if(!E.card||!document.body.contains(E.card))mountCard();i=Math.min(i,Q.length-1);const c=current();flip=false;E.card.classList.remove("flip");E.card.style.transform="";E.card.style.opacity=1;E.roman.textContent=c.roman;E.fa.textContent=c.fa;E.en.textContent=c.en;E.mr.textContent=c.roman;E.mf.textContent=c.fa;E.known.textContent=[...K].filter(w=>D.some(c=>c.fa===w)).length;E.leftCount.textContent=TOTAL-Number(E.known.textContent);E.left.style.opacity=E.right.style.opacity=0;if("speechSynthesis" in window)speechSynthesis.cancel();
+}
 function turn(){if(!Q.length)return;flip=!flip;E.card.classList.toggle("flip",flip)}
 function pushMissedCopies(c,count){const minGap=8,maxGap=Math.min(32,Q.length);for(let n=0;n<count;n++){const gap=minGap+Math.floor(Math.random()*Math.max(1,maxGap-minGap+1));Q.splice(Math.min(i+gap,Q.length),0,c)}}
-function grade(know){if(!Q.length)return;if("speechSynthesis" in window)speechSynthesis.cancel();let c=Q[i],id=c[3],oldMiss=miss[id]||0;last={card:c,know,oldMiss};let dir=know?1:-1;E.card.style.transition="transform .18s ease,opacity .16s";E.card.style.transform=`translateX(${dir*innerWidth}px) rotate(${dir*9}deg)`;E.card.style.opacity=0;setTimeout(()=>{Q.splice(i,1);if(know){K.add(id);delete miss[id];Q=Q.filter(x=>x[3]!==id)}else{miss[id]=Math.min(oldMiss+1,4);pushMissedCopies(c,1+Math.min(miss[id],2))}save();if(i>=Q.length)i=0;E.undo.classList.add("show");E.card.style.transition="none";render();requestAnimationFrame(()=>E.card.style.transition="")},165)}
-function undo(){if(!last)return;const {card,know,oldMiss}=last,id=card[3];if(know)K.delete(id);if(oldMiss)miss[id]=oldMiss;else delete miss[id];save();makeDeck();i=Q.findIndex(x=>x[3]===id);if(i<0)i=0;last=null;E.undo.classList.remove("show");render()}
-E.card.onclick=()=>{if(suppress){suppress=false;return}turn()};
-E.stage.onpointerdown=e=>{if(!Q.length)return;down=true;start=e.clientX;dx=0;suppress=false;E.stage.setPointerCapture?.(e.pointerId);E.card.classList.add("drag")};
-E.stage.onpointermove=e=>{if(!down)return;dx=e.clientX-start;if(Math.abs(dx)>6)suppress=true;let base=flip?"rotateY(180deg) ":"";E.card.style.transform=`${base} translateX(${dx}px) rotate(${dx/28}deg)`;let n=Math.min(Math.abs(dx)/110,1);E.left.style.opacity=dx<0?n:0;E.right.style.opacity=dx>0?n:0};
-function end(){if(!down)return;down=false;E.card.classList.remove("drag");let t=Math.min(110,innerWidth*.22);if(dx < -t)grade(false);else if(dx > t)grade(true);else{E.card.style.transform=flip?"rotateY(180deg)":"";E.left.style.opacity=E.right.style.opacity=0}dx=0}
-E.stage.onpointerup=end;E.stage.onpointercancel=end;
-E.speak.onpointerdown=e=>e.stopPropagation();E.speak.onclick=e=>{e.stopPropagation();speakFarsi()};
+function grade(know){if(!Q.length)return;if("speechSynthesis" in window)speechSynthesis.cancel();const c=current(),fa=c.fa,oldMiss=miss[fa]||0;last={card:c,know,oldMiss};const dir=know?1:-1;E.card.style.transition="transform .18s ease,opacity .16s";E.card.style.transform=`${flip?"rotateY(180deg) ":""}translateX(${dir*innerWidth}px) rotate(${dir*9}deg)`;E.card.style.opacity=0;setTimeout(()=>{Q.splice(i,1);if(know){K.add(fa);delete miss[fa];Q=Q.filter(x=>x.fa!==fa)}else{miss[fa]=Math.min(oldMiss+1,4);pushMissedCopies(c,1+Math.min(miss[fa],2))}save();if(i>=Q.length)i=0;E.undo.classList.add("show");E.card.style.transition="none";render();requestAnimationFrame(()=>{if(E.card)E.card.style.transition=""})},165)}
+function undo(){if(!last)return;const {card,know,oldMiss}=last,fa=card.fa;if(know)K.delete(fa);if(oldMiss)miss[fa]=oldMiss;else delete miss[fa];save();makeDeck();i=Q.findIndex(x=>x.fa===fa);if(i<0)i=0;last=null;E.undo.classList.remove("show");render()}
+function endPointer(){if(!down)return;down=false;E.card.classList.remove("drag");const t=Math.min(110,innerWidth*.22);if(dx < -t)grade(false);else if(dx > t)grade(true);else{E.card.style.transform=flip?"rotateY(180deg)":"";E.left.style.opacity=E.right.style.opacity=0}dx=0}
+function choosePersianVoice(){if(!("speechSynthesis" in window))return;const voices=speechSynthesis.getVoices();faVoice=voices.find(v=>/^fa(-|_)/i.test(v.lang))||voices.find(v=>/^fa/i.test(v.lang))||null}
+function speakFarsi(){const c=current();if(!c||!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(c.fa);u.lang="fa-IR";if(faVoice)u.voice=faVoice;u.rate=.84;speechSynthesis.speak(u)}
+choosePersianVoice();if("speechSynthesis" in window&&"onvoiceschanged" in speechSynthesis)speechSynthesis.onvoiceschanged=choosePersianVoice;
+
 E.again.onclick=()=>grade(false);E.knowBtn.onclick=()=>grade(true);E.undo.onclick=undo;
 document.onkeydown=e=>{if(e.code==="Space"||e.key==="Enter"||e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();turn()}else if(e.key==="ArrowLeft"){e.preventDefault();grade(false)}else if(e.key==="ArrowRight"){e.preventDefault();grade(true)}else if(e.key.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();speakFarsi()}else if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}};
-E.reset.onclick=()=>{if(confirm("Reset all progress?")){if("speechSynthesis" in window)speechSynthesis.cancel();K=new Set;miss={};for(const k of [KEY,...LEGACY])localStorage.removeItem(k);makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
-save();makeDeck();render();
+E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};localStorage.removeItem(STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
+
+(async()=>{
+  migrateState();
+  try{
+    const cached=parseJSON(localStorage.getItem(DECK_KEY),null);
+    if(Array.isArray(cached)&&cached.length===TOTAL)D=cached;
+    else{D=await buildDeck();localStorage.setItem(DECK_KEY,JSON.stringify(D))}
+    K=new Set([...K].filter(fa=>D.some(c=>c.fa===fa)));const cleanMiss={};for(const [fa,n] of Object.entries(miss))if(D.some(c=>c.fa===fa))cleanMiss[fa]=n;miss=cleanMiss;save();makeDeck();render();
+  }catch(err){console.error(err);E.main.innerHTML=`<div class="loading error"><strong>Couldn’t load the word list</strong><span>Check your connection and reload. Your progress is safe.</span></div>`}
+})();
 </script>
 </body>
 </html>
