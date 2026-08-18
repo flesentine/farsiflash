@@ -1,40 +1,82 @@
 window.FARSI_AUDIO=window.FARSI_AUDIO||{};
 
-// Bundled audio sprite for the first 24 beginner cards. This plays from GitHub Pages
-// and does not depend on browser speech voices or a third-party TTS request.
-window.FARSI_AUDIO_SPRITE={
-  src:"audio/beginner-01.ogg",
-  clips:{
-    "سلام":[0.0,1.179],"خداحافظ":[1.399,2.911],"بله":[3.131,4.127],"آره":[4.347,5.367],"نَه":[5.587,6.459],
-    "لطفا":[6.679,7.8],"ممنون":[8.02,9.169],"مرسی":[9.389,10.516],"ببخشید":[10.736,12.124],"خوب":[12.344,13.433],
-    "بد":[13.653,14.538],"باشه":[14.758,15.863],"من":[16.083,17.031],"تو":[17.251,18.102],"شما":[18.322,19.343],
-    "او":[19.563,20.483],"ما":[20.703,21.628],"آنها":[21.848,22.899],"این":[23.119,24.108],"آن":[24.328,25.216],
-    "چه":[25.436,26.435],"کی":[26.655,27.568],"کجا":[27.788,28.858],"چرا":[29.078,30.153]
-  }
+// Self-contained audio for the first 24 beginner cards. Each small OGG is served
+// directly by GitHub Pages, so playback does not depend on a system Persian voice.
+window.FARSI_AUDIO_CLIPS={
+  "سلام":["audio/beginner-01.ogg",0.000,1.179],
+  "خداحافظ":["audio/beginner-01.ogg",1.379,2.891],
+  "بله":["audio/beginner-01.ogg",3.091,4.087],
+  "آره":["audio/beginner-01.ogg",4.287,5.307],
+
+  "نَه":["audio/beginner-02.ogg",0.000,0.872],
+  "لطفا":["audio/beginner-02.ogg",1.072,2.193],
+  "ممنون":["audio/beginner-02.ogg",2.393,3.542],
+  "مرسی":["audio/beginner-02.ogg",3.742,4.870],
+
+  "ببخشید":["audio/beginner-03.ogg",0.000,1.388],
+  "خوب":["audio/beginner-03.ogg",1.588,2.677],
+  "بد":["audio/beginner-03.ogg",2.877,3.762],
+  "باشه":["audio/beginner-03.ogg",3.962,5.067],
+
+  "من":["audio/beginner-04.ogg",0.000,0.948],
+  "تو":["audio/beginner-04.ogg",1.148,1.999],
+  "شما":["audio/beginner-04.ogg",2.199,3.220],
+  "او":["audio/beginner-04.ogg",3.420,4.340],
+
+  "ما":["audio/beginner-05.ogg",0.000,0.924],
+  "آنها":["audio/beginner-05.ogg",1.124,2.176],
+  "این":["audio/beginner-05.ogg",2.376,3.365],
+  "آن":["audio/beginner-05.ogg",3.565,4.453],
+
+  "چه":["audio/beginner-06.ogg",0.000,0.999],
+  "کی":["audio/beginner-06.ogg",1.199,2.113],
+  "کجا":["audio/beginner-06.ogg",2.313,3.382],
+  "چرا":["audio/beginner-06.ogg",3.582,4.657]
 };
 
 window.addEventListener("load",()=>{
   const btn=document.getElementById("speak");
   if(!btn)return;
   const originalClick=btn.onclick;
-  const sprite=new Audio(window.FARSI_AUDIO_SPRITE.src);
-  sprite.preload="auto";
-  let stopTimer=null;
+  const players={};
+  let current=null,stopTimer=null;
 
-  function finish(){if(stopTimer){clearTimeout(stopTimer);stopTimer=null}btn.classList.remove("playing")}
-  function playSprite(fa){
-    const clip=window.FARSI_AUDIO_SPRITE.clips[fa];
+  function finish(){
+    if(stopTimer){clearTimeout(stopTimer);stopTimer=null}
+    btn.classList.remove("playing");
+  }
+  function playBundled(fa){
+    const clip=window.FARSI_AUDIO_CLIPS[fa];
     if(!clip)return false;
-    finish();sprite.pause();sprite.currentTime=clip[0];btn.classList.add("playing");
-    sprite.play().then(()=>{stopTimer=setTimeout(()=>{sprite.pause();finish()},Math.max(120,(clip[1]-clip[0])*1000+60))}).catch(()=>{finish();if(originalClick)originalClick({stopPropagation(){}})});
+    const [src,start,end]=clip;
+    finish();
+    if(current)current.pause();
+    const a=players[src]||(players[src]=new Audio(src));
+    current=a;
+    a.pause();
+    a.currentTime=start;
+    btn.classList.add("playing");
+    a.play().then(()=>{
+      stopTimer=setTimeout(()=>{a.pause();finish()},Math.max(120,(end-start)*1000+80));
+    }).catch(()=>{
+      finish();
+      if(originalClick)originalClick({stopPropagation(){}});
+    });
     return true;
   }
   function play(){
     const fa=(document.getElementById("fa")?.textContent||"").trim();
     if(!fa)return;
-    if(playSprite(fa))return;
+    if(playBundled(fa))return;
     if(originalClick)originalClick({stopPropagation(){}});
   }
+
   btn.onclick=e=>{e.stopPropagation();play()};
-  document.addEventListener("keydown",e=>{if(e.key?.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();e.stopImmediatePropagation();play()}},true);
+  document.addEventListener("keydown",e=>{
+    if(e.key?.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      play();
+    }
+  },true);
 });
