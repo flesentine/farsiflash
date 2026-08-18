@@ -1,7 +1,7 @@
 window.FARSI_PATH=[
   {name:"Start Here",cards:[
     ["سلام","salaam","hello"],["خداحافظ","khodaahafez","goodbye"],["بله","bale","yes"],["آره","aare","yes / yeah"],
-    ["نه","na / noh","no / nine"],["لطفا","lotfan","please"],["ممنون","mamnoon","thank you"],["مرسی","merci","thanks"],
+    ["نَه","na","no / not"],["لطفا","lotfan","please"],["ممنون","mamnoon","thank you"],["مرسی","merci","thanks"],
     ["ببخشید","bebakhshid","excuse me / sorry"],["خوب","khoob","good / well"],["بد","bad","bad"],["باشه","baashe","okay / alright"],
     ["من","man","I / me"],["تو","to","you (informal)"],["شما","shomaa","you (formal / plural)"],["او","oo","he / she"],
     ["ما","maa","we / us"],["آنها","aanhaa","they"],["این","een","this"],["آن","aan / oon","that"],
@@ -12,7 +12,7 @@ window.FARSI_PATH=[
   ]},
   {name:"Numbers & Time",cards:[
     ["صفر","sefr","zero"],["یک","yek","one"],["دو","do","two"],["سه","se","three"],["چهار","chahaar","four"],["پنج","panj","five"],
-    ["شش","shesh","six"],["هفت","haft","seven"],["هشت","hasht","eight"],["ده","dah","ten"],["یازده","yaazdah","eleven"],
+    ["شش","shesh","six"],["هفت","haft","seven"],["هشت","hasht","eight"],["نُه","noh","nine"],["ده","dah","ten"],["یازده","yaazdah","eleven"],
     ["دوازده","davaazdah","twelve"],["سیزده","sizdah","thirteen"],["چهارده","chahaardah","fourteen"],["پانزده","paanzdah","fifteen"],
     ["شانزده","shaanzdah","sixteen"],["هفده","hefdah","seventeen"],["هجده","hejdah","eighteen"],["نوزده","noozdah","nineteen"],["بیست","bist","twenty"],
     ["امروز","emrooz","today"],["فردا","fardaa","tomorrow"],["دیروز","dirooz","yesterday"],["صبح","sobh","morning"],["ظهر","zohr","noon"],
@@ -75,3 +75,6 @@ window.FARSI_PATH=[
     ["مهم","mohem","important"],["ممکن","momken","possible"],["لازم","laazem","necessary"],["واقعا","vaaghean","really"],["تقریبا","taghriban","almost / approximately"]
   ]}
 ];
+
+// نه is a Persian homograph: نَه (na, no/not) and نُه (noh, nine). Remove the unvowelled raw corpus card so they are taught separately.
+if(window.FARSI_MILLER_CHUNKS){window.FARSI_MILLER_CHUNKS=window.FARSI_MILLER_CHUNKS.map(chunk=>chunk.filter(row=>row[1]!=="نه"));}
