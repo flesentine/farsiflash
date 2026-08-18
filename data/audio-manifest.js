@@ -41,34 +41,64 @@ window.addEventListener("load",()=>{
   const players={};
   let current=null,stopTimer=null;
 
+  const style=document.createElement("style");
+  style.textContent=`
+    .speak.bundled::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;right:1px;bottom:1px;background:#5d8065;border:2px solid #fff}
+    .audio-test{font-weight:600}
+    @media(prefers-color-scheme:dark){.speak.bundled::after{border-color:#2b2b27}}
+  `;
+  document.head.appendChild(style);
+
   function finish(){
     if(stopTimer){clearTimeout(stopTimer);stopTimer=null}
     btn.classList.remove("playing");
   }
-  function playBundled(fa){
-    const clip=window.FARSI_AUDIO_CLIPS[fa];
+  function getPlayer(src){return players[src]||(players[src]=new Audio(src))}
+  function playClip(clip,onDone,onFail){
     if(!clip)return false;
     const [src,start,end]=clip;
     finish();
     if(current)current.pause();
-    const a=players[src]||(players[src]=new Audio(src));
+    const a=getPlayer(src);
     current=a;
     a.pause();
-    a.currentTime=start;
+    try{a.currentTime=start}catch{}
     btn.classList.add("playing");
     a.play().then(()=>{
-      stopTimer=setTimeout(()=>{a.pause();finish()},Math.max(120,(end-start)*1000+80));
-    }).catch(()=>{
-      finish();
-      if(originalClick)originalClick({stopPropagation(){}});
-    });
+      stopTimer=setTimeout(()=>{a.pause();finish();onDone?.()},Math.max(120,(end-start)*1000+80));
+    }).catch(()=>{finish();onFail?.()});
     return true;
   }
+  function currentFa(){return (document.getElementById("fa")?.textContent||"").trim()}
+  function updateCoverage(){
+    const has=!!window.FARSI_AUDIO_CLIPS[currentFa()];
+    btn.classList.toggle("bundled",has);
+    btn.title=has?"Hear bundled Persian audio (A)":"Audio for this card is not bundled yet (A)";
+  }
   function play(){
-    const fa=(document.getElementById("fa")?.textContent||"").trim();
+    const fa=currentFa();
     if(!fa)return;
-    if(playBundled(fa))return;
+    const clip=window.FARSI_AUDIO_CLIPS[fa];
+    if(clip){playClip(clip,null,()=>{if(originalClick)originalClick({stopPropagation(){}})});return}
     if(originalClick)originalClick({stopPropagation(){}});
+  }
+
+  const header=document.querySelector(".header-actions");
+  if(header){
+    const test=document.createElement("button");
+    test.className="tiny audio-test";
+    test.type="button";
+    test.textContent="test audio";
+    test.title="Play bundled سلام audio";
+    test.onclick=e=>{
+      e.stopPropagation();
+      test.textContent="playing…";
+      playClip(window.FARSI_AUDIO_CLIPS["سلام"],()=>{test.textContent="test audio"},()=>{
+        test.textContent="audio failed";
+        setTimeout(()=>test.textContent="test audio",2200);
+      });
+    };
+    header.prepend(test);
   }
 
   btn.onclick=e=>{e.stopPropagation();play()};
@@ -79,4 +109,8 @@ window.addEventListener("load",()=>{
       play();
     }
   },true);
+
+  const faNode=document.getElementById("fa");
+  if(faNode)new MutationObserver(updateCoverage).observe(faNode,{childList:true,characterData:true,subtree:true});
+  updateCoverage();
 });
