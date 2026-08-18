@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Static MP3 builder; touching this file intentionally triggers the audio workflow.
+# Static MP3 builder. Generates one probe first, then fans out in parallel.
 import asyncio
 import hashlib
 import json
@@ -57,8 +57,6 @@ def build_final_words():
     exact = set()
     covered_base = set()
 
-    # Keep intentional curated homographs (e.g. نَه and نُه) as separate cards,
-    # but prevent the unvowelled raw corpus form from being added later.
     for fa, roman, en in path_cards:
         if fa in exact:
             continue
@@ -88,20 +86,20 @@ async def synth_one(sem, fa, path):
         return
     async with sem:
         last = None
-        for attempt in range(4):
+        for attempt in range(3):
             try:
                 tmp = path.with_suffix(".tmp.mp3")
                 if tmp.exists():
                     tmp.unlink()
                 communicate = edge_tts.Communicate(fa, VOICE, rate=RATE)
-                await communicate.save(str(tmp))
+                await asyncio.wait_for(communicate.save(str(tmp)), timeout=25)
                 if not tmp.exists() or tmp.stat().st_size < 500:
                     raise RuntimeError("generated audio was empty")
                 tmp.replace(path)
                 return
             except Exception as e:
                 last = e
-                await asyncio.sleep(1.5 * (attempt + 1))
+                await asyncio.sleep(1.0 * (attempt + 1))
         raise RuntimeError(f"TTS failed for {fa!r}: {last}")
 
 
@@ -110,15 +108,18 @@ async def main():
     AUDIO.mkdir(exist_ok=True)
     manifest = {}
     wanted = set()
-    sem = asyncio.Semaphore(5)
-    jobs = []
 
     for fa, _roman, _en in cards:
         name = audio_name(fa)
         wanted.add(name)
         manifest[fa] = f"audio/{name}"
-        jobs.append(synth_one(sem, fa, AUDIO / name))
 
+    # Probe one word before starting 2,000 requests so service failures are immediate.
+    first_fa = cards[0][0]
+    await synth_one(asyncio.Semaphore(1), first_fa, AUDIO / audio_name(first_fa))
+
+    sem = asyncio.Semaphore(12)
+    jobs = [synth_one(sem, fa, AUDIO / audio_name(fa)) for fa, _roman, _en in cards[1:]]
     await asyncio.gather(*jobs)
 
     for p in AUDIO.glob("*.mp3"):
