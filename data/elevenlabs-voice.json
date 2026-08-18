@@ -1,0 +1,17 @@
+{
+  "voice_id": "XrExE9yKIg1WjnnlVkGX",
+  "name": "Matilda - Knowledgable, Professional",
+  "source": "free account/default voice",
+  "category": "premade",
+  "labels": {
+    "use_case": "informative_educational",
+    "accent": "american",
+    "language": "en",
+    "age": "middle_aged",
+    "gender": "female",
+    "descriptive": "upbeat"
+  },
+  "model": "eleven_v3",
+  "language_code": "fa",
+  "audition_words": 30
+}
