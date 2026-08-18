@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Static MP3 builder; touching this file intentionally triggers the audio workflow.
 import asyncio
 import hashlib
 import json
