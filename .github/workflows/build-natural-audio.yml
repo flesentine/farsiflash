@@ -16,6 +16,7 @@ on:
   push:
     paths:
       - "tools/build_natural_audio.py"
+      - "tools/build_natural_audio_resilient.py"
       - ".github/workflows/build-natural-audio.yml"
 
 permissions:
@@ -53,7 +54,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check requests
       - name: Generate natural Persian audio batch
         id: generate
-        run: python tools/build_natural_audio.py
+        run: python tools/build_natural_audio_resilient.py
       - name: Preserve autoplay controls
         if: always()
         shell: bash
