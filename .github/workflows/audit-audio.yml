@@ -27,7 +27,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Audit all 2000 natural pronunciations
-        run: python tools/audit_audio.py | tee data/audio-audit.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          python tools/audit_audio.py 2>&1 | tee data/audio-audit.txt
       - name: Record passing audit
         shell: bash
         run: |
