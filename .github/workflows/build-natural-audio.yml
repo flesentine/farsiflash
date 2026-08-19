@@ -1,7 +1,18 @@
-name: Build natural Persian audio audition
+name: Build natural Persian audio
 
 on:
   workflow_dispatch:
+    inputs:
+      start_index:
+        description: "Deck start index (0, 250, 500...)"
+        required: true
+        default: "0"
+        type: string
+      count:
+        description: "Number of words to generate"
+        required: true
+        default: "250"
+        type: string
   push:
     paths:
       - "tools/build_natural_audio.py"
@@ -15,12 +26,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  audition:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
       ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+      START_INDEX: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.start_index || '0' }}
+      COUNT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.count || '250' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,20 +51,20 @@ jobs:
           fi
       - name: Install client
         run: python -m pip install --disable-pip-version-check requests
-      - name: Generate 30-word Iranian Persian audition
+      - name: Generate natural Persian audio batch
         run: python tools/build_natural_audio.py
       - name: Preserve autoplay controls
         run: cat data/audio-ui.js >> data/audio-manifest.js
-      - name: Commit audition audio
+      - name: Commit audio batch
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json
           if git diff --cached --quiet; then
-            echo "Natural audio audition already current."
+            echo "Natural audio batch already current."
             exit 0
           fi
-          git commit -m "Generate natural Persian audio audition"
+          git commit -m "Generate natural Persian audio batch ${START_INDEX}+${COUNT}"
           git pull --rebase origin main
           git push origin main
