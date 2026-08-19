@@ -274,19 +274,55 @@ def synthesize(voice_id, word, dest):
             "speed": 0.90,
         },
     }
-    r = checked(
-        requests.post(
-            f"{API}/text-to-speech/{voice_id}",
-            params={"output_format": "mp3_44100_128"},
-            headers=headers(),
-            json=payload,
-            timeout=120,
-        ),
-        f"TTS for {word}",
-    )
-    if len(r.content) < 1000:
-        raise RuntimeError(f"TTS for {word} returned suspiciously small audio ({len(r.content)} bytes)")
-    dest.write_bytes(r.content)
+    url = f"{API}/text-to-speech/{voice_id}"
+    params = {"output_format": "mp3_44100_128"}
+    retryable_statuses = {408, 429, 500, 502, 503, 504}
+    max_attempts = 6
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            r = requests.post(
+                url,
+                params=params,
+                headers=headers(),
+                json=payload,
+                timeout=120,
+            )
+        except requests.RequestException as exc:
+            if attempt == max_attempts:
+                raise RuntimeError(
+                    f"TTS for {word} failed after {max_attempts} attempts: {exc}"
+                ) from exc
+            delay = min(30, 2 ** attempt)
+            print(f"  transient connection error for {word}; retry {attempt}/{max_attempts - 1} in {delay}s: {exc}")
+            time.sleep(delay)
+            continue
+
+        if r.ok:
+            if len(r.content) < 1000:
+                if attempt == max_attempts:
+                    raise RuntimeError(
+                        f"TTS for {word} returned suspiciously small audio ({len(r.content)} bytes)"
+                    )
+                delay = min(30, 2 ** attempt)
+                print(f"  small audio response for {word}; retry {attempt}/{max_attempts - 1} in {delay}s")
+                time.sleep(delay)
+                continue
+            dest.write_bytes(r.content)
+            return
+
+        if r.status_code not in retryable_statuses or attempt == max_attempts:
+            checked(r, f"TTS for {word}")
+
+        retry_after = r.headers.get("Retry-After", "").strip()
+        try:
+            delay = max(1.0, float(retry_after)) if retry_after else min(30, 2 ** attempt)
+        except ValueError:
+            delay = min(30, 2 ** attempt)
+        print(f"  ElevenLabs HTTP {r.status_code} for {word}; retry {attempt}/{max_attempts - 1} in {delay:g}s")
+        time.sleep(delay)
+
+    raise RuntimeError(f"TTS for {word} failed unexpectedly")
 
 
 def main():
