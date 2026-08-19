@@ -1,0 +1,50 @@
+name: Bundle app UI controls
+
+on:
+  push:
+    paths:
+      - "data/audio-ui.js"
+      - "data/reading-mode.js"
+      - ".github/workflows/bundle-ui.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild UI bundle in audio manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path("data/audio-manifest.js")
+          first = manifest.read_text(encoding="utf-8").splitlines()[0]
+          if not first.startswith("window.FARSI_AUDIO="):
+              raise SystemExit("audio manifest does not start with FARSI_AUDIO mapping")
+          chunks = [
+              first.rstrip() + "\n",
+              Path("data/audio-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
+          ]
+          manifest.write_text("".join(chunks), encoding="utf-8")
+          PY
+      - name: Commit bundled controls
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/audio-manifest.js
+          if git diff --cached --quiet; then
+            echo "UI bundle already current."
+            exit 0
+          fi
+          git commit -m "Bundle app UI controls"
+          git pull --rebase origin main
+          git push origin main
