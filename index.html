@@ -12,8 +12,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;padding:max(16px,env(safe-area-inset-top)) 18px max(14px,env(safe-area-inset-bottom))}
 header{height:40px;display:flex;align-items:center;justify-content:space-between;font-size:13px;letter-spacing:.035em;color:#746f67}
 .header-actions{display:flex;align-items:center;gap:2px}button,a{font:inherit}button{border:0;background:transparent;color:inherit;cursor:pointer}.tiny{padding:8px;color:#746f67;text-decoration:none;border-radius:10px}.progress{font-variant-numeric:tabular-nums}
+.desktop-fullscreen{display:none;font-size:19px;line-height:1;padding:8px 9px}
 main{display:grid;place-items:center;min-height:0}
-.stage{width:min(88vw,480px);height:min(66dvh,590px);perspective:1200px;position:relative;touch-action:none}
+.stage{width:min(88vw,480px);height:min(66dvh,590px);perspective:1200px;position:relative;touch-action:none;transition:width .22s ease,height .22s ease}
 .card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .28s cubic-bezier(.2,.75,.25,1),opacity .16s;cursor:pointer;outline:none}
 .card.flip{transform:rotateY(180deg)}.card.drag{transition:none}.card:focus-visible{box-shadow:0 0 0 3px #0002;border-radius:22px}
 .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:38px;border-radius:22px;background:#fff;border:1px solid #e8e3da;box-shadow:0 12px 42px #2a241912,0 1px 2px #2a241910;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-align:center}
@@ -29,16 +30,18 @@ main{display:grid;place-items:center;min-height:0}
 .grade{min-height:52px;padding:0 14px;border-radius:14px;font-size:14px;color:#6e6961;transition:background .12s,transform .08s}.grade:active{transform:scale(.97)}.grade.again{text-align:left}.grade.know{text-align:right}.grade.again:active{background:#a85e5510}.grade.know:active{background:#5d806510}
 .undo{min-width:70px;min-height:52px;padding:0 8px;font-size:12px;color:#777168;opacity:0;pointer-events:none;transition:opacity .14s}.undo.show{opacity:1;pointer-events:auto}
 .loading,.done{text-align:center;color:#746f67}.loading strong,.done h1{display:block;color:#1c1b19;font-size:32px;margin-bottom:10px}.loading span{font-size:13px}.error{max-width:420px;line-height:1.5}
+@media(hover:hover) and (pointer:fine) and (min-width:800px){.desktop-fullscreen{display:inline-grid;place-items:center}}
+:fullscreen body{background:#f4f1ea}:fullscreen .app{height:100vh;padding:18px 28px 16px}:fullscreen .stage{width:min(72vw,720px);height:min(80vh,780px)}:fullscreen .roman,:fullscreen .english{font-size:clamp(58px,7vw,92px)}:fullscreen .farsi{font-size:clamp(46px,5vw,72px)}
 @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:#00000009}}
-@media(prefers-reduced-motion:reduce){.card,.grade,.undo,.speak{transition:none!important}}
-@media(prefers-color-scheme:dark){body{background:#161614;color:#f4f1e9}.face{background:#252522;border-color:#34342f;box-shadow:0 14px 50px #0005}.farsi{color:#c7c0b6}header,.grade,.undo,.mini,.tiny{color:#928c82}.speak{background:#2b2b27;border-color:#3a3933;color:#d1cbc0}.sw{background:#252522dd}.card:focus-visible{box-shadow:0 0 0 3px #fff3}@media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:#ffffff0b}}}
+@media(prefers-reduced-motion:reduce){.card,.grade,.undo,.speak,.stage{transition:none!important}}
+@media(prefers-color-scheme:dark){body{background:#161614;color:#f4f1e9}.face{background:#252522;border-color:#34342f;box-shadow:0 14px 50px #0005}.farsi{color:#c7c0b6}header,.grade,.undo,.mini,.tiny{color:#928c82}.speak{background:#2b2b27;border-color:#3a3933;color:#d1cbc0}.sw{background:#252522dd}.card:focus-visible{box-shadow:0 0 0 3px #fff3}:fullscreen body{background:#161614}@media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:#ffffff0b}}}
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="progress"><span id="stageName">Start Here</span> · <span id="known">0</span> known · <span id="leftCount">2000</span> left</div>
-  <div class="header-actions"><a class="tiny" href="https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Persian/Miller_Aghajanian-Stewart_2009_(index)" target="_blank" rel="noopener" title="Frequency source">source</a><button class="tiny" id="reset" aria-label="Reset all progress">reset</button></div>
+  <div class="header-actions"><button class="tiny desktop-fullscreen" id="fullscreen" aria-label="Enter full screen" title="Full screen">⛶</button><a class="tiny" href="https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Persian/Miller_Aghajanian-Stewart_2009_(index)" target="_blank" rel="noopener" title="Frequency source">source</a><button class="tiny" id="reset" aria-label="Reset all progress">reset</button></div>
 </header>
 <main id="main"><div class="loading"><strong>Farsi 2000</strong><span>loading…</span></div></main>
 <div class="actions"><button class="grade again" id="again" aria-label="Again, I do not know this word">← Again</button><button class="undo" id="undo" aria-label="Undo last answer">Undo</button><button class="grade know" id="knowBtn" aria-label="Know, I know this word">Know →</button></div>
@@ -53,7 +56,7 @@ const STATIC_D=(window.FARSI_MILLER_CHUNKS||[]).flat();
 window.FARSI_CHUNKS=[];window.FARSI_MILLER_CHUNKS=[];
 const TOTAL=2000,STATE_KEY="farsi2000-v4",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
 const $=id=>document.getElementById(id);
-const E={main:$("main"),stageName:$("stageName"),known:$("known"),leftCount:$("leftCount"),reset:$("reset"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
+const E={main:$("main"),stageName:$("stageName"),known:$("known"),leftCount:$("leftCount"),reset:$("reset"),fullscreen:$("fullscreen"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
 const CURRICULUM=window.FARSI_PATH||[],AUDIO=window.FARSI_AUDIO||{};
 function baseFa(s){return String(s||"").replace(/[\u064B-\u0652\u0670]/g,"").replace(/\u200c/g,"").replace(/ي/g,"ی").replace(/ك/g,"ک")}
 function buildLearningDeck(){
@@ -84,8 +87,11 @@ function endPointer(){if(!down)return;down=false;E.card.classList.remove("drag")
 function choosePersianVoice(){if(!("speechSynthesis"in window))return;const voices=speechSynthesis.getVoices();faVoice=voices.find(v=>/^fa(-|_)/i.test(v.lang))||voices.find(v=>/^fa/i.test(v.lang))||null}
 function nativeSpeak(c){if(!c||!("speechSynthesis"in window))return;const u=new SpeechSynthesisUtterance(c.fa);u.lang="fa-IR";if(faVoice)u.voice=faVoice;u.rate=.84;speechSynthesis.speak(u)}
 function speakFarsi(){const c=current();if(!c)return;stopAudio();const src=AUDIO[c.fa];if(src){audioEl.src=src;E.speak.classList.add("playing");audioEl.onended=()=>E.speak.classList.remove("playing");audioEl.onerror=()=>{E.speak.classList.remove("playing");nativeSpeak(c)};audioEl.play().catch(()=>nativeSpeak(c))}else nativeSpeak(c)}
+function desktopFullscreenAvailable(){return !!(E.fullscreen&&document.documentElement.requestFullscreen&&matchMedia("(hover:hover) and (pointer:fine) and (min-width:800px)").matches)}
+async function toggleFullscreen(){if(!desktopFullscreenAvailable())return;try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{}}
+function syncFullscreenButton(){if(!E.fullscreen)return;const active=!!document.fullscreenElement;E.fullscreen.textContent=active?"⛶":"⛶";E.fullscreen.title=active?"Exit full screen":"Full screen";E.fullscreen.setAttribute("aria-label",active?"Exit full screen":"Enter full screen");E.fullscreen.hidden=!desktopFullscreenAvailable()}
 choosePersianVoice();if("speechSynthesis"in window&&"onvoiceschanged"in speechSynthesis)speechSynthesis.onvoiceschanged=choosePersianVoice;
-E.again.onclick=()=>grade(false);E.knowBtn.onclick=()=>grade(true);E.undo.onclick=undo;
+E.again.onclick=()=>grade(false);E.knowBtn.onclick=()=>grade(true);E.undo.onclick=undo;E.fullscreen.onclick=toggleFullscreen;document.addEventListener("fullscreenchange",syncFullscreenButton);window.addEventListener("resize",syncFullscreenButton);syncFullscreenButton();
 document.onkeydown=e=>{if(e.code==="Space"||e.key==="Enter"||e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();turn()}else if(e.key==="ArrowLeft"){e.preventDefault();grade(false)}else if(e.key==="ArrowRight"){e.preventDefault();grade(true)}else if(e.key.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();speakFarsi()}else if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}};
 E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};review={};due={};steps=0;localStorage.removeItem(STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
 migrateState();
