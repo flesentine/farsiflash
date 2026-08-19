@@ -5,6 +5,7 @@ on:
     paths:
       - "data/audio-ui.js"
       - "data/reading-mode.js"
+      - "data/responsive-ui.js"
       - ".github/workflows/bundle-ui.yml"
   workflow_dispatch:
 
@@ -32,6 +33,7 @@ jobs:
               first.rstrip() + "\n",
               Path("data/audio-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
           ]
           manifest.write_text("".join(chunks), encoding="utf-8")
           PY
