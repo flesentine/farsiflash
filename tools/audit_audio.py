@@ -3,13 +3,12 @@ from collections import Counter
 
 import build_natural_audio as base
 
+REPORT = base.ROOT / "data" / "audio-audit.txt"
+
 
 def main():
     words = base.build_final_words()
     manifest = base.load_manifest()
-
-    if len(words) != base.TOTAL:
-        raise SystemExit(f"Deck size mismatch: {len(words)} != {base.TOTAL}")
 
     missing_manifest = []
     missing_files = []
@@ -48,44 +47,55 @@ def main():
     referenced_mp3s = set(paths)
     orphan_files = sorted(actual_mp3s - referenced_mp3s)
 
-    print(f"Deck words: {len(words)}")
-    print(f"Manifest entries for deck: {sum(1 for w in words if w in manifest)}")
-    print(f"Natural MP3 files on disk: {len(actual_mp3s)}")
-    print(f"Missing manifest entries: {len(missing_manifest)}")
-    print(f"Missing files: {len(missing_files)}")
-    print(f"Files under 1000 bytes: {len(small_files)}")
-    print(f"Unexpected manifest paths: {len(wrong_paths)}")
-    print(f"Duplicate audio paths: {len(duplicate_paths)}")
-    print(f"Extra manifest entries: {len(extra_manifest)}")
-    print(f"Orphan natural MP3 files: {len(orphan_files)}")
-
     problems = (
-        missing_manifest
+        len(words) != base.TOTAL
+        or missing_manifest
         or missing_files
         or small_files
         or wrong_paths
         or duplicate_paths
     )
 
+    lines = [
+        f"Deck words: {len(words)}",
+        f"Manifest entries for deck: {sum(1 for w in words if w in manifest)}",
+        f"Natural MP3 files on disk: {len(actual_mp3s)}",
+        f"Missing manifest entries: {len(missing_manifest)}",
+        f"Missing files: {len(missing_files)}",
+        f"Files under 1000 bytes: {len(small_files)}",
+        f"Unexpected manifest paths: {len(wrong_paths)}",
+        f"Duplicate audio paths: {len(duplicate_paths)}",
+        f"Extra manifest entries: {len(extra_manifest)}",
+        f"Orphan natural MP3 files: {len(orphan_files)}",
+    ]
+
     if problems:
+        lines.append("Audio integrity audit FAILED")
+        if len(words) != base.TOTAL:
+            lines.append(f"Deck size mismatch: {len(words)} != {base.TOTAL}")
         if missing_manifest:
-            print("Missing manifest words:", ", ".join(missing_manifest[:20]))
+            lines.append("Missing manifest words: " + ", ".join(missing_manifest[:20]))
         if missing_files:
-            print("Missing file examples:", missing_files[:10])
+            lines.append("Missing file examples: " + repr(missing_files[:10]))
         if small_files:
-            print("Small file examples:", small_files[:10])
+            lines.append("Small file examples: " + repr(small_files[:10]))
         if wrong_paths:
-            print("Wrong path examples:", wrong_paths[:10])
+            lines.append("Wrong path examples: " + repr(wrong_paths[:10]))
         if duplicate_paths:
-            print("Duplicate path examples:", duplicate_paths[:10])
-        raise SystemExit("Audio integrity audit FAILED")
+            lines.append("Duplicate path examples: " + repr(duplicate_paths[:10]))
+    else:
+        lines.append("Audio integrity audit PASSED: all 2000 deck words have distinct, valid natural MP3 files.")
+        if extra_manifest:
+            lines.append(f"Note: {len(extra_manifest)} extra manifest entries are not in the current 2000-word deck.")
+        if orphan_files:
+            lines.append(f"Note: {len(orphan_files)} orphan MP3 files are present but not referenced by the current deck.")
 
-    print("Audio integrity audit PASSED: all 2000 deck words have distinct, valid natural MP3 files.")
+    text = "\n".join(lines) + "\n"
+    print(text, end="")
+    REPORT.write_text(text, encoding="utf-8")
 
-    if extra_manifest:
-        print(f"Note: {len(extra_manifest)} extra manifest entries are not in the current 2000-word deck.")
-    if orphan_files:
-        print(f"Note: {len(orphan_files)} orphan MP3 files are present but not referenced by the current deck.")
+    if problems:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
