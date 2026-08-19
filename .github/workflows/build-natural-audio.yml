@@ -13,13 +13,6 @@ on:
         required: true
         default: "500"
         type: string
-  push:
-    paths:
-      - "tools/build_natural_audio.py"
-      - "tools/build_natural_audio_resilient.py"
-      - "tools/audit_audio.py"
-      - "data/reading-mode.js"
-      - ".github/workflows/build-natural-audio.yml"
 
 permissions:
   contents: write
@@ -35,8 +28,8 @@ jobs:
     env:
       ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
       ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-      START_INDEX: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.start_index || '1500' }}
-      COUNT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.count || '500' }}
+      START_INDEX: ${{ github.event.inputs.start_index }}
+      COUNT: ${{ github.event.inputs.count }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,7 +57,7 @@ jobs:
           if ! grep -q 'const PREF="farsi2000-autoplay"' data/audio-manifest.js; then
             cat data/audio-ui.js >> data/audio-manifest.js
           fi
-          if ! grep -q 'farsi2000-reading-mode' data/audio-manifest.js; then
+          if ! grep -q 'farsi2000-direction' data/audio-manifest.js; then
             cat data/reading-mode.js >> data/audio-manifest.js
           fi
       - name: Audit all 2000 natural pronunciations
@@ -86,7 +79,7 @@ jobs:
             exit 0
           fi
           if [ "$AUDIT_OUTCOME" = "success" ]; then
-            MSG="Verify full Persian audio audit and reading mode"
+            MSG="Verify full Persian audio audit and UI controls"
           elif [ "$GEN_OUTCOME" = "success" ]; then
             MSG="Record Persian audio audit failure"
           else
