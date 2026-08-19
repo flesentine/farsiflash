@@ -1,0 +1,25 @@
+name: Audit Persian audio integrity
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "audio/natural/**"
+      - "data/audio-manifest.js"
+      - "data/path.js"
+      - "data/miller-*.js"
+      - "tools/build_natural_audio.py"
+      - "tools/audit_audio.py"
+      - ".github/workflows/audit-audio.yml"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Audit all 2000 natural pronunciations
+        run: python tools/audit_audio.py
