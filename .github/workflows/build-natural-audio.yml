@@ -17,6 +17,7 @@ on:
     paths:
       - "tools/build_natural_audio.py"
       - "tools/build_natural_audio_resilient.py"
+      - "tools/audit_audio.py"
       - "data/reading-mode.js"
       - ".github/workflows/build-natural-audio.yml"
 
@@ -66,23 +67,30 @@ jobs:
           if ! grep -q 'farsi2000-reading-mode' data/audio-manifest.js; then
             cat data/reading-mode.js >> data/audio-manifest.js
           fi
-      - name: Commit audio progress
+      - name: Audit all 2000 natural pronunciations
+        id: audit
+        if: always()
+        run: python tools/audit_audio.py
+      - name: Commit audio and audit result
         if: always()
         shell: bash
         env:
           GEN_OUTCOME: ${{ steps.generate.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json
+          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json data/audio-audit.txt
           if git diff --cached --quiet; then
-            echo "Natural audio batch already current."
+            echo "Audio and audit result already current."
             exit 0
           fi
-          if [ "$GEN_OUTCOME" = "success" ]; then
-            MSG="Generate natural Persian audio batch ${START_INDEX}+${COUNT}"
+          if [ "$AUDIT_OUTCOME" = "success" ]; then
+            MSG="Verify full Persian audio audit and reading mode"
+          elif [ "$GEN_OUTCOME" = "success" ]; then
+            MSG="Record Persian audio audit failure"
           else
-            MSG="Save partial natural Persian audio batch ${START_INDEX}+${COUNT}"
+            MSG="Save partial Persian audio and audit result"
           fi
           git commit -m "$MSG"
           git pull --rebase origin main
