@@ -17,6 +17,7 @@ on:
     paths:
       - "tools/build_natural_audio.py"
       - "tools/build_natural_audio_resilient.py"
+      - "data/reading-mode.js"
       - ".github/workflows/build-natural-audio.yml"
 
 permissions:
@@ -55,12 +56,15 @@ jobs:
       - name: Generate natural Persian audio batch
         id: generate
         run: python tools/build_natural_audio_resilient.py
-      - name: Preserve autoplay controls
+      - name: Preserve app controls
         if: always()
         shell: bash
         run: |
           if ! grep -q 'const PREF="farsi2000-autoplay"' data/audio-manifest.js; then
             cat data/audio-ui.js >> data/audio-manifest.js
+          fi
+          if ! grep -q 'farsi2000-reading-mode' data/audio-manifest.js; then
+            cat data/reading-mode.js >> data/audio-manifest.js
           fi
       - name: Commit audio progress
         if: always()
