@@ -52,11 +52,20 @@ jobs:
       - name: Install client
         run: python -m pip install --disable-pip-version-check requests
       - name: Generate natural Persian audio batch
+        id: generate
         run: python tools/build_natural_audio.py
       - name: Preserve autoplay controls
-        run: cat data/audio-ui.js >> data/audio-manifest.js
-      - name: Commit audio batch
+        if: always()
         shell: bash
+        run: |
+          if ! grep -q 'const PREF="farsi2000-autoplay"' data/audio-manifest.js; then
+            cat data/audio-ui.js >> data/audio-manifest.js
+          fi
+      - name: Commit audio progress
+        if: always()
+        shell: bash
+        env:
+          GEN_OUTCOME: ${{ steps.generate.outcome }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -65,6 +74,11 @@ jobs:
             echo "Natural audio batch already current."
             exit 0
           fi
-          git commit -m "Generate natural Persian audio batch ${START_INDEX}+${COUNT}"
+          if [ "$GEN_OUTCOME" = "success" ]; then
+            MSG="Generate natural Persian audio batch ${START_INDEX}+${COUNT}"
+          else
+            MSG="Save partial natural Persian audio batch ${START_INDEX}+${COUNT}"
+          fi
+          git commit -m "$MSG"
           git pull --rebase origin main
           git push origin main
