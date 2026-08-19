@@ -27,13 +27,17 @@ jobs:
         with:
           python-version: "3.12"
       - name: Audit all 2000 natural pronunciations
+        id: audit
+        run: python tools/audit_audio.py
+      - name: Record audit outcome
+        if: always()
         shell: bash
+        env:
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
         run: |
-          set -o pipefail
-          python tools/audit_audio.py 2>&1 | tee data/audio-audit.txt
-      - name: Record passing audit
-        shell: bash
-        run: |
+          if [ ! -f data/audio-audit.txt ]; then
+            printf 'Audio integrity audit FAILED before a report could be written.\n' > data/audio-audit.txt
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/audio-audit.txt
@@ -41,6 +45,11 @@ jobs:
             echo "Audit result already current."
             exit 0
           fi
-          git commit -m "Record Persian audio audit pass"
+          if [ "$AUDIT_OUTCOME" = "success" ]; then
+            MSG="Record Persian audio audit pass"
+          else
+            MSG="Record Persian audio audit failure"
+          fi
+          git commit -m "$MSG"
           git pull --rebase origin main
           git push origin main
