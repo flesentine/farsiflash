@@ -6,7 +6,7 @@ on:
       start_index:
         description: "Deck start index (0, 250, 500...)"
         required: true
-        default: "1000"
+        default: "1250"
         type: string
       count:
         description: "Number of words to generate"
@@ -32,7 +32,7 @@ jobs:
     env:
       ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
       ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-      START_INDEX: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.start_index || '1000' }}
+      START_INDEX: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.start_index || '1250' }}
       COUNT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.count || '250' }}
     steps:
       - uses: actions/checkout@v4
