@@ -1,0 +1,11 @@
+Deck words: 2000
+Manifest entries for deck: 2000
+Natural MP3 files on disk: 2000
+Missing manifest entries: 0
+Missing files: 0
+Files under 1000 bytes: 0
+Unexpected manifest paths: 0
+Duplicate audio paths: 0
+Extra manifest entries: 0
+Orphan natural MP3 files: 0
+Audio integrity audit PASSED: all 2000 deck words have distinct, valid natural MP3 files.
