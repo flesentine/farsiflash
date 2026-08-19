@@ -89,9 +89,9 @@ window.FARSI_AUDIO={"سلام":"audio/natural/fa65ac7860c0f271.mp3","خداحا�
 
   function sync(btn){
     document.body.classList.toggle("reading-mode",enabled);
-    btn.textContent="فارسی";
-    btn.title=enabled?"Reading mode on — show romanization":"Reading mode off — Persian first";
-    btn.setAttribute("aria-label",enabled?"Turn off Persian reading mode":"Turn on Persian reading mode");
+    btn.textContent="abc";
+    btn.title=enabled?"Phonetics hidden — show romanization":"Hide phonetic romanization";
+    btn.setAttribute("aria-label",enabled?"Show phonetic romanization":"Hide phonetic romanization");
     btn.setAttribute("aria-pressed",enabled?"true":"false");
   }
 
@@ -106,8 +106,8 @@ window.FARSI_AUDIO={"سلام":"audio/natural/fa65ac7860c0f271.mp3","خداحا�
       btn.className="tiny";
       btn.type="button";
       btn.id="readingMode";
-      btn.style.fontFamily='Tahoma,"Geeza Pro","Noto Naskh Arabic",sans-serif';
-      btn.style.fontSize="14px";
+      btn.style.fontSize="13px";
+      btn.style.letterSpacing=".03em";
       const reset=document.getElementById("reset");
       if(reset)reset.insertAdjacentElement("beforebegin",btn);
       else header.appendChild(btn);
