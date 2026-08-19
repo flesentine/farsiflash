@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -11,17 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 AUDIO_DIR = ROOT / "audio" / "natural"
 MANIFEST = ROOT / "data" / "audio-manifest.js"
 VOICE_META = ROOT / "data" / "elevenlabs-voice.json"
+PATH_FILE = ROOT / "data" / "path.js"
+MILLER_GLOB = "miller-*.js"
 API = "https://api.elevenlabs.io/v1"
 API_V2 = "https://api.elevenlabs.io/v2"
 API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
-
-# Small audition set only. Do not generate the full deck until this voice is approved.
-WORDS = [
-    "سلام", "خداحافظ", "بله", "آره", "نَه", "لطفا", "ممنون", "مرسی",
-    "ببخشید", "خوب", "بد", "باشه", "من", "تو", "شما", "او", "ما", "آنها",
-    "این", "آن", "چه", "کی", "کجا", "چرا", "چطور", "چند", "کدام", "اینجا",
-    "آنجا", "الان",
-]
+START_INDEX = int(os.environ.get("START_INDEX", "0"))
+COUNT = int(os.environ.get("COUNT", "250"))
+TOTAL = 2000
 
 
 def headers():
@@ -33,6 +31,95 @@ def checked(resp, label):
         return resp
     detail = resp.text[:1600]
     raise RuntimeError(f"{label} failed: HTTP {resp.status_code}: {detail}")
+
+
+def base_fa(s):
+    s = str(s or "").replace("ي", "ی").replace("ك", "ک").replace("\u200c", "")
+    return re.sub(r"[\u064B-\u0652\u0670]", "", s)
+
+
+def load_curriculum_words():
+    text = PATH_FILE.read_text(encoding="utf-8")
+    quoted = r'"(?:\\.|[^"\\])*"'
+    card_re = re.compile(rf"\[\s*({quoted})\s*,\s*({quoted})\s*,\s*({quoted})\s*\]")
+    cards = []
+    for match in card_re.finditer(text):
+        fa, roman, english = json.loads("[" + ",".join(match.groups()) + "]")
+        cards.append((fa, roman, english))
+    if not cards:
+        raise RuntimeError("Could not parse curriculum cards from data/path.js")
+    return cards
+
+
+def load_miller_rows():
+    rows = []
+    files = sorted((ROOT / "data").glob(MILLER_GLOB))
+    if not files:
+        raise RuntimeError("No data/miller-*.js files found")
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        match = re.search(r"\.push\((.*)\);\s*$", text, re.S)
+        if not match:
+            raise RuntimeError(f"Could not parse {path.name}")
+        chunk = json.loads(match.group(1))
+        rows.extend(chunk)
+    return rows
+
+
+def build_final_words():
+    used_exact = set()
+    covered_base = set()
+    words = []
+
+    for fa, _roman, _english in load_curriculum_words():
+        if fa in used_exact:
+            continue
+        words.append(fa)
+        used_exact.add(fa)
+        covered_base.add(base_fa(fa))
+
+    for row in load_miller_rows():
+        if len(row) < 2:
+            continue
+        fa = row[1]
+        if fa in used_exact or base_fa(fa) in covered_base:
+            continue
+        words.append(fa)
+        used_exact.add(fa)
+        covered_base.add(base_fa(fa))
+        if len(words) == TOTAL:
+            break
+
+    if len(words) != TOTAL:
+        raise RuntimeError(f"Reconstructed {len(words)} final deck words; expected {TOTAL}")
+    return words
+
+
+def load_manifest():
+    if not MANIFEST.exists():
+        return {}
+    for line in MANIFEST.read_text(encoding="utf-8").splitlines():
+        if line.startswith("window.FARSI_AUDIO="):
+            raw = line[len("window.FARSI_AUDIO="):].strip()
+            if raw.endswith(";"):
+                raw = raw[:-1]
+            data = json.loads(raw)
+            return data if isinstance(data, dict) else {}
+    return {}
+
+
+def write_manifest(manifest, all_words):
+    ordered = {}
+    for fa in all_words:
+        if fa in manifest:
+            ordered[fa] = manifest[fa]
+    for fa, src in manifest.items():
+        if fa not in ordered:
+            ordered[fa] = src
+    MANIFEST.write_text(
+        "window.FARSI_AUDIO=" + json.dumps(ordered, ensure_ascii=False, separators=(",", ":")) + ";\n",
+        encoding="utf-8",
+    )
 
 
 def voice_score(v):
@@ -50,7 +137,6 @@ def voice_score(v):
     ]).lower()
 
     score = 0
-    # Current ElevenLabs replacements that fit a calm teacher voice particularly well.
     preferred_names = {
         "talia": 80,
         "jade": 65,
@@ -88,8 +174,6 @@ def voice_score(v):
 
 
 def list_account_voices():
-    # Voice Library voices are not available through the API on the free tier, but the
-    # voices already available to the account are. Prefer premade/default voices first.
     r = requests.get(
         f"{API_V2}/voices",
         headers=headers(),
@@ -101,7 +185,6 @@ def list_account_voices():
         if voices:
             return voices
 
-    # Some accounts expose the new default voices without the legacy category filter.
     r = checked(
         requests.get(
             f"{API_V2}/voices",
@@ -142,7 +225,7 @@ def choose_account_voice():
         "labels": chosen.get("labels") or {},
         "model": "eleven_v3",
         "language_code": "fa",
-        "audition_words": len(WORDS),
+        "deck_words": TOTAL,
     }
     VOICE_META.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return voice_id, meta
@@ -156,12 +239,11 @@ def load_voice_id():
             "source": "ELEVENLABS_VOICE_ID",
             "model": "eleven_v3",
             "language_code": "fa",
-            "audition_words": len(WORDS),
+            "deck_words": TOTAL,
         }
         VOICE_META.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         return explicit, meta
 
-    # Reuse a previously selected free/default account voice so the audition is stable.
     if VOICE_META.exists():
         try:
             meta = json.loads(VOICE_META.read_text(encoding="utf-8"))
@@ -180,7 +262,6 @@ def filename_for(word):
 
 
 def synthesize(voice_id, word, dest):
-    # language_code matters for short, ambiguous prompts such as single vocabulary words.
     payload = {
         "text": word,
         "model_id": "eleven_v3",
@@ -211,32 +292,39 @@ def synthesize(voice_id, word, dest):
 def main():
     if not API_KEY:
         raise SystemExit("ELEVENLABS_API_KEY is missing")
+    if START_INDEX < 0 or START_INDEX >= TOTAL:
+        raise SystemExit(f"START_INDEX must be between 0 and {TOTAL - 1}")
+    if COUNT <= 0:
+        raise SystemExit("COUNT must be greater than 0")
+
+    all_words = build_final_words()
+    end = min(START_INDEX + COUNT, TOTAL)
+    batch = all_words[START_INDEX:end]
+    print(f"Natural Persian audio batch: {START_INDEX}..{end - 1} ({len(batch)} words)")
 
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
     voice_id, meta = load_voice_id()
+    manifest = load_manifest()
 
-    manifest = {}
-    wanted = set()
-    for idx, word in enumerate(WORDS, 1):
+    generated = 0
+    reused = 0
+    for offset, word in enumerate(batch, 1):
         name = filename_for(word)
-        wanted.add(name)
+        rel = f"audio/natural/{name}"
         dest = AUDIO_DIR / name
-        if not dest.exists() or dest.stat().st_size < 1000:
-            print(f"[{idx:02d}/{len(WORDS)}] {word}")
-            synthesize(voice_id, word, dest)
-            time.sleep(0.30)
-        manifest[word] = f"audio/natural/{name}"
+        if dest.exists() and dest.stat().st_size >= 1000:
+            manifest[word] = rel
+            reused += 1
+            print(f"[{offset:03d}/{len(batch)}] reuse {word}")
+            continue
 
-    for p in AUDIO_DIR.glob("*.mp3"):
-        if p.name not in wanted:
-            p.unlink()
+        print(f"[{offset:03d}/{len(batch)}] generate {word}")
+        synthesize(voice_id, word, dest)
+        manifest[word] = rel
+        generated += 1
+        time.sleep(0.30)
 
-    # The app already reads window.FARSI_AUDIO before initializing its speaker logic.
-    # Keeping this file data-only removes the old robotic test-audio override.
-    MANIFEST.write_text(
-        "window.FARSI_AUDIO=" + json.dumps(manifest, ensure_ascii=False, separators=(",", ":")) + ";\n",
-        encoding="utf-8",
-    )
+    write_manifest(manifest, all_words)
 
     if not VOICE_META.exists():
         VOICE_META.write_text(
@@ -244,8 +332,9 @@ def main():
             encoding="utf-8",
         )
 
-    total = sum((AUDIO_DIR / n).stat().st_size for n in wanted)
-    print(f"Built {len(manifest)} natural Persian audition clips ({total/1024/1024:.2f} MiB)")
+    total_audio = sum(1 for fa in all_words if fa in manifest)
+    print(f"Batch complete: {generated} generated, {reused} reused")
+    print(f"Natural audio coverage: {total_audio}/{TOTAL} words")
     print(f"Voice: {voice_id}")
 
 
