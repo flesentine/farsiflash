@@ -680,7 +680,7 @@ ts-fsrs/dist/index.mjs:
   const STYLE_ID="iranBackgroundStyles";
   const WRAP_ID="iranBackgrounds";
   const SPRITE="backgrounds/iran-sprite.webp";
-  const TILE_W=800,TILE_H=450,COLS=4,COUNT=14;
+  const TILE_W=300,TILE_H=169,COLS=4,COUNT=14;
   let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0;
 
   function installStyles(){
