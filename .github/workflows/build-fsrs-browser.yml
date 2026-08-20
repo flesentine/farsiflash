@@ -1,0 +1,48 @@
+name: Build browser FSRS bundle
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-fsrs-browser.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build ts-fsrs for the browser
+        shell: bash
+        run: |
+          rm -rf /tmp/farsi-fsrs-build
+          mkdir -p /tmp/farsi-fsrs-build
+          cd /tmp/farsi-fsrs-build
+          npm init -y >/dev/null 2>&1
+          npm install --silent ts-fsrs esbuild
+          cat > entry.mjs <<'EOF'
+          import { createEmptyCard, fsrs, Rating, State } from "ts-fsrs";
+          window.TSFSRS = { createEmptyCard, fsrs, Rating, State };
+          EOF
+          ./node_modules/.bin/esbuild entry.mjs --bundle --format=iife --platform=browser --target=es2020 --minify --outfile="$GITHUB_WORKSPACE/data/fsrs-browser.js"
+      - name: Commit browser bundle
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/fsrs-browser.js
+          if git diff --cached --quiet; then
+            echo "FSRS browser bundle already current."
+            exit 0
+          fi
+          git commit -m "Build browser FSRS bundle"
+          git pull --rebase origin main
+          git push origin main
