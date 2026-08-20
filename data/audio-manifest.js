@@ -191,7 +191,8 @@ window.FARSI_AUDIO={"سلام":"audio/natural/fa65ac7860c0f271.mp3","خداحا�
       direction=direction==="fa"?"en":"fa";
       localStorage.setItem(DIR_PREF,direction);
       syncDirection(directionBtn);
-      render();
+      if(typeof window.FARSI_DIRECTION_CHANGED==="function")window.FARSI_DIRECTION_CHANGED(direction);
+      else render();
     };
 
     phoneticsBtn.onclick=e=>{
