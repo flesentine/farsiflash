@@ -1,8 +1,8 @@
 (()=>{
   const STYLE_ID="iranBackgroundStyles";
   const WRAP_ID="iranBackgrounds";
-  const SPRITE="backgrounds/iran-sprite.webp";
-  const TILE_W=200,TILE_H=112.5,COLS=4,COUNT=14;
+  const SPRITE="backgrounds/iran-sprite.webp?v=hq1024-1";
+  const TILE_W=1024,TILE_H=576,COLS=4,COUNT=14;
   let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0;
 
   function installStyles(){
@@ -55,7 +55,7 @@
     if(!sprite||!sprite.complete||!sprite.naturalWidth||index<0)return;
     const rect=canvas.getBoundingClientRect();
     const cssW=Math.max(1,rect.width),cssH=Math.max(1,rect.height);
-    const dpr=Math.min(window.devicePixelRatio||1,1.6);
+    const dpr=Math.min(window.devicePixelRatio||1,2);
     const w=Math.max(1,Math.round(cssW*dpr)),h=Math.max(1,Math.round(cssH*dpr));
     if(canvas.width!==w)canvas.width=w;
     if(canvas.height!==h)canvas.height=h;
