@@ -1,9 +1,37 @@
 #!/usr/bin/env python3
+import json
 from collections import Counter
 
 import build_natural_audio as base
 
 REPORT = base.ROOT / "data" / "audio-audit.txt"
+
+
+def voice_is_native_persian(meta):
+    if not isinstance(meta, dict):
+        return False
+    if meta.get("native_persian_verified") is True:
+        return True
+
+    labels = meta.get("labels") or {}
+    language_values = [
+        labels.get("language"),
+        meta.get("native_language"),
+        meta.get("voice_language"),
+    ]
+    for value in language_values:
+        value = str(value or "").strip().lower()
+        if value in {"fa", "fa-ir", "persian", "persian (iran)"}:
+            return True
+
+    for item in meta.get("verified_languages") or []:
+        if not isinstance(item, dict):
+            continue
+        language = str(item.get("language") or "").strip().lower()
+        locale = str(item.get("locale") or "").strip().lower()
+        if language == "fa" or locale.startswith("fa-ir"):
+            return True
+    return False
 
 
 def main():
@@ -47,6 +75,18 @@ def main():
     referenced_mp3s = set(paths)
     orphan_files = sorted(actual_mp3s - referenced_mp3s)
 
+    voice_meta = {}
+    if base.VOICE_META.exists():
+        try:
+            voice_meta = json.loads(base.VOICE_META.read_text(encoding="utf-8"))
+        except Exception:
+            voice_meta = {}
+    native_persian_voice = voice_is_native_persian(voice_meta)
+    labels = voice_meta.get("labels") or {}
+    voice_name = voice_meta.get("name") or voice_meta.get("voice_id") or "unknown"
+    voice_language = labels.get("language") or voice_meta.get("native_language") or voice_meta.get("voice_language") or "unknown"
+    voice_accent = labels.get("accent") or voice_meta.get("accent") or "unknown"
+
     problems = (
         len(words) != base.TOTAL
         or missing_manifest
@@ -54,6 +94,7 @@ def main():
         or small_files
         or wrong_paths
         or duplicate_paths
+        or not native_persian_voice
     )
 
     lines = [
@@ -67,10 +108,14 @@ def main():
         f"Duplicate audio paths: {len(duplicate_paths)}",
         f"Extra manifest entries: {len(extra_manifest)}",
         f"Orphan natural MP3 files: {len(orphan_files)}",
+        f"Voice: {voice_name}",
+        f"Voice native language: {voice_language}",
+        f"Voice accent: {voice_accent}",
+        f"Native Persian voice verified: {'yes' if native_persian_voice else 'NO'}",
     ]
 
     if problems:
-        lines.append("Audio integrity audit FAILED")
+        lines.append("Audio integrity/quality audit FAILED")
         if len(words) != base.TOTAL:
             lines.append(f"Deck size mismatch: {len(words)} != {base.TOTAL}")
         if missing_manifest:
@@ -83,8 +128,15 @@ def main():
             lines.append("Wrong path examples: " + repr(wrong_paths[:10]))
         if duplicate_paths:
             lines.append("Duplicate path examples: " + repr(duplicate_paths[:10]))
+        if not native_persian_voice:
+            lines.append(
+                "Pronunciation quality block: the selected TTS voice is not verified native Persian. "
+                "Do not ship or teach from this audio set."
+            )
     else:
-        lines.append("Audio integrity audit PASSED: all 2000 deck words have distinct, valid natural MP3 files.")
+        lines.append(
+            "Audio integrity/quality audit PASSED: all 2000 deck words have distinct, valid MP3 files generated with a verified native Persian voice."
+        )
         if extra_manifest:
             lines.append(f"Note: {len(extra_manifest)} extra manifest entries are not in the current 2000-word deck.")
         if orphan_files:
