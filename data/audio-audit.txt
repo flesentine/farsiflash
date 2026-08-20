@@ -8,4 +8,8 @@ Unexpected manifest paths: 0
 Duplicate audio paths: 0
 Extra manifest entries: 0
 Orphan natural MP3 files: 0
-Audio integrity audit PASSED: all 2000 deck words have distinct, valid natural MP3 files.
+Voice: Microsoft Dilara Neural
+Voice native language: fa-IR
+Voice accent: Iranian Persian
+Native Persian voice verified: yes
+Audio integrity/quality audit PASSED: all 2000 deck words have distinct, valid MP3 files generated with a verified native Persian voice.

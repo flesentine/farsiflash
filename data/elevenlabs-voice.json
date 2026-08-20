@@ -1,17 +1,16 @@
 {
-  "voice_id": "XrExE9yKIg1WjnnlVkGX",
-  "name": "Matilda - Knowledgable, Professional",
-  "source": "free account/default voice",
-  "category": "premade",
+  "voice_id": "fa-IR-DilaraNeural",
+  "name": "Microsoft Dilara Neural",
+  "source": "Microsoft Edge TTS",
+  "engine": "Microsoft neural TTS",
+  "native_language": "fa-IR",
+  "voice_language": "Persian (Iran)",
+  "native_persian_verified": true,
   "labels": {
-    "use_case": "informative_educational",
-    "accent": "american",
-    "language": "en",
-    "age": "middle_aged",
-    "gender": "female",
-    "descriptive": "upbeat"
+    "language": "fa-IR",
+    "accent": "Iranian Persian",
+    "gender": "female"
   },
-  "model": "eleven_v3",
-  "language_code": "fa",
-  "audition_words": 30
+  "rate": "-2%",
+  "deck_words": 2000
 }
