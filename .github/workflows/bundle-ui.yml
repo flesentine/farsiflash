@@ -8,6 +8,7 @@ on:
       - "data/audio-ui.js"
       - "data/reading-mode.js"
       - "data/responsive-ui.js"
+      - "data/background-ui.js"
       - "data/audio-quality-lock.js"
       - ".github/workflows/bundle-ui.yml"
   workflow_dispatch:
@@ -39,6 +40,7 @@ jobs:
               Path("data/memory-engine.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/background-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-quality-lock.js").read_text(encoding="utf-8").rstrip() + "\n",
           ]
           manifest.write_text("".join(chunks), encoding="utf-8")
