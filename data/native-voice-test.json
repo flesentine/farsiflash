@@ -1,0 +1,106 @@
+{
+  "candidates": [
+    {
+      "id": "dilara",
+      "name": "Microsoft Dilara Neural",
+      "engine": "Microsoft",
+      "voice": "fa-IR-DilaraNeural",
+      "native_locale": "fa-IR",
+      "gender": "female",
+      "native_persian_verified": true,
+      "samples": [
+        {
+          "word": "دو",
+          "meaning": "two — should sound like Persian 'doh/DOE', not English 'do'",
+          "src": "audio/native-voice-test/dilara/67610a88d56a.mp3"
+        },
+        {
+          "word": "تو",
+          "meaning": "you (informal)",
+          "src": "audio/native-voice-test/dilara/51f03b86a43f.mp3"
+        },
+        {
+          "word": "او",
+          "meaning": "he / she",
+          "src": "audio/native-voice-test/dilara/c8ac1215959d.mp3"
+        },
+        {
+          "word": "نَه",
+          "meaning": "no / not",
+          "src": "audio/native-voice-test/dilara/f27de78c5a48.mp3"
+        },
+        {
+          "word": "روز",
+          "meaning": "day",
+          "src": "audio/native-voice-test/dilara/c48a4b443df5.mp3"
+        },
+        {
+          "word": "خوب",
+          "meaning": "good / well",
+          "src": "audio/native-voice-test/dilara/b3188f4c34de.mp3"
+        },
+        {
+          "word": "خداحافظ",
+          "meaning": "goodbye",
+          "src": "audio/native-voice-test/dilara/bfa6a2ab2b6b.mp3"
+        },
+        {
+          "word": "موسیقی",
+          "meaning": "music",
+          "src": "audio/native-voice-test/dilara/16350c72b626.mp3"
+        }
+      ]
+    },
+    {
+      "id": "farid",
+      "name": "Microsoft Farid Neural",
+      "engine": "Microsoft",
+      "voice": "fa-IR-FaridNeural",
+      "native_locale": "fa-IR",
+      "gender": "male",
+      "native_persian_verified": true,
+      "samples": [
+        {
+          "word": "دو",
+          "meaning": "two — should sound like Persian 'doh/DOE', not English 'do'",
+          "src": "audio/native-voice-test/farid/67610a88d56a.mp3"
+        },
+        {
+          "word": "تو",
+          "meaning": "you (informal)",
+          "src": "audio/native-voice-test/farid/51f03b86a43f.mp3"
+        },
+        {
+          "word": "او",
+          "meaning": "he / she",
+          "src": "audio/native-voice-test/farid/c8ac1215959d.mp3"
+        },
+        {
+          "word": "نَه",
+          "meaning": "no / not",
+          "src": "audio/native-voice-test/farid/f27de78c5a48.mp3"
+        },
+        {
+          "word": "روز",
+          "meaning": "day",
+          "src": "audio/native-voice-test/farid/c48a4b443df5.mp3"
+        },
+        {
+          "word": "خوب",
+          "meaning": "good / well",
+          "src": "audio/native-voice-test/farid/b3188f4c34de.mp3"
+        },
+        {
+          "word": "خداحافظ",
+          "meaning": "goodbye",
+          "src": "audio/native-voice-test/farid/bfa6a2ab2b6b.mp3"
+        },
+        {
+          "word": "موسیقی",
+          "meaning": "music",
+          "src": "audio/native-voice-test/farid/16350c72b626.mp3"
+        }
+      ]
+    }
+  ]
+}
