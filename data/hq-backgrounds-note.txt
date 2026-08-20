@@ -1,1 +1,0 @@
-High-resolution Iranian background assets are stored under backgrounds/hq/ and loaded responsively by background-ui.js.
