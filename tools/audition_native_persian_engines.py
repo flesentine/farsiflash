@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 
 import edge_tts
-from gtts import gTTS
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "audio" / "native-voice-test"
@@ -25,6 +24,7 @@ TEST_WORDS = [
     ("موسیقی", "music"),
 ]
 
+# Both are Microsoft's official Persian (Iran), fa-IR, neural voices.
 CANDIDATES = [
     {
         "id": "dilara",
@@ -42,14 +42,6 @@ CANDIDATES = [
         "native_locale": "fa-IR",
         "gender": "male",
     },
-    {
-        "id": "google-fa",
-        "name": "Google Persian TTS",
-        "engine": "Google",
-        "voice": "gTTS-fa",
-        "native_locale": "fa",
-        "gender": "provider default",
-    },
 ]
 
 
@@ -66,12 +58,6 @@ async def synth_edge(text, voice, dest):
         raise RuntimeError(f"Microsoft TTS returned invalid audio for {text}")
 
 
-def synth_google(text, dest):
-    gTTS(text=text, lang="fa", slow=False).save(str(dest))
-    if not dest.exists() or dest.stat().st_size < 500:
-        raise RuntimeError(f"Google Persian TTS returned invalid audio for {text}")
-
-
 async def main():
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -85,16 +71,13 @@ async def main():
         print(f"Generating {candidate['name']}")
         for word, meaning in TEST_WORDS:
             dest = folder / fname(word)
-            if candidate["engine"] == "Microsoft":
-                await synth_edge(word, candidate["voice"], dest)
-            else:
-                await asyncio.to_thread(synth_google, word, dest)
+            await synth_edge(word, candidate["voice"], dest)
             samples.append({
                 "word": word,
                 "meaning": meaning,
                 "src": str(dest.relative_to(ROOT)).replace("\\", "/"),
             })
-        results.append({**candidate, "samples": samples})
+        results.append({**candidate, "native_persian_verified": True, "samples": samples})
 
     META.write_text(json.dumps({"candidates": results}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -106,11 +89,11 @@ async def main():
                 f'''<div class="sample"><div><b dir="rtl">{html.escape(s["word"])}</b><small>{html.escape(s["meaning"])}</small></div><audio controls preload="none" src="{html.escape(s["src"])}"></audio></div>'''
             )
         sections.append(
-            f'''<section><h2>Candidate {idx}: {html.escape(c["name"])}</h2><p>{html.escape(c["engine"])} · native locale {html.escape(c["native_locale"])} · {html.escape(c["gender"])}</p>{''.join(rows)}</section>'''
+            f'''<section><h2>Candidate {idx}: {html.escape(c["name"])}</h2><p>{html.escape(c["engine"])} · Persian (Iran) {html.escape(c["native_locale"])} · {html.escape(c["gender"])}</p>{''.join(rows)}</section>'''
         )
 
     PAGE.write_text(
-        '''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Farsi 2000 — native Persian voice test</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:900px;margin:0 auto;padding:24px;background:#f4f1ea;color:#222}h1{margin-bottom:6px}.note{color:#665f56;margin-bottom:28px;line-height:1.5}section{background:white;border:1px solid #ddd6cb;border-radius:18px;padding:20px;margin:18px 0}.sample{display:grid;grid-template-columns:minmax(190px,1fr) minmax(220px,1fr);gap:16px;align-items:center;border-top:1px solid #eee7dc;padding:13px 0}.sample b{font-family:Tahoma,"Geeza Pro",sans-serif;font-size:28px}.sample small{display:block;color:#766f66;margin-top:4px}audio{width:100%}@media(max-width:600px){.sample{grid-template-columns:1fr}body{padding:14px}}</style></head><body><h1>Native Persian pronunciation test</h1><p class="note">The old ElevenLabs American-English voice has been disabled. These candidates are actual Persian/Iranian TTS options. Listen to <b dir="rtl">دو</b> first: it should sound like Persian <b>doh / DOE</b>, not American English <b>do</b>. Pick the candidate that sounds most like a native Iranian speaker.</p>'''
+        '''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Farsi 2000 — native Persian voice test</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:900px;margin:0 auto;padding:24px;background:#f4f1ea;color:#222}h1{margin-bottom:6px}.note{color:#665f56;margin-bottom:28px;line-height:1.5}section{background:white;border:1px solid #ddd6cb;border-radius:18px;padding:20px;margin:18px 0}.sample{display:grid;grid-template-columns:minmax(190px,1fr) minmax(220px,1fr);gap:16px;align-items:center;border-top:1px solid #eee7dc;padding:13px 0}.sample b{font-family:Tahoma,"Geeza Pro",sans-serif;font-size:28px}.sample small{display:block;color:#766f66;margin-top:4px}audio{width:100%}@media(max-width:600px){.sample{grid-template-columns:1fr}body{padding:14px}}</style></head><body><h1>Native Persian pronunciation test</h1><p class="note">The old ElevenLabs American-English voice has been disabled. Both candidates below are official <b>Persian (Iran), fa-IR</b> voices. Listen to <b dir="rtl">دو</b> first: it should sound like Persian <b>doh / DOE</b>, not American English <b>do</b>.</p>'''
         + "".join(sections)
         + "</body></html>",
         encoding="utf-8",
