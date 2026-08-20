@@ -3,6 +3,8 @@ name: Bundle app UI controls
 on:
   push:
     paths:
+      - "data/fsrs-browser.js"
+      - "data/memory-engine.js"
       - "data/audio-ui.js"
       - "data/reading-mode.js"
       - "data/responsive-ui.js"
@@ -32,7 +34,9 @@ jobs:
               raise SystemExit("audio manifest does not start with FARSI_AUDIO mapping")
           chunks = [
               first.rstrip() + "\n",
+              Path("data/fsrs-browser.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/memory-engine.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-quality-lock.js").read_text(encoding="utf-8").rstrip() + "\n",
