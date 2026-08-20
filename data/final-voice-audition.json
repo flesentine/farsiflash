@@ -1,0 +1,23 @@
+{
+  "candidates": [
+    {
+      "id": "dilara",
+      "name": "Microsoft Dilara Neural",
+      "note": "Official Persian (Iran) fa-IR neural voice. Free to generate through the current Edge TTS workflow.",
+      "license": "Microsoft service voice"
+    },
+    {
+      "id": "ava",
+      "name": "Ava 82M (open source)",
+      "note": "Persian-only Kokoro adaptation trained on Iranian Persian Mana-TTS, with Persian G2P and pronunciation corrections.",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "piper",
+      "name": "Mana Persian Piper (open source)",
+      "note": "Lightweight fa-IR Piper model trained on Mana-TTS; designed for real-time/on-device Persian speech.",
+      "license": "MIT"
+    }
+  ],
+  "errors": []
+}
