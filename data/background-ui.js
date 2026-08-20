@@ -2,7 +2,7 @@
   const STYLE_ID="iranBackgroundStyles";
   const WRAP_ID="iranBackgrounds";
   const SPRITE="backgrounds/iran-sprite.webp";
-  const TILE_W=300,TILE_H=169,COLS=4,COUNT=14;
+  const TILE_W=200,TILE_H=112.5,COLS=4,COUNT=14;
   let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0;
 
   function installStyles(){
@@ -52,7 +52,7 @@
   }
 
   function drawCover(canvas,index){
-    if(!sprite||!sprite.complete||index<0)return;
+    if(!sprite||!sprite.complete||!sprite.naturalWidth||index<0)return;
     const rect=canvas.getBoundingClientRect();
     const cssW=Math.max(1,rect.width),cssH=Math.max(1,rect.height);
     const dpr=Math.min(window.devicePixelRatio||1,1.6);
@@ -86,7 +86,7 @@
   }
 
   function rotate(){
-    const wrap=document.getElementById(WRAP_ID);if(!wrap||!sprite||!sprite.complete)return;
+    const wrap=document.getElementById(WRAP_ID);if(!wrap||!sprite||!sprite.complete||!sprite.naturalWidth)return;
     const a=wrap.querySelector('.a'),b=wrap.querySelector('.b');
     const incoming=showA?b:a,outgoing=showA?a:b;
     drawCover(incoming,nextIndex());
@@ -111,6 +111,7 @@
     sprite=new Image();
     sprite.decoding="async";
     sprite.onload=()=>{rotate();redrawVisible()};
+    sprite.onerror=()=>console.error("Iranian background artwork failed to load",SPRITE);
     sprite.src=SPRITE;
     watchCards();
     window.addEventListener("resize",()=>{
