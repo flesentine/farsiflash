@@ -1,17 +1,24 @@
 // Autoplay/replay controls for Persian pronunciation.
-// Loaded into audio-manifest.js by the natural-audio workflow so future audio builds preserve it.
+// Loaded into audio-manifest.js by the UI bundler so future builds preserve it.
 (()=>{
   const PREF="farsi2000-autoplay";
+  const DIR_PREF="farsi2000-direction";
   let enabled=localStorage.getItem(PREF)!=="0";
   const player=new Audio();
   player.preload="auto";
   let lastFa="";
 
   function currentFa(){return (document.getElementById("fa")?.textContent||"").trim()}
+  function direction(){return localStorage.getItem(DIR_PREF)==="en"?"en":"fa"}
+  function persianVisible(){
+    if(direction()==="fa")return true;
+    const card=document.getElementById("card");
+    return !!card&&!card.classList.contains("flip");
+  }
   function stop(){player.pause();try{player.currentTime=0}catch{}}
   function playCurrent(force=false){
     const fa=currentFa(),src=(window.FARSI_AUDIO||{})[fa];
-    if(!enabled||!fa||!src)return;
+    if(!enabled||!fa||!src||!persianVisible())return;
     if(!force&&fa===lastFa)return;
     lastFa=fa;
     stop();
@@ -24,6 +31,8 @@
     btn.setAttribute("aria-label",enabled?"Mute automatic pronunciation":"Turn on automatic pronunciation");
     btn.setAttribute("aria-pressed",enabled?"true":"false");
   }
+
+  window.FARSI_AUTOPLAY_REVEAL=()=>playCurrent(true);
 
   window.addEventListener("load",()=>{
     const header=document.querySelector(".header-actions");
@@ -54,6 +63,16 @@
         lastFa="";
         setTimeout(()=>playCurrent(false),25);
       }).observe(faNode,{childList:true,characterData:true,subtree:true});
+    }
+
+    const card=document.getElementById("card");
+    if(card){
+      new MutationObserver(()=>{
+        if(direction()==="en"&&persianVisible()){
+          lastFa="";
+          setTimeout(()=>playCurrent(true),20);
+        }
+      }).observe(card,{attributes:true,attributeFilter:["class"]});
     }
 
     // Manual replay always wins over an autoplay clip already in progress.
