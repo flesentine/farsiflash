@@ -122,7 +122,7 @@ def render(candidates):
         '@media(max-width:600px){.sample{grid-template-columns:1fr}body{padding:14px}}</style></head><body>'
         '<h1>Final Persian voice shootout</h1>'
         '<p class="lead">No more 2,000-word runs until the voice passes this page. Start with <b dir="rtl">دو</b>. '
-        'Compare the official Microsoft fa-IR voice with two genuinely Persian open-source models. '</n        '</p>'
+        'Compare the official Microsoft fa-IR voice with two genuinely Persian open-source models.</p>'
         + "".join(sections) + '</body></html>',
         encoding="utf-8",
     )
@@ -155,8 +155,19 @@ def main():
         raise SystemExit("All voice candidates failed: " + " | ".join(errors))
 
     render(candidates)
-    META.write_text(json.dumps({"candidates": [{k:v for k,v in c.items() if k != "samples"} for c in candidates], "errors": errors}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    STATUS.write_text("Generated: " + ", ".join(c["name"] for c in candidates) + ("\nErrors: " + " | ".join(errors) if errors else "") + "\n", encoding="utf-8")
+    META.write_text(
+        json.dumps(
+            {"candidates": [{k: v for k, v in c.items() if k != "samples"} for c in candidates], "errors": errors},
+            ensure_ascii=False,
+            indent=2,
+        ) + "\n",
+        encoding="utf-8",
+    )
+    STATUS.write_text(
+        "Generated: " + ", ".join(c["name"] for c in candidates)
+        + ("\nErrors: " + " | ".join(errors) if errors else "") + "\n",
+        encoding="utf-8",
+    )
     print(STATUS.read_text(encoding="utf-8"), end="")
 
 
