@@ -1,0 +1,53 @@
+name: Audition native Persian voices
+
+on:
+  push:
+    paths:
+      - "tools/audition_persian_voice.py"
+      - ".github/workflows/audition-persian-voice.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: farsi-native-voice-audition
+  cancel-in-progress: true
+
+jobs:
+  audition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check ElevenLabs key
+        shell: bash
+        run: |
+          if [ -z "$ELEVENLABS_API_KEY" ]; then
+            echo "::error::Missing repository secret ELEVENLABS_API_KEY"
+            exit 2
+          fi
+      - name: Install client
+        run: python -m pip install --disable-pip-version-check requests
+      - name: Find native Persian voices and make test samples
+        run: python tools/audition_persian_voice.py
+      - name: Commit audition page and samples
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/voice-test data/persian-voice-candidates.json voice-test.html
+          if git diff --cached --quiet; then
+            echo "Voice audition already current."
+            exit 0
+          fi
+          git commit -m "Create native Persian voice audition"
+          git pull --rebase origin main
+          git push origin main
