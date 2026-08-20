@@ -75,11 +75,26 @@
       }).observe(card,{attributes:true,attributeFilter:["class"]});
     }
 
+    // In EN→FA mode, audio is corrective feedback, not a hint: block manual
+    // pronunciation while the English cue is still showing.
+    document.addEventListener("click",e=>{
+      if(e.target.closest?.("#speak")&&direction()==="en"&&!persianVisible()){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    },true);
+    document.addEventListener("keydown",e=>{
+      if(e.key?.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+        stop();
+        if(direction()==="en"&&!persianVisible()){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      }
+    },true);
+
     // Manual replay always wins over an autoplay clip already in progress.
     document.addEventListener("pointerdown",e=>{if(e.target.closest?.("#speak"))stop()},true);
-    document.addEventListener("keydown",e=>{
-      if(e.key?.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey)stop();
-    },true);
 
     // Browsers may block this very first attempt until the user interacts once;
     // later cards will autoplay normally after interaction.
