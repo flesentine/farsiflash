@@ -5,6 +5,7 @@ on:
     paths:
       - "data/fsrs-browser.js"
       - "data/memory-engine.js"
+      - "data/grade-animation-fix.js"
       - "data/audio-ui.js"
       - "data/reading-mode.js"
       - "data/responsive-ui.js"
@@ -38,6 +39,7 @@ jobs:
               Path("data/fsrs-browser.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/memory-engine.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/grade-animation-fix.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/background-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
