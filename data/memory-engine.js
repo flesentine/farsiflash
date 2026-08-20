@@ -258,6 +258,9 @@
         saveMemory();
 
         const move=know?1:-1;
+        // Preserve whichever face the learner is already looking at while the
+        // card exits. If they flipped to the answer, it should slide away as-is.
+        E.card.classList.toggle("flip",flip);
         E.card.style.transition="transform .18s ease,opacity .16s";
         E.card.style.transform=cardTransform(move*innerWidth,move*9);
         E.card.style.opacity=0;
@@ -275,8 +278,6 @@
       if(!know&&!wasAnswerVisible){
         revealCorrectAnswer();
         setTimeout(apply,FEEDBACK_MS);
-      }else if(!know){
-        setTimeout(apply,300);
       }else apply();
     };
 
