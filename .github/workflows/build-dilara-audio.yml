@@ -1,0 +1,46 @@
+name: Rebuild all Persian audio with Dilara
+
+on:
+  push:
+    paths:
+      - "tools/build_dilara_audio.py"
+      - ".github/workflows/build-dilara-audio.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: farsi-dilara-rebuild
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Persian TTS client
+        run: python -m pip install --disable-pip-version-check edge-tts requests
+      - name: Rebuild all 2000 pronunciations with Microsoft Dilara fa-IR
+        run: python tools/build_dilara_audio.py
+      - name: Audit full Persian audio set
+        run: python tools/audit_audio.py
+      - name: Commit verified Dilara audio
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json data/audio-quality-lock.js data/audio-audit.txt
+          if git diff --cached --quiet; then
+            echo "Dilara audio already current."
+            exit 0
+          fi
+          git commit -m "Replace all Persian audio with Microsoft Dilara"
+          git pull --rebase origin main
+          git push origin main
