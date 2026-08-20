@@ -1,0 +1,46 @@
+name: Final Persian voice shootout
+
+on:
+  push:
+    paths:
+      - "tools/audition_final_persian_voices.py"
+      - ".github/workflows/audition-final-persian-voices.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: farsi-final-voice-shootout
+  cancel-in-progress: true
+
+jobs:
+  audition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Persian TTS candidates
+        run: |
+          python -m pip install --disable-pip-version-check edge-tts piper-tts huggingface_hub
+          python -m pip install --disable-pip-version-check "https://huggingface.co/xmanii/Ava-82M/resolve/main/ava_tts-0.2.0-py3-none-any.whl"
+      - name: Generate final voice comparison
+        run: python tools/audition_final_persian_voices.py
+      - name: Commit comparison samples
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/voice-final voice-test.html data/final-voice-audition.json data/final-voice-audition-status.txt
+          if git diff --cached --quiet; then
+            echo "Final voice shootout already current."
+            exit 0
+          fi
+          git commit -m "Create final Persian voice shootout"
+          git pull --rebase origin main
+          git push origin main
