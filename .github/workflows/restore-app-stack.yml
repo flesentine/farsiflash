@@ -1,0 +1,47 @@
+name: Restore Farsi Flip app stack
+
+on:
+  push:
+    paths:
+      - ".github/workflows/restore-app-stack.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore enhancement scripts and cache keys
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          names=['fsrs-browser.js','memory-engine.js','grade-animation-fix.js','reading-mode.js','audio-ui.js','responsive-ui.js']
+          for name in names:
+              s=re.sub(r'\s*<script src="data/'+re.escape(name)+r'(?:\?v=[^"<]+)?"></script>\s*','\n',s)
+          block='''\n<!-- Farsi Flip enhancement stack: scheduler first, then UI/animation wrappers. -->\n<script src="data/fsrs-browser.js?v=stack-20260821-2"></script>\n<script src="data/memory-engine.js?v=stack-20260821-2"></script>\n<script src="data/grade-animation-fix.js?v=stack-20260821-2"></script>\n<script src="data/reading-mode.js?v=stack-20260821-2"></script>\n<script src="data/audio-ui.js?v=stack-20260821-2"></script>\n<script src="data/responsive-ui.js?v=stack-20260821-2"></script>\n'''
+          if '</body>' not in s:
+              raise SystemExit('missing body close')
+          s=s.replace('</body>',block+'</body>',1)
+          s=re.sub(r'data/background-ui\.js\?v=[^"<]+','data/background-ui.js?v=gen10-sharp2',s)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/restore-app-stack.yml
+          git add index.html
+          git commit -m "Restore FSRS and card exit UI stack"
+          git pull --rebase origin main
+          git push origin main
