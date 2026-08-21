@@ -1,10 +1,10 @@
 (()=>{
-  if(window.__farsiGeneratedBackgroundsV7)return;
-  window.__farsiGeneratedBackgroundsV7=true;
+  if(window.__farsiGeneratedBackgroundsV8)return;
+  window.__farsiGeneratedBackgroundsV8=true;
 
-  const STYLE_ID="iranGeneratedBackgroundStylesV7";
-  const WRAP_ID="iranGeneratedBackgroundsV7";
-  const VERSION="gen10-avif1";
+  const STYLE_ID="iranGeneratedBackgroundStylesV8";
+  const WRAP_ID="iranGeneratedBackgroundsV8";
+  const VERSION="gen10-sharp2";
   const BACKGROUNDS=Array.from({length:10},(_,i)=>
     `backgrounds/generated/iran-gen-${String(i+1).padStart(2,"0")}.avif?v=${VERSION}`
   );
@@ -15,11 +15,11 @@
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f url("${BACKGROUNDS[0]}") center/cover no-repeat}
-      #${WRAP_ID} .iran-generated-bg{position:absolute;inset:-2%;width:104%;height:104%;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.01);transition:opacity .9s ease,transform 18s ease;will-change:opacity,transform}
-      #${WRAP_ID} .iran-generated-bg.show{opacity:1;transform:scale(1.045)}
+      #${WRAP_ID} .iran-generated-bg{position:absolute;inset:0;width:100%;height:100%;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:none;transition:opacity .9s ease;will-change:opacity}
+      #${WRAP_ID} .iran-generated-bg.show{opacity:1;transform:none}
       #${WRAP_ID} .iran-generated-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.25),rgba(7,8,9,.12) 27%,rgba(7,8,9,.20) 72%,rgba(7,8,9,.38)),radial-gradient(circle at center,transparent 20%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.24))}
       .app{position:relative!important;z-index:1!important;background:transparent!important}
       header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
@@ -32,7 +32,7 @@
       .sw{background:rgba(14,14,12,.66)!important;border:1px solid rgba(255,255,255,.12)}
       @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.13)!important}}
       @media(max-width:700px){#${WRAP_ID} .iran-generated-scrim{background:linear-gradient(to bottom,rgba(7,8,9,.34),rgba(7,8,9,.17) 27%,rgba(7,8,9,.27) 72%,rgba(7,8,9,.46))}.face{background:rgba(25,25,22,.79)!important}}
-      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .iran-generated-bg{transition:none!important;transform:none!important}}
+      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .iran-generated-bg{transition:none!important}}
     `;
     document.head.appendChild(style);
   }
