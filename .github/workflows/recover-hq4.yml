@@ -1,0 +1,60 @@
+name: Recover HQ4 Iranian backgrounds
+
+on:
+  push:
+    paths:
+      - 'asset-staging/hq4-recover.ready'
+      - '.github/workflows/recover-hq4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild and extract chunked background archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f asset-staging/hq4.part-00
+          test -f asset-staging/hq4.part-01
+          test -f asset-staging/hq4.part-02
+          test -f asset-staging/hq4.part-03
+          cat asset-staging/hq4.part-00 asset-staging/hq4.part-01 asset-staging/hq4.part-02 asset-staging/hq4.part-03 | tr -d '\r\n' | base64 -d > /tmp/hq4.zip
+          unzip -t /tmp/hq4.zip
+          unzip -o /tmp/hq4.zip -d /tmp/hq4
+          mkdir -p backgrounds
+          count=0
+          shopt -s nullglob
+          for src in /tmp/hq4/backgrounds/iran-hq-*.webp; do
+            base=$(basename "$src")
+            num=${base#iran-hq-}
+            num=${num%.webp}
+            cp "$src" "backgrounds/iran-${num}.webp"
+            count=$((count+1))
+          done
+          echo "Recovered $count individual background images"
+          if [ "$count" -lt 1 ]; then
+            echo "No Iranian background images found in HQ4 archive" >&2
+            exit 1
+          fi
+          printf '%s\n' "$count" > backgrounds/recovered-count.txt
+      - name: Commit recovered images
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backgrounds
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit"
+            exit 0
+          fi
+          git commit -m "Recover chunked Iranian background images"
+          git pull --rebase origin main
+          git push origin main
