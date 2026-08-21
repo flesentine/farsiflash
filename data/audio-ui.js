@@ -35,6 +35,11 @@
   window.FARSI_AUTOPLAY_REVEAL=()=>playCurrent(true);
 
   window.addEventListener("load",()=>{
+    // audio-ui is also bundled into audio-manifest.js. If that bundled copy
+    // already attached, do not install a second player/observer set.
+    if(window.__farsiAudioUiAttached||document.getElementById("autoAudio"))return;
+    window.__farsiAudioUiAttached=true;
+
     const header=document.querySelector(".header-actions");
     if(!header)return;
 
