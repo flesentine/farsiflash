@@ -1,6 +1,5 @@
-// Animate a visual clone of the currently visible face while the real card is graded.
-// This completely decouples the exit motion from the card's rotateY flip, so a
-// revealed answer can never visibly flip back before it leaves the screen.
+// Slide a clone of the currently visible FACE, not the 3D card.
+// This guarantees a revealed answer never rotates back before leaving.
 (()=>{
   window.addEventListener("load",()=>{
     if(typeof grade!=="function")return;
@@ -11,57 +10,52 @@
       return englishFirst?!flip:!!flip;
     }
 
-    function animateVisibleFace(original,move){
-      if(!original||!original.isConnected||original.dataset.exitCloneActive)return;
-      original.dataset.exitCloneActive="1";
-      const stage=original.parentElement;
-      if(!stage)return;
+    function visibleFace(card){
+      return card?.querySelector(flip?".face.back":".face:not(.back)")||null;
+    }
 
-      const ghost=original.cloneNode(true);
+    function animateVisibleFace(card,move){
+      if(!card||!card.isConnected||card.dataset.exitFaceActive)return;
+      const stage=card.parentElement;
+      const face=visibleFace(card);
+      if(!stage||!face)return;
+      card.dataset.exitFaceActive="1";
+
+      const ghost=face.cloneNode(true);
+      ghost.classList.remove("back");
       ghost.removeAttribute("id");
       ghost.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
       ghost.setAttribute("aria-hidden","true");
-      ghost.style.position="absolute";
-      ghost.style.inset="0";
-      ghost.style.width="100%";
-      ghost.style.height="100%";
-      ghost.style.margin="0";
-      ghost.style.pointerEvents="none";
-      ghost.style.zIndex="40";
-      ghost.style.transition="none";
-      // Pin the same face the learner is seeing. Individual translate/rotate
-      // properties below can now animate without touching rotateY.
-      ghost.style.transform=flip?"rotateY(180deg)":"rotateY(0deg)";
-      ghost.style.opacity="1";
+      Object.assign(ghost.style,{
+        position:"absolute",inset:"0",width:"100%",height:"100%",margin:"0",
+        transform:"none",backfaceVisibility:"visible",webkitBackfaceVisibility:"visible",
+        pointerEvents:"none",zIndex:"60",opacity:"1",transition:"none"
+      });
       stage.appendChild(ghost);
-      original.style.visibility="hidden";
+      card.style.visibility="hidden";
       void ghost.offsetWidth;
       requestAnimationFrame(()=>{
-        ghost.style.transition="translate .18s ease,rotate .18s ease,opacity .16s";
-        ghost.style.translate=`${move*window.innerWidth}px 0`;
-        ghost.style.rotate=`${move*9}deg`;
+        ghost.style.transition="transform .18s ease,opacity .16s";
+        ghost.style.transform=`translateX(${move*window.innerWidth}px) rotate(${move*9}deg)`;
         ghost.style.opacity="0";
       });
       setTimeout(()=>{
         ghost.remove();
-        original.style.visibility="";
-        delete original.dataset.exitCloneActive;
-      },210);
+        if(card.isConnected)card.style.visibility="";
+        delete card.dataset.exitFaceActive;
+      },220);
     }
 
     grade=function(know){
       if(!E?.card||!Q?.length)return baseGrade(know);
-      const original=E.card;
-      const move=know?1:-1;
+      const card=E.card;
       if(answerVisible()){
-        // Manual flip already happened: slide that exact face away immediately.
-        animateVisibleFace(original,move);
+        animateVisibleFace(card,know?1:-1);
       }else if(!know){
-        // Again without looking: memory-engine reveals corrective feedback for
-        // 850 ms. Clone that revealed face just before its exit animation.
+        // memory-engine reveals the answer for 850ms first.
         setTimeout(()=>{
-          if(original.isConnected&&E.card===original)animateVisibleFace(original,-1);
-        },835);
+          if(card.isConnected&&E.card===card)animateVisibleFace(card,-1);
+        },825);
       }
       return baseGrade(know);
     };
