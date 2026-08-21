@@ -39,12 +39,12 @@ jobs:
           p=Path('data/background-ui.js')
           s=p.read_text(encoding='utf-8')
           s=s.replace('.avif?v=${VERSION}', '.webp?v=${VERSION}')
-          s,n=re.subn(r'const VERSION="gen10-[^"]+";', 'const VERSION="gen10-desktop-hq1";', s, count=1)
+          s,n=re.subn(r'const VERSION="gen10-[^"]+";', 'const VERSION="gen10-desktop-hq2";', s, count=1)
           if n != 1: raise SystemExit('background version bump failed')
           p.write_text(s,encoding='utf-8')
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=re.sub(r'data/background-ui\.js\?v=[^"<]+','data/background-ui.js?v=gen10-desktop-hq1',s)
+          s=re.sub(r'data/background-ui\.js\?v=[^"<]+','data/background-ui.js?v=gen10-desktop-hq2',s)
           p.write_text(s,encoding='utf-8')
           PY
           rm -f asset-staging/hq35d.part-* asset-staging/hq35d.ready asset-staging/hq35c.part-* asset-staging/hq35c.ready asset-staging/hq35b.part-* asset-staging/hq35b.ready asset-staging/hq35.part-* asset-staging/hq35.ready asset-staging/hq45.part-* asset-staging/hq45.ready
@@ -59,3 +59,5 @@ jobs:
           git commit -m "Build sharp 1920px desktop backgrounds"
           git pull --rebase origin main
           git push origin main
+
+# retrigger 2026-08-21T19:23Z
