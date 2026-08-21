@@ -261,7 +261,7 @@
         // Preserve whichever face the learner is already looking at while the
         // card exits. If they flipped to the answer, it should slide away as-is.
         E.card.classList.toggle("flip",flip);
-        E.card.style.transition="transform .18s ease,opacity .16s";
+        E.card.style.transition="transform .16s ease,opacity .14s";
         E.card.style.transform=cardTransform(move*innerWidth,move*9);
         E.card.style.opacity=0;
         setTimeout(()=>{
@@ -272,7 +272,7 @@
           if(E.card)E.card.style.transition="none";
           render();
           requestAnimationFrame(()=>{if(E.card)E.card.style.transition=""});
-        },165);
+        },200);
       };
 
       if(!know&&!wasAnswerVisible){
