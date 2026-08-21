@@ -749,8 +749,12 @@ ts-fsrs/dist/index.mjs:
   const STYLE_ID="iranBackgroundStyles";
   const WRAP_ID="iranBackgrounds";
   const BACKGROUNDS=[
-    "asset-staging/q8-iran-01.b64?v=hq1280-2",
-    "backgrounds-b64/iran-02.b64?v=hq1280-2"
+    "asset-staging/q8-iran-01.b64?v=hq1280-4",
+    "backgrounds-b64/iran-02.b64?v=hq1280-4",
+    "backgrounds-b64/iran-07.b64?v=hq1280-4",
+    "backgrounds-b64/iran-12.b64?v=hq1280-4",
+    "backgrounds-b64/iran-13.b64?v=hq1280-4",
+    "backgrounds-b64/iran-14.b64?v=hq1280-4"
   ];
   let current=-1,showA=true,changes=0;
   const cache=new Map();
