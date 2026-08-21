@@ -1,0 +1,87 @@
+name: Recover Iranian background images
+
+on:
+  push:
+    paths:
+      - "asset-staging/recover-backgrounds.ready"
+      - ".github/workflows/recover-background-images.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore last known HQ sprite
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show 45c134565c06c2ef75d44b78a9fe7fd8d9bb53a6:backgrounds/iran-sprite.webp > /tmp/iran-hq.webp
+          echo "Recovered sprite: $(wc -c < /tmp/iran-hq.webp) bytes"
+          test "$(wc -c < /tmp/iran-hq.webp)" -gt 100000
+
+      - name: Split sprite into 14 normal images
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+
+          src=Path('/tmp/iran-hq.webp')
+          out=Path('backgrounds')
+          out.mkdir(exist_ok=True)
+          im=Image.open(src)
+          im.load()
+          w,h=im.size
+          cols=4
+          rows=4
+          if w % cols or h % rows:
+              raise SystemExit(f'Unexpected sprite dimensions: {w}x{h}')
+          tw,th=w//cols,h//rows
+          if tw < 400 or th < 220:
+              raise SystemExit(f'Sprite tiles too small: {tw}x{th}')
+          files=[]
+          for idx in range(14):
+              col=idx%cols
+              row=idx//cols
+              tile=im.crop((col*tw,row*th,(col+1)*tw,(row+1)*th)).convert('RGB')
+              p=out/f'iran-{idx+1:02d}.webp'
+              tile.save(p,'WEBP',quality=88,method=6)
+              if p.stat().st_size < 10000:
+                  raise SystemExit(f'{p} unexpectedly small: {p.stat().st_size}')
+              files.append({'file':p.name,'bytes':p.stat().st_size})
+          (out/'manifest.json').write_text(json.dumps({
+              'source_commit':'45c134565c06c2ef75d44b78a9fe7fd8d9bb53a6',
+              'sprite':[w,h],
+              'tile':[tw,th],
+              'count':14,
+              'files':files,
+          },indent=2)+'\n',encoding='utf-8')
+          print(f'Split {w}x{h} sprite into 14 images at {tw}x{th}')
+          for x in files: print(x)
+          PY
+
+      - name: Commit recovered images
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f asset-staging/recover-backgrounds.ready
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backgrounds/iran-*.webp backgrounds/manifest.json asset-staging
+          if git diff --cached --quiet; then
+            echo "Recovered images already current."
+            exit 0
+          fi
+          git commit -m "Recover 14 Iranian background images"
+          git pull --rebase origin main
+          git push origin main
