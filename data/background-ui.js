@@ -1,40 +1,34 @@
 (()=>{
-  const STYLE_ID="iranBackgroundStyles";
-  const WRAP_ID="iranBackgrounds";
-  const SPRITE="backgrounds/iran-sprite.webp?v=bg-failsafe-3";
-  const COLS=4,COUNT=14,ROWS=Math.ceil(COUNT/COLS);
-  let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0,tileW=0,tileH=0;
+  const STYLE_ID="iranPhotoBackgroundStylesV4";
+  const WRAP_ID="iranPhotoBackgroundsV4";
+  const SPRITE="backgrounds/iran-sprite.webp?v=css-tiles-4";
+  const COLS=4,ROWS=4,COUNT=14;
+  let current=-1,showA=true,changes=0;
 
   function installStyles(){
     if(document.getElementById(STYLE_ID))return;
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      body{
-        background-color:#121210!important;
-        background-image:linear-gradient(rgba(8,8,7,.56),rgba(8,8,7,.66)),url("${SPRITE}")!important;
-        background-repeat:no-repeat!important;
-        background-position:center,0 0!important;
-        background-size:cover,auto 400%!important;
-      }
-      @media(min-aspect-ratio:16/9){body{background-size:cover,400% auto!important}}
-      #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:transparent}
-      #${WRAP_ID} .iran-bg-canvas{position:absolute;inset:-2%;width:104%;height:104%;opacity:0;transform:scale(1.01);transition:opacity .9s ease,transform 12s ease;will-change:opacity,transform}
-      #${WRAP_ID} .iran-bg-canvas.show{opacity:1;transform:scale(1.045)}
-      #${WRAP_ID} .iran-bg-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,7,.62),rgba(8,8,7,.35) 23%,rgba(8,8,7,.50) 72%,rgba(8,8,7,.70)),radial-gradient(circle at center,rgba(255,255,255,.03),transparent 52%)}
-      .app{position:relative;z-index:1}
-      header,.grade,.undo,.tiny{color:#ede6da!important;text-shadow:0 1px 3px rgba(0,0,0,.38)}
-      .tiny,.grade,.undo{background:rgba(18,18,16,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-      .face{background:rgba(31,31,28,.76)!important;border-color:rgba(255,255,255,.10)!important;box-shadow:0 20px 70px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.30)!important;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
-      .roman,.english{color:#fbf7f1!important;text-shadow:0 2px 18px rgba(0,0,0,.24)}
-      .farsi{color:#efe5d9!important;text-shadow:0 2px 18px rgba(0,0,0,.24)}
-      .mini,.hint{color:#d6cfc3!important}
-      .speak{color:#f6f2ea!important;background:rgba(20,20,18,.46)!important;border-color:rgba(255,255,255,.15)!important;box-shadow:0 4px 18px rgba(0,0,0,.24)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-      .sw{background:rgba(16,16,14,.66)!important;border:1px solid rgba(255,255,255,.10)}
+      /* Disable every older canvas-based background implementation. */
+      #iranBackgrounds{display:none!important}
+      body{background:#121210!important;background-image:none!important}
+      #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#121210}
+      #${WRAP_ID} .iran-photo-bg{position:absolute;inset:-1%;width:102%;height:102%;background-image:url("${SPRITE}");background-repeat:no-repeat;background-size:400% 400%;opacity:0;transform:scale(1.01);transition:opacity .8s ease,transform 14s ease;will-change:opacity,transform;background-color:#121210}
+      #${WRAP_ID} .iran-photo-bg.show{opacity:1;transform:scale(1.045)}
+      #${WRAP_ID} .iran-photo-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,7,.48),rgba(8,8,7,.24) 24%,rgba(8,8,7,.38) 72%,rgba(8,8,7,.58)),radial-gradient(circle at center,rgba(255,255,255,.025),transparent 58%)}
+      .app{position:relative!important;z-index:1!important;background:transparent!important}
+      header,.grade,.undo,.tiny{color:#f1ebe2!important;text-shadow:0 1px 4px rgba(0,0,0,.55)}
+      .tiny,.grade,.undo{background:rgba(15,15,13,.16)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+      .face{background:rgba(27,27,24,.74)!important;border-color:rgba(255,255,255,.13)!important;box-shadow:0 22px 70px rgba(0,0,0,.42),0 1px 2px rgba(0,0,0,.34)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+      .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.28)}
+      .farsi{color:#f3e8dc!important;text-shadow:0 2px 18px rgba(0,0,0,.28)}
+      .mini,.hint{color:#ded5c9!important}
+      .speak{color:#f8f3ea!important;background:rgba(18,18,16,.48)!important;border-color:rgba(255,255,255,.16)!important;box-shadow:0 4px 18px rgba(0,0,0,.27)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+      .sw{background:rgba(15,15,13,.68)!important;border:1px solid rgba(255,255,255,.11)}
       @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.11)!important}}
-      @media(max-width:700px){#${WRAP_ID} .iran-bg-scrim{background:linear-gradient(to bottom,rgba(8,8,7,.69),rgba(8,8,7,.44) 23%,rgba(8,8,7,.58) 72%,rgba(8,8,7,.78))}.face{background:rgba(31,31,28,.82)!important}}
-      @media(max-width:430px){#${WRAP_ID} .iran-bg-canvas{inset:-4%;width:108%;height:108%}.face{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}}
-      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .iran-bg-canvas{transition:none!important;transform:none!important}}
+      @media(max-width:700px){#${WRAP_ID} .iran-photo-scrim{background:linear-gradient(to bottom,rgba(8,8,7,.56),rgba(8,8,7,.30) 24%,rgba(8,8,7,.46) 72%,rgba(8,8,7,.66))}.face{background:rgba(27,27,24,.80)!important}}
+      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .iran-photo-bg{transition:none!important;transform:none!important}}
     `;
     document.head.appendChild(style);
   }
@@ -45,7 +39,7 @@
     wrap=document.createElement("div");
     wrap.id=WRAP_ID;
     wrap.setAttribute("aria-hidden","true");
-    wrap.innerHTML='<canvas class="iran-bg-canvas a"></canvas><canvas class="iran-bg-canvas b"></canvas><div class="iran-bg-scrim"></div>';
+    wrap.innerHTML='<div class="iran-photo-bg a"></div><div class="iran-photo-bg b"></div><div class="iran-photo-scrim"></div>';
     document.body.prepend(wrap);
     return wrap;
   }
@@ -58,46 +52,19 @@
     return n;
   }
 
-  function drawCover(canvas,index){
-    if(!sprite||!sprite.complete||!sprite.naturalWidth||!tileW||!tileH||index<0)return;
-    const rect=canvas.getBoundingClientRect();
-    const cssW=Math.max(1,rect.width),cssH=Math.max(1,rect.height);
-    const dpr=Math.min(window.devicePixelRatio||1,2);
-    const w=Math.max(1,Math.round(cssW*dpr)),h=Math.max(1,Math.round(cssH*dpr));
-    if(canvas.width!==w)canvas.width=w;
-    if(canvas.height!==h)canvas.height=h;
-    const ctx=canvas.getContext("2d",{alpha:false});
-    if(!ctx)return;
-    ctx.imageSmoothingEnabled=true;
-    ctx.imageSmoothingQuality="high";
+  function setTile(layer,index){
     const col=index%COLS,row=Math.floor(index/COLS);
-    const tileX=col*tileW,tileY=row*tileH;
-    const targetRatio=w/h,tileRatio=tileW/tileH;
-    let sx=tileX,sy=tileY,sw=tileW,sh=tileH;
-    if(targetRatio>tileRatio){
-      sh=tileW/targetRatio;
-      sy=tileY+(tileH-sh)/2;
-    }else{
-      sw=tileH*targetRatio;
-      sx=tileX+(tileW-sw)/2;
-    }
-    ctx.drawImage(sprite,sx,sy,sw,sh,0,0,w,h);
-    canvas.dataset.index=String(index);
-  }
-
-  function redrawVisible(){
-    const wrap=document.getElementById(WRAP_ID);if(!wrap)return;
-    for(const c of wrap.querySelectorAll(".iran-bg-canvas")){
-      const n=Number(c.dataset.index);
-      if(Number.isFinite(n))drawCover(c,n);
-    }
+    const x=(col/(COLS-1))*100;
+    const y=(row/(ROWS-1))*100;
+    layer.style.backgroundPosition=`${x}% ${y}%`;
+    layer.dataset.index=String(index+1);
   }
 
   function rotate(){
-    const wrap=document.getElementById(WRAP_ID);if(!wrap||!sprite||!sprite.complete||!sprite.naturalWidth)return;
+    const wrap=document.getElementById(WRAP_ID);if(!wrap)return;
     const a=wrap.querySelector(".a"),b=wrap.querySelector(".b");
     const incoming=showA?b:a,outgoing=showA?a:b;
-    drawCover(incoming,nextIndex());
+    setTile(incoming,nextIndex());
     requestAnimationFrame(()=>{
       incoming.classList.add("show");
       outgoing.classList.remove("show");
@@ -107,28 +74,17 @@
 
   function watchCards(attempt=0){
     const fa=document.getElementById("fa");
-    if(!fa){if(attempt<24)setTimeout(()=>watchCards(attempt+1),250);return}
-    new MutationObserver(()=>{changes++;if(changes%7===0)rotate()})
+    if(!fa){if(attempt<32)setTimeout(()=>watchCards(attempt+1),250);return}
+    new MutationObserver(()=>{changes++;if(changes%6===0)rotate()})
       .observe(fa,{childList:true,characterData:true,subtree:true});
   }
 
   function init(){
-    installStyles();installMarkup();
-    sprite=new Image();
-    sprite.decoding="async";
-    sprite.onload=()=>{
-      tileW=sprite.naturalWidth/COLS;
-      tileH=sprite.naturalHeight/ROWS;
-      rotate();
-      redrawVisible();
-    };
-    sprite.onerror=()=>console.error("Iranian background artwork failed to load",SPRITE);
-    sprite.src=SPRITE;
+    installStyles();
+    installMarkup();
+    rotate();
     watchCards();
-    window.addEventListener("resize",()=>{
-      clearTimeout(resizeTimer);
-      resizeTimer=setTimeout(redrawVisible,90);
-    },{passive:true});
+    setInterval(rotate,30000);
   }
 
   if(document.readyState==="complete")init();
