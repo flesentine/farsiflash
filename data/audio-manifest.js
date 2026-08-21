@@ -740,14 +740,14 @@ ts-fsrs/dist/index.mjs:
   else install();
 })();
 (()=>{
-  if(window.__farsiGeneratedBackgroundsV6)return;
-  window.__farsiGeneratedBackgroundsV6=true;
+  if(window.__farsiGeneratedBackgroundsV7)return;
+  window.__farsiGeneratedBackgroundsV7=true;
 
-  const STYLE_ID="iranGeneratedBackgroundStylesV6";
-  const WRAP_ID="iranGeneratedBackgroundsV6";
-  const VERSION="gen10-20260821";
+  const STYLE_ID="iranGeneratedBackgroundStylesV7";
+  const WRAP_ID="iranGeneratedBackgroundsV7";
+  const VERSION="gen10-avif1";
   const BACKGROUNDS=Array.from({length:10},(_,i)=>
-    `backgrounds/generated/iran-gen-${String(i+1).padStart(2,"0")}.webp?v=${VERSION}`
+    `backgrounds/generated/iran-gen-${String(i+1).padStart(2,"0")}.avif?v=${VERSION}`
   );
   let current=-1,showA=true,changes=0,rotationToken=0,first=true;
 
@@ -756,8 +756,7 @@ ts-fsrs/dist/index.mjs:
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      /* Retire all previous sprite/recovery background implementations. */
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f url("${BACKGROUNDS[0]}") center/cover no-repeat}
       #${WRAP_ID} .iran-generated-bg{position:absolute;inset:-2%;width:104%;height:104%;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.01);transition:opacity .9s ease,transform 18s ease;will-change:opacity,transform}
