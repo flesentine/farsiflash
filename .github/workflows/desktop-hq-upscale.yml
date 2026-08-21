@@ -1,0 +1,61 @@
+name: Build desktop HQ backgrounds
+
+on:
+  push:
+    paths:
+      - ".github/workflows/desktop-hq-upscale.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  upscale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Upscale and sharpen generated backgrounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v ffmpeg
+          mkdir -p /tmp/farsiflip-hq backgrounds/generated
+          for f in backgrounds/generated/iran-gen-*.avif; do
+            n="$(basename "$f" .avif)"
+            out="/tmp/farsiflip-hq/${n}.webp"
+            ffmpeg -hide_banner -loglevel error -y -i "$f" \
+              -vf "scale=1920:1080:flags=lanczos,unsharp=5:5:0.75:5:5:0.0" \
+              -frames:v 1 -c:v libwebp -quality 88 -compression_level 6 "$out"
+            test "$(wc -c < "$out")" -gt 50000
+          done
+          test "$(find /tmp/farsiflip-hq -name 'iran-gen-*.webp' | wc -l | tr -d ' ')" = "10"
+          rm -f backgrounds/generated/iran-gen-*.webp
+          cp /tmp/farsiflip-hq/iran-gen-*.webp backgrounds/generated/
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('data/background-ui.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('.avif?v=${VERSION}', '.webp?v=${VERSION}')
+          s,n=re.subn(r'const VERSION="gen10-[^"]+";', 'const VERSION="gen10-desktop-hq1";', s, count=1)
+          if n != 1: raise SystemExit('background version bump failed')
+          p.write_text(s,encoding='utf-8')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'data/background-ui\.js\?v=[^"<]+','data/background-ui.js?v=gen10-desktop-hq1',s)
+          p.write_text(s,encoding='utf-8')
+          PY
+          rm -f asset-staging/hq35d.part-* asset-staging/hq35d.ready asset-staging/hq35c.part-* asset-staging/hq35c.ready asset-staging/hq35b.part-* asset-staging/hq35b.ready asset-staging/hq35.part-* asset-staging/hq35.ready asset-staging/hq45.part-* asset-staging/hq45.ready
+      - name: Commit HQ assets and cleanup
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/desktop-hq-upscale.yml
+          if [ -f .github/workflows/install-hq-background.yml ]; then git rm .github/workflows/install-hq-background.yml; fi
+          git add backgrounds/generated data/background-ui.js index.html asset-staging
+          git commit -m "Build sharp 1920px desktop backgrounds"
+          git pull --rebase origin main
+          git push origin main
