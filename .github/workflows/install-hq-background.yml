@@ -1,9 +1,9 @@
-name: Install HQ Iranian background
+name: Install HQ generated backgrounds
 
 on:
   push:
     paths:
-      - "asset-staging/hq-background.ready"
+      - "asset-staging/hq45.ready"
 
 permissions:
   contents: write
@@ -16,47 +16,53 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install native-resolution artwork
+      - name: Rebuild and install high-quality backgrounds
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p backgrounds
-          cat asset-staging/hqn30.part-* | base64 -d > backgrounds/iran-sprite.webp
-          size=$(wc -c < backgrounds/iran-sprite.webp)
-          echo "Native sprite size: $size bytes"
-          if [ "$size" -lt 1000000 ]; then
-            echo "Sprite is unexpectedly small" >&2
-            exit 1
-          fi
+          test -f asset-staging/hq45.ready
+          test -n "$(find asset-staging -maxdepth 1 -name 'hq45.part-*' -print -quit)"
+          cat asset-staging/hq45.part-* > /tmp/farsiflip-hq45.b64
+          base64 -d /tmp/farsiflip-hq45.b64 > /tmp/farsiflip-hq45.zip
+          unzip -tq /tmp/farsiflip-hq45.zip
+          rm -rf /tmp/farsiflip-hq45
+          mkdir -p /tmp/farsiflip-hq45 backgrounds/generated
+          unzip -q /tmp/farsiflip-hq45.zip -d /tmp/farsiflip-hq45
+          count="$(find /tmp/farsiflip-hq45 -maxdepth 1 -name 'iran-gen-*.avif' | wc -l | tr -d ' ')"
+          test "$count" = "10"
+          for f in /tmp/farsiflip-hq45/iran-gen-*.avif; do
+            size="$(wc -c < "$f")"
+            test "$size" -gt 25000
+          done
+          rm -f backgrounds/generated/iran-gen-*.avif
+          cp /tmp/farsiflip-hq45/iran-gen-*.avif backgrounds/generated/
           python - <<'PY'
           from pathlib import Path
-          p=Path('backgrounds/iran-sprite.webp')
-          b=p.read_bytes()
-          if b[:4] != b'RIFF' or b[8:12] != b'WEBP':
-              raise SystemExit('Not a valid WebP container')
-          print('WebP header verified:', len(b), 'bytes')
+          p=Path('data/background-ui.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('const VERSION="gen10-hq1";','const VERSION="gen10-hq45-1";')
+          s=s.replace('const VERSION="gen10-20260821";','const VERSION="gen10-hq45-1";')
+          s=s.replace('const VERSION="gen10-avif1";','const VERSION="gen10-hq45-1";')
+          if 'gen10-hq45-1' not in s:
+              raise SystemExit('background version bump failed')
+          p.write_text(s,encoding='utf-8')
 
-          bg=Path('data/background-ui.js').read_text(encoding='utf-8')
-          required=[
-              'backgrounds/iran-sprite.webp?v=native-q30-1',
-              'TILE_W=1672,TILE_H=941,COLS=4,COUNT=14',
-          ]
-          missing=[x for x in required if x not in bg]
-          if missing:
-              raise SystemExit('Background UI is not configured for native sprite: '+repr(missing))
-          print('Background UI dimensions verified')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('data/audio-manifest.js?v=gen10-avif1','data/audio-manifest.js?v=gen10-hq45-1')
+          s=s.replace('data/background-ui.js?v=gen10-avif1','data/background-ui.js?v=gen10-hq45-1')
+          s=s.replace('data/audio-manifest.js?v=gen10-hq1','data/audio-manifest.js?v=gen10-hq45-1')
+          s=s.replace('data/background-ui.js?v=gen10-hq1','data/background-ui.js?v=gen10-hq45-1')
+          p.write_text(s,encoding='utf-8')
           PY
-          rm -f asset-staging/hqn30.part-* asset-staging/hq-background.ready
-      - name: Commit native artwork
+          rm -f asset-staging/hq45.part-* asset-staging/hq45.ready
+      - name: Commit HQ backgrounds and clean installer
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backgrounds/iran-sprite.webp asset-staging
-          if git diff --cached --quiet; then
-            echo "Native artwork already installed."
-            exit 0
-          fi
-          git commit -m "Install native-resolution Iranian artwork"
+          git rm .github/workflows/install-hq-background.yml
+          git add backgrounds/generated data/background-ui.js index.html asset-staging
+          git commit -m "Install higher-quality generated backgrounds"
           git pull --rebase origin main
           git push origin main
