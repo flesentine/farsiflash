@@ -3,7 +3,7 @@ name: Install HQ generated backgrounds
 on:
   push:
     paths:
-      - "asset-staging/hq35.ready"
+      - "asset-staging/hq35b.ready"
 
 permissions:
   contents: write
@@ -20,10 +20,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f asset-staging/hq35.ready
-          test -n "$(find asset-staging -maxdepth 1 -name 'hq35.part-*' -print -quit)"
-          cat asset-staging/hq35.part-* > /tmp/farsiflip-hq35.b64
+          test -f asset-staging/hq35b.ready
+          count_parts="$(find asset-staging -maxdepth 1 -name 'hq35b.part-*' | wc -l | tr -d ' ')"
+          test "$count_parts" = "36"
+          cat asset-staging/hq35b.part-* > /tmp/farsiflip-hq35.b64
           base64 -d /tmp/farsiflip-hq35.b64 > /tmp/farsiflip-hq35.zip
+          echo '9b126efa0ec1da73bd1639ffce8260ae715f6758d67b243688166b4b802e5699  /tmp/farsiflip-hq35.zip' | sha256sum -c -
           unzip -tq /tmp/farsiflip-hq35.zip
           rm -rf /tmp/farsiflip-hq35
           mkdir -p /tmp/farsiflip-hq35 backgrounds/generated
@@ -38,9 +40,9 @@ jobs:
           cp /tmp/farsiflip-hq35/iran-gen-*.avif backgrounds/generated/
           python - <<'PY'
           from pathlib import Path
+          import re
           p=Path('data/background-ui.js')
           s=p.read_text(encoding='utf-8')
-          import re
           s,n=re.subn(r'const VERSION="gen10-[^"]+";', 'const VERSION="gen10-hq35-1";', s, count=1)
           if n != 1:
               raise SystemExit('background version bump failed')
@@ -52,7 +54,7 @@ jobs:
           s=re.sub(r'data/background-ui\.js\?v=[^"<]+', 'data/background-ui.js?v=gen10-hq35-1', s)
           p.write_text(s,encoding='utf-8')
           PY
-          rm -f asset-staging/hq35.part-* asset-staging/hq35.ready asset-staging/hq45.part-* asset-staging/hq45.ready
+          rm -f asset-staging/hq35b.part-* asset-staging/hq35b.ready asset-staging/hq35.part-* asset-staging/hq35.ready asset-staging/hq45.part-* asset-staging/hq45.ready
       - name: Commit HQ backgrounds and clean installer
         shell: bash
         run: |
