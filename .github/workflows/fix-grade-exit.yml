@@ -1,4 +1,4 @@
-name: Fix revealed card exit timing
+name: Stop Again from revealing answer
 
 on:
   push:
@@ -16,25 +16,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Make exit finish before next card renders
+      - name: Remove corrective answer reveal on Again
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('data/memory-engine.js')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('E.card.style.transition="transform .18s ease,opacity .16s";','E.card.style.transition="transform .16s ease,opacity .14s";')
-          s=s.replace('        },165);\n      };','        },200);\n      };')
-          if 'transform .16s ease,opacity .14s' not in s or '        },200);\n      };' not in s:
-              raise SystemExit('grading timing patch did not apply')
+          old='''      const wasAnswerVisible=answerIsVisible();\n      grading=true;'''
+          new='''      grading=true;'''
+          if old not in s:
+              raise SystemExit('could not find answer visibility hook')
+          s=s.replace(old,new,1)
+          old='''      if(!know&&!wasAnswerVisible){\n        revealCorrectAnswer();\n        setTimeout(apply,FEEDBACK_MS);\n      }else apply();'''
+          new='''      apply();'''
+          if old not in s:
+              raise SystemExit('could not find corrective reveal block')
+          s=s.replace(old,new,1)
+          s=s.replace('  const FEEDBACK_MS=850;\n','',1)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit fix
+      - name: Commit fix and remove one-shot workflow
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/fix-grade-exit.yml
           git add data/memory-engine.js
-          git commit -m "Finish grading slide before next card render"
+          git commit -m "Do not reveal answer when marked Again"
           git pull --rebase origin main
           git push origin main
