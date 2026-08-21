@@ -44,3 +44,5 @@ jobs:
           git commit -m "Install generated Iranian backgrounds"
           git pull --rebase origin main
           git push origin main
+
+# install trigger 2026-08-21
