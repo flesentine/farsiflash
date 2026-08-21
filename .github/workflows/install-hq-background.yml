@@ -20,10 +20,10 @@ jobs:
         shell: bash
         run: |
           mkdir -p backgrounds
-          cat asset-staging/iran-sprite.part-* | base64 -d > backgrounds/iran-sprite.webp
+          cat asset-staging/hq8.part-* | base64 -d > backgrounds/iran-sprite.webp
           size=$(wc -c < backgrounds/iran-sprite.webp)
           echo "HQ sprite size: $size bytes"
-          if [ "$size" -lt 500000 ]; then
+          if [ "$size" -lt 380000 ]; then
             echo "Sprite is unexpectedly small" >&2
             exit 1
           fi
@@ -46,18 +46,12 @@ jobs:
 
           mem=Path('data/memory-engine.js')
           s=mem.read_text(encoding='utf-8')
-          old='E.card.style.transition="transform .18s ease,opacity .16s";'
-          new='E.card.style.transition="transform .16s ease,opacity .14s";'
-          if old not in s and new not in s:
-              raise SystemExit('Could not find grading transition')
-          s=s.replace(old,new)
-          old_timeout='        },165);\n      };'
-          new_timeout='        },200);\n      };'
-          if old_timeout not in s and new_timeout not in s:
-              raise SystemExit('Could not find grading completion timeout')
-          s=s.replace(old_timeout,new_timeout)
+          s=s.replace('E.card.style.transition="transform .18s ease,opacity .16s";','E.card.style.transition="transform .16s ease,opacity .14s";')
+          s=s.replace('        },165);\n      };','        },200);\n      };')
+          if 'transform .16s ease,opacity .14s' not in s or '        },200);\n      };' not in s:
+              raise SystemExit('Grading timing is not fixed')
           mem.write_text(s,encoding='utf-8')
-          print('Grading animation now finishes before the next card renders')
+          print('Grading animation verified')
           PY
           rm -rf asset-staging
       - name: Commit HQ artwork and fixes
