@@ -1,0 +1,46 @@
+name: Install generated backgrounds
+
+on:
+  push:
+    paths:
+      - "asset-staging/farsiflip-generated-pack.zip"
+      - ".github/workflows/install-generated-backgrounds.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install generated images
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f asset-staging/farsiflip-generated-pack.zip || exit 0
+          rm -rf /tmp/farsiflip-bgpack
+          mkdir -p /tmp/farsiflip-bgpack backgrounds/generated
+          unzip -q asset-staging/farsiflip-generated-pack.zip -d /tmp/farsiflip-bgpack
+          rm -f backgrounds/generated/iran-gen-*.webp
+          cp /tmp/farsiflip-bgpack/iran-gen-*.webp backgrounds/generated/
+          count="$(find backgrounds/generated -maxdepth 1 -name 'iran-gen-*.webp' | wc -l | tr -d ' ')"
+          test "$count" = "10"
+          rm -f asset-staging/farsiflip-generated-pack.zip
+      - name: Commit installed backgrounds
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backgrounds/generated asset-staging/farsiflip-generated-pack.zip
+          if git diff --cached --quiet; then
+            echo "Generated backgrounds already installed."
+            exit 0
+          fi
+          git commit -m "Install generated Iranian backgrounds"
+          git pull --rebase origin main
+          git push origin main
