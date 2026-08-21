@@ -3,7 +3,7 @@ name: Install generated backgrounds
 on:
   push:
     paths:
-      - "asset-staging/farsiflip-generated-pack.zip"
+      - "asset-staging/genpack.part-*"
       - ".github/workflows/install-generated-backgrounds.yml"
   workflow_dispatch:
 
@@ -18,31 +18,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install generated images
+      - name: Rebuild and install generated images
         shell: bash
         run: |
           set -euo pipefail
-          test -f asset-staging/farsiflip-generated-pack.zip || exit 0
-          rm -rf /tmp/farsiflip-bgpack
+          if ! compgen -G 'asset-staging/genpack.part-*' > /dev/null; then
+            echo "No generated background chunks yet."
+            exit 0
+          fi
+          rm -rf /tmp/farsiflip-bgpack /tmp/farsiflip-generated-pack.zip /tmp/farsiflip-generated-pack.b64
+          cat asset-staging/genpack.part-* > /tmp/farsiflip-generated-pack.b64
+          base64 -d /tmp/farsiflip-generated-pack.b64 > /tmp/farsiflip-generated-pack.zip
+          unzip -tq /tmp/farsiflip-generated-pack.zip
           mkdir -p /tmp/farsiflip-bgpack backgrounds/generated
-          unzip -q asset-staging/farsiflip-generated-pack.zip -d /tmp/farsiflip-bgpack
+          unzip -q /tmp/farsiflip-generated-pack.zip -d /tmp/farsiflip-bgpack
           rm -f backgrounds/generated/iran-gen-*.webp
           cp /tmp/farsiflip-bgpack/iran-gen-*.webp backgrounds/generated/
           count="$(find backgrounds/generated -maxdepth 1 -name 'iran-gen-*.webp' | wc -l | tr -d ' ')"
           test "$count" = "10"
-          rm -f asset-staging/farsiflip-generated-pack.zip
+          rm -f asset-staging/genpack.part-* asset-staging/farsiflip-generated-pack.zip
+          printf '10\n' > backgrounds/generated/count.txt
       - name: Commit installed backgrounds
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backgrounds/generated asset-staging/farsiflip-generated-pack.zip
+          git add -A backgrounds/generated asset-staging
           if git diff --cached --quiet; then
             echo "Generated backgrounds already installed."
             exit 0
           fi
-          git commit -m "Install generated Iranian backgrounds"
+          git commit -m "Install 10 generated Iranian backgrounds"
           git pull --rebase origin main
           git push origin main
-
-# install trigger 2026-08-21
