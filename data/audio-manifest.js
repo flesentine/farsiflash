@@ -740,43 +740,41 @@ ts-fsrs/dist/index.mjs:
   else install();
 })();
 (()=>{
-  if(window.__farsiRecoveredBackgroundsV5)return;
-  window.__farsiRecoveredBackgroundsV5=true;
+  if(window.__farsiGeneratedBackgroundsV6)return;
+  window.__farsiGeneratedBackgroundsV6=true;
 
-  const STYLE_ID="iranRecoveredBackgroundStylesV5";
-  const WRAP_ID="iranRecoveredBackgroundsV5";
-  const BACKGROUNDS=[
-    "backgrounds/iran-01.webp?v=5302b519",
-    "backgrounds/iran-07.webp?v=5302b519",
-    "backgrounds/iran-13.webp?v=5302b519",
-    "backgrounds/iran-14.webp?v=5302b519"
-  ];
-  let current=-1,showA=true,changes=0,rotationToken=0;
+  const STYLE_ID="iranGeneratedBackgroundStylesV6";
+  const WRAP_ID="iranGeneratedBackgroundsV6";
+  const VERSION="gen10-20260821";
+  const BACKGROUNDS=Array.from({length:10},(_,i)=>
+    `backgrounds/generated/iran-gen-${String(i+1).padStart(2,"0")}.webp?v=${VERSION}`
+  );
+  let current=-1,showA=true,changes=0,rotationToken=0,first=true;
 
   function installStyles(){
     if(document.getElementById(STYLE_ID))return;
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      /* Retire every corrupt sprite-based background implementation. */
-      #iranBackgrounds,#iranPhotoBackgroundsV4{display:none!important}
-      body{background:#121210!important;background-image:none!important}
-      #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#121210}
-      #${WRAP_ID} .iran-recovered-bg{position:absolute;inset:-2%;width:104%;height:104%;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.01);transition:opacity .85s ease,transform 14s ease;will-change:opacity,transform}
-      #${WRAP_ID} .iran-recovered-bg.show{opacity:1;transform:scale(1.045)}
-      #${WRAP_ID} .iran-recovered-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,7,.40),rgba(8,8,7,.20) 24%,rgba(8,8,7,.31) 72%,rgba(8,8,7,.50)),radial-gradient(circle at center,rgba(255,255,255,.025),transparent 58%)}
+      /* Retire all previous sprite/recovery background implementations. */
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5{display:none!important}
+      body{background:#11110f!important;background-image:none!important}
+      #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f url("${BACKGROUNDS[0]}") center/cover no-repeat}
+      #${WRAP_ID} .iran-generated-bg{position:absolute;inset:-2%;width:104%;height:104%;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.01);transition:opacity .9s ease,transform 18s ease;will-change:opacity,transform}
+      #${WRAP_ID} .iran-generated-bg.show{opacity:1;transform:scale(1.045)}
+      #${WRAP_ID} .iran-generated-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.25),rgba(7,8,9,.12) 27%,rgba(7,8,9,.20) 72%,rgba(7,8,9,.38)),radial-gradient(circle at center,transparent 20%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.24))}
       .app{position:relative!important;z-index:1!important;background:transparent!important}
-      header,.grade,.undo,.tiny{color:#f1ebe2!important;text-shadow:0 1px 4px rgba(0,0,0,.58)}
-      .tiny,.grade,.undo{background:rgba(15,15,13,.15)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
-      .face{background:rgba(27,27,24,.72)!important;border-color:rgba(255,255,255,.13)!important;box-shadow:0 22px 70px rgba(0,0,0,.42),0 1px 2px rgba(0,0,0,.34)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-      .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.30)}
-      .farsi{color:#f3e8dc!important;text-shadow:0 2px 18px rgba(0,0,0,.30)}
-      .mini,.hint{color:#ded5c9!important}
-      .speak{color:#f8f3ea!important;background:rgba(18,18,16,.46)!important;border-color:rgba(255,255,255,.16)!important;box-shadow:0 4px 18px rgba(0,0,0,.27)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-      .sw{background:rgba(15,15,13,.68)!important;border:1px solid rgba(255,255,255,.11)}
-      @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.11)!important}}
-      @media(max-width:700px){#${WRAP_ID} .iran-recovered-scrim{background:linear-gradient(to bottom,rgba(8,8,7,.48),rgba(8,8,7,.25) 24%,rgba(8,8,7,.39) 72%,rgba(8,8,7,.58))}.face{background:rgba(27,27,24,.79)!important}}
-      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .iran-recovered-bg{transition:none!important;transform:none!important}}
+      header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
+      .tiny,.grade,.undo{background:rgba(13,13,12,.20)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+      .face{background:rgba(25,25,22,.72)!important;border-color:rgba(255,255,255,.15)!important;box-shadow:0 22px 70px rgba(0,0,0,.43),0 1px 2px rgba(0,0,0,.36)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+      .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
+      .farsi{color:#f4e9dc!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
+      .mini,.hint{color:#e2d9ce!important}
+      .speak{color:#faf5ed!important;background:rgba(16,16,14,.48)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 4px 18px rgba(0,0,0,.28)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+      .sw{background:rgba(14,14,12,.66)!important;border:1px solid rgba(255,255,255,.12)}
+      @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.13)!important}}
+      @media(max-width:700px){#${WRAP_ID} .iran-generated-scrim{background:linear-gradient(to bottom,rgba(7,8,9,.34),rgba(7,8,9,.17) 27%,rgba(7,8,9,.27) 72%,rgba(7,8,9,.46))}.face{background:rgba(25,25,22,.79)!important}}
+      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .iran-generated-bg{transition:none!important;transform:none!important}}
     `;
     document.head.appendChild(style);
   }
@@ -787,12 +785,13 @@ ts-fsrs/dist/index.mjs:
     wrap=document.createElement("div");
     wrap.id=WRAP_ID;
     wrap.setAttribute("aria-hidden","true");
-    wrap.innerHTML='<div class="iran-recovered-bg a"></div><div class="iran-recovered-bg b"></div><div class="iran-recovered-scrim"></div>';
+    wrap.innerHTML='<div class="iran-generated-bg a"></div><div class="iran-generated-bg b"></div><div class="iran-generated-scrim"></div>';
     document.body.prepend(wrap);
     return wrap;
   }
 
   function nextIndex(){
+    if(first){first=false;current=0;return 0}
     if(BACKGROUNDS.length<2)return 0;
     let n=current;
     while(n===current)n=Math.floor(Math.random()*BACKGROUNDS.length);
@@ -818,8 +817,8 @@ ts-fsrs/dist/index.mjs:
       showA=!showA;
     };
     img.onerror=()=>{
-      console.error("Recovered Iranian background failed to load",src);
-      setTimeout(rotate,1200);
+      console.error("Generated Iranian background failed to load",src);
+      if(token===rotationToken)setTimeout(rotate,1200);
     };
     img.src=src;
   }
