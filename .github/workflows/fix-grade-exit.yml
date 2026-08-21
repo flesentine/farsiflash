@@ -1,0 +1,40 @@
+name: Fix revealed card exit timing
+
+on:
+  push:
+    paths:
+      - ".github/workflows/fix-grade-exit.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make exit finish before next card renders
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('data/memory-engine.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('E.card.style.transition="transform .18s ease,opacity .16s";','E.card.style.transition="transform .16s ease,opacity .14s";')
+          s=s.replace('        },165);\n      };','        },200);\n      };')
+          if 'transform .16s ease,opacity .14s' not in s or '        },200);\n      };' not in s:
+              raise SystemExit('grading timing patch did not apply')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/memory-engine.js
+          git commit -m "Finish grading slide before next card render"
+          git pull --rebase origin main
+          git push origin main
