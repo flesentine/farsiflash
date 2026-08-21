@@ -16,50 +16,47 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install high-resolution artwork and grading fix
+      - name: Install native-resolution artwork
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p backgrounds
-          cat asset-staging/hq8.part-* | base64 -d > backgrounds/iran-sprite.webp
+          cat asset-staging/hqn30.part-* | base64 -d > backgrounds/iran-sprite.webp
           size=$(wc -c < backgrounds/iran-sprite.webp)
-          echo "HQ sprite size: $size bytes"
-          if [ "$size" -lt 380000 ]; then
+          echo "Native sprite size: $size bytes"
+          if [ "$size" -lt 1000000 ]; then
             echo "Sprite is unexpectedly small" >&2
             exit 1
           fi
           python - <<'PY'
           from pathlib import Path
-
-          sprite=Path('backgrounds/iran-sprite.webp')
-          b=sprite.read_bytes()
+          p=Path('backgrounds/iran-sprite.webp')
+          b=p.read_bytes()
           if b[:4] != b'RIFF' or b[8:12] != b'WEBP':
               raise SystemExit('Not a valid WebP container')
-          print('WebP header verified')
+          print('WebP header verified:', len(b), 'bytes')
 
-          bg=Path('data/background-ui.js')
-          s=bg.read_text(encoding='utf-8')
-          s=s.replace('backgrounds/iran-sprite.webp?v=hq1024-1','backgrounds/iran-sprite.webp?v=hq1280-1')
-          s=s.replace('const TILE_W=1024,TILE_H=576,COLS=4,COUNT=14;','const TILE_W=1280,TILE_H=720,COLS=4,COUNT=14;')
-          if 'TILE_W=1280,TILE_H=720' not in s:
-              raise SystemExit('Could not update background tile dimensions')
-          bg.write_text(s,encoding='utf-8')
-
-          mem=Path('data/memory-engine.js')
-          s=mem.read_text(encoding='utf-8')
-          s=s.replace('E.card.style.transition="transform .18s ease,opacity .16s";','E.card.style.transition="transform .16s ease,opacity .14s";')
-          s=s.replace('        },165);\n      };','        },200);\n      };')
-          if 'transform .16s ease,opacity .14s' not in s or '        },200);\n      };' not in s:
-              raise SystemExit('Grading timing is not fixed')
-          mem.write_text(s,encoding='utf-8')
-          print('Grading animation verified')
+          bg=Path('data/background-ui.js').read_text(encoding='utf-8')
+          required=[
+              'backgrounds/iran-sprite.webp?v=native-q30-1',
+              'TILE_W=1672,TILE_H=941,COLS=4,COUNT=14',
+          ]
+          missing=[x for x in required if x not in bg]
+          if missing:
+              raise SystemExit('Background UI is not configured for native sprite: '+repr(missing))
+          print('Background UI dimensions verified')
           PY
-          rm -rf asset-staging
-      - name: Commit HQ artwork and fixes
+          rm -f asset-staging/hqn30.part-* asset-staging/hq-background.ready
+      - name: Commit native artwork
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backgrounds/iran-sprite.webp data/background-ui.js data/memory-engine.js asset-staging
-          git commit -m "Install HQ Iranian backgrounds and fix grading exit"
+          git add backgrounds/iran-sprite.webp asset-staging
+          if git diff --cached --quiet; then
+            echo "Native artwork already installed."
+            exit 0
+          fi
+          git commit -m "Install native-resolution Iranian artwork"
           git pull --rebase origin main
           git push origin main
