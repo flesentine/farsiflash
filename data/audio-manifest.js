@@ -119,7 +119,6 @@ ts-fsrs/dist/index.mjs:
   const DIR_PREF="farsi2000-direction";
   const MAX_LOGS=30000;
   const REVIEW_CHUNK=24;
-  const FEEDBACK_MS=850;
 
   let memState=null;
   let scheduler=null;
@@ -354,7 +353,6 @@ ts-fsrs/dist/index.mjs:
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
       const responseMs=Math.max(0,performance.now()-shownAt);
-      const wasAnswerVisible=answerIsVisible();
       grading=true;
 
       const apply=()=>{
@@ -387,10 +385,7 @@ ts-fsrs/dist/index.mjs:
         },200);
       };
 
-      if(!know&&!wasAnswerVisible){
-        revealCorrectAnswer();
-        setTimeout(apply,FEEDBACK_MS);
-      }else apply();
+      apply();
     };
 
     undo=function(){
@@ -449,16 +444,11 @@ ts-fsrs/dist/index.mjs:
   });
 })();
 // Slide a clone of the currently visible FACE, not the 3D card.
-// This guarantees a revealed answer never rotates back before leaving.
+// Grade exits always preserve exactly what the learner is looking at.
 (()=>{
   window.addEventListener("load",()=>{
     if(typeof grade!=="function")return;
     const baseGrade=grade;
-
-    function answerVisible(){
-      const englishFirst=document.body.classList.contains("english-first");
-      return englishFirst?!flip:!!flip;
-    }
 
     function visibleFace(card){
       return card?.querySelector(flip?".face.back":".face:not(.back)")||null;
@@ -498,15 +488,8 @@ ts-fsrs/dist/index.mjs:
 
     grade=function(know){
       if(!E?.card||!Q?.length)return baseGrade(know);
-      const card=E.card;
-      if(answerVisible()){
-        animateVisibleFace(card,know?1:-1);
-      }else if(!know){
-        // memory-engine reveals the answer for 850ms first.
-        setTimeout(()=>{
-          if(card.isConnected&&E.card===card)animateVisibleFace(card,-1);
-        },825);
-      }
+      // Never reveal or flip on Again. Slide away the exact face currently shown.
+      animateVisibleFace(E.card,know?1:-1);
       return baseGrade(know);
     };
   });
