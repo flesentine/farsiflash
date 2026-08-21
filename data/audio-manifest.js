@@ -742,17 +742,24 @@ ts-fsrs/dist/index.mjs:
 (()=>{
   const STYLE_ID="iranBackgroundStyles";
   const WRAP_ID="iranBackgrounds";
-  const SPRITE="backgrounds/iran-sprite.webp?v=sprite-1024x576-1";
-  const TILE_W=1024,TILE_H=576,COLS=4,COUNT=14;
-  let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0;
+  const SPRITE="backgrounds/iran-sprite.webp?v=bg-failsafe-3";
+  const COLS=4,COUNT=14,ROWS=Math.ceil(COUNT/COLS);
+  let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0,tileW=0,tileH=0;
 
   function installStyles(){
     if(document.getElementById(STYLE_ID))return;
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      body{background:#121210!important}
-      #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#121210}
+      body{
+        background-color:#121210!important;
+        background-image:linear-gradient(rgba(8,8,7,.56),rgba(8,8,7,.66)),url("${SPRITE}")!important;
+        background-repeat:no-repeat!important;
+        background-position:center,0 0!important;
+        background-size:cover,auto 400%!important;
+      }
+      @media(min-aspect-ratio:16/9){body{background-size:cover,400% auto!important}}
+      #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:transparent}
       #${WRAP_ID} .iran-bg-canvas{position:absolute;inset:-2%;width:104%;height:104%;opacity:0;transform:scale(1.01);transition:opacity .9s ease,transform 12s ease;will-change:opacity,transform}
       #${WRAP_ID} .iran-bg-canvas.show{opacity:1;transform:scale(1.045)}
       #${WRAP_ID} .iran-bg-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,7,.62),rgba(8,8,7,.35) 23%,rgba(8,8,7,.50) 72%,rgba(8,8,7,.70)),radial-gradient(circle at center,rgba(255,255,255,.03),transparent 52%)}
@@ -793,7 +800,7 @@ ts-fsrs/dist/index.mjs:
   }
 
   function drawCover(canvas,index){
-    if(!sprite||!sprite.complete||!sprite.naturalWidth||index<0)return;
+    if(!sprite||!sprite.complete||!sprite.naturalWidth||!tileW||!tileH||index<0)return;
     const rect=canvas.getBoundingClientRect();
     const cssW=Math.max(1,rect.width),cssH=Math.max(1,rect.height);
     const dpr=Math.min(window.devicePixelRatio||1,2);
@@ -805,15 +812,15 @@ ts-fsrs/dist/index.mjs:
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality="high";
     const col=index%COLS,row=Math.floor(index/COLS);
-    const tileX=col*TILE_W,tileY=row*TILE_H;
-    const targetRatio=w/h,tileRatio=TILE_W/TILE_H;
-    let sx=tileX,sy=tileY,sw=TILE_W,sh=TILE_H;
+    const tileX=col*tileW,tileY=row*tileH;
+    const targetRatio=w/h,tileRatio=tileW/tileH;
+    let sx=tileX,sy=tileY,sw=tileW,sh=tileH;
     if(targetRatio>tileRatio){
-      sh=TILE_W/targetRatio;
-      sy=tileY+(TILE_H-sh)/2;
+      sh=tileW/targetRatio;
+      sy=tileY+(tileH-sh)/2;
     }else{
-      sw=TILE_H*targetRatio;
-      sx=tileX+(TILE_W-sw)/2;
+      sw=tileH*targetRatio;
+      sx=tileX+(tileW-sw)/2;
     }
     ctx.drawImage(sprite,sx,sy,sw,sh,0,0,w,h);
     canvas.dataset.index=String(index);
@@ -850,7 +857,12 @@ ts-fsrs/dist/index.mjs:
     installStyles();installMarkup();
     sprite=new Image();
     sprite.decoding="async";
-    sprite.onload=()=>{rotate();redrawVisible()};
+    sprite.onload=()=>{
+      tileW=sprite.naturalWidth/COLS;
+      tileH=sprite.naturalHeight/ROWS;
+      rotate();
+      redrawVisible();
+    };
     sprite.onerror=()=>console.error("Iranian background artwork failed to load",SPRITE);
     sprite.src=SPRITE;
     watchCards();
