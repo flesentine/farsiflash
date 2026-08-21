@@ -7,7 +7,6 @@
   const DIR_PREF="farsi2000-direction";
   const MAX_LOGS=30000;
   const REVIEW_CHUNK=24;
-  const FEEDBACK_MS=850;
 
   let memState=null;
   let scheduler=null;
@@ -242,7 +241,6 @@
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
       const responseMs=Math.max(0,performance.now()-shownAt);
-      const wasAnswerVisible=answerIsVisible();
       grading=true;
 
       const apply=()=>{
@@ -275,10 +273,7 @@
         },200);
       };
 
-      if(!know&&!wasAnswerVisible){
-        revealCorrectAnswer();
-        setTimeout(apply,FEEDBACK_MS);
-      }else apply();
+      apply();
     };
 
     undo=function(){
