@@ -1,8 +1,8 @@
 (()=>{
   const STYLE_ID="iranBackgroundStyles";
   const WRAP_ID="iranBackgrounds";
-  const SPRITE="backgrounds/iran-sprite.webp?v=native-q30-1";
-  const TILE_W=1672,TILE_H=941,COLS=4,COUNT=14;
+  const SPRITE="backgrounds/iran-sprite.webp?v=sprite-1024x576-1";
+  const TILE_W=1024,TILE_H=576,COLS=4,COUNT=14;
   let current=-1,showA=true,changes=0,sprite=null,resizeTimer=0;
 
   function installStyles(){
