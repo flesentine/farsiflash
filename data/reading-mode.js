@@ -1,4 +1,7 @@
 (()=>{
+  if(window.__farsiReadingModeV2)return;
+  window.__farsiReadingModeV2=true;
+
   const DIR_PREF="farsi2000-direction";
   const PHON_PREF="farsi2000-hide-phonetics";
   const OLD_PREF="farsi2000-reading-mode";
@@ -9,6 +12,12 @@
   if(localStorage.getItem(PHON_PREF)===null&&localStorage.getItem(OLD_PREF)==="1"){
     hidePhonetics=true;
     localStorage.setItem(PHON_PREF,"1");
+  }
+
+  function activeDirection(){
+    return window.FARSI_ACTIVE_DIRECTION==="en"||window.FARSI_ACTIVE_DIRECTION==="fa"
+      ?window.FARSI_ACTIVE_DIRECTION
+      :direction;
   }
 
   function ensureStyle(){
@@ -22,9 +31,9 @@
       body.english-first .back .mini{display:none}
       #directionMode,#phoneticsMode{font-variant-numeric:tabular-nums;white-space:nowrap}
       body.hide-phonetics #phoneticsMode{text-decoration:line-through;background:#0000000b;font-weight:700}
-      body.farsi-first #directionMode{background:#0000000b;font-weight:700}
+      body.direction-pref-fa #directionMode{background:#0000000b;font-weight:700}
       @media(prefers-color-scheme:dark){
-        body.hide-phonetics #phoneticsMode,body.farsi-first #directionMode{background:#ffffff10}
+        body.hide-phonetics #phoneticsMode,body.direction-pref-fa #directionMode{background:#ffffff10}
       }
       :fullscreen body.hide-phonetics .face:not(.back) .farsi{font-size:clamp(64px,7vw,104px)}
     `;
@@ -33,18 +42,33 @@
 
   function applyStartSide(){
     if(!E?.card||!Q?.length)return;
-    flip=direction==="en";
+    const active=activeDirection();
+    const farsiFirst=active==="fa";
+    document.body.classList.toggle("farsi-first",farsiFirst);
+    document.body.classList.toggle("english-first",!farsiFirst);
+    flip=!farsiFirst;
     E.card.classList.toggle("flip",flip);
     E.card.style.transform="";
+
+    const frontHint=E.card.querySelector(".face:not(.back) .hint");
+    const backHint=E.card.querySelector(".face.back .hint");
+    if(farsiFirst){
+      if(frontHint)frontHint.textContent="tap · ↑ ↓ to flip";
+      if(backHint)backHint.textContent="meaning";
+    }else{
+      if(backHint)backHint.textContent=window.FARSI_AUTO_REVERSE
+        ?"recall Farsi · tap to reveal"
+        :"say it in Farsi · tap to reveal";
+      if(frontHint)frontHint.textContent="Farsi answer · tap to flip";
+    }
   }
 
   function syncDirection(btn){
     const farsiFirst=direction==="fa";
-    document.body.classList.toggle("farsi-first",farsiFirst);
-    document.body.classList.toggle("english-first",!farsiFirst);
+    document.body.classList.toggle("direction-pref-fa",farsiFirst);
     btn.textContent=farsiFirst?"FA→EN":"EN→FA";
     btn.title=farsiFirst
-      ?"Farsi first: Persian + phonetics, then English"
+      ?"Farsi first, with automatic English-to-Farsi recall checks after mastery"
       :"English first: English, then Persian + phonetics";
     btn.setAttribute("aria-label",farsiFirst
       ?"Switch to English-first cards"
@@ -103,7 +127,11 @@
       localStorage.setItem(DIR_PREF,direction);
       syncDirection(directionBtn);
       if(typeof window.FARSI_DIRECTION_CHANGED==="function")window.FARSI_DIRECTION_CHANGED(direction);
-      else render();
+      else{
+        window.FARSI_ACTIVE_DIRECTION=direction;
+        window.FARSI_AUTO_REVERSE=false;
+        render();
+      }
     };
 
     phoneticsBtn.onclick=e=>{
