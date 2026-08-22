@@ -73,3 +73,5 @@ jobs:
           git commit -m "Bundle app UI controls"
           git pull --rebase origin main
           git push origin main
+
+# rollout trigger: adaptive reverse recall
