@@ -1,0 +1,52 @@
+name: Install twilight background
+
+on:
+  push:
+    branches:
+      - fix/twilight-background-repair
+    paths:
+      - "asset-staging/twilightbg.ready"
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild verified WebP
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f asset-staging/twilightbg.ready
+          count="$(find asset-staging -maxdepth 1 -name 'twilightbg.part-*' | wc -l | tr -d ' ')"
+          test "$count" = "20"
+          cat asset-staging/twilightbg.part-* > /tmp/twilight.b64
+          base64 -d /tmp/twilight.b64 > /tmp/twilight.webp
+          echo 'e5267c22c89bc938ae7cfe0d472fab9e1ae77c80ad18c77c7e2329b1992d696e  /tmp/twilight.webp' | sha256sum -c -
+          test "$(wc -c < /tmp/twilight.webp)" = "146690"
+          mkdir -p backgrounds/generated
+          cp /tmp/twilight.webp backgrounds/generated/twilight-courtyard-full.webp
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('data/background-ui.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('backgrounds/generated/twilight-courtyard.webp?v=twilight-hq2','backgrounds/generated/twilight-courtyard-full.webp?v=twilight-hq3')
+          if 'twilight-courtyard-full.webp?v=twilight-hq3' not in s:
+              raise SystemExit('background URL replacement failed')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit repaired asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backgrounds/generated/twilight-courtyard-full.webp data/background-ui.js
+          git rm asset-staging/twilightbg.part-* asset-staging/twilightbg.ready
+          git commit -m "Install verified twilight background"
+          git push origin HEAD:fix/twilight-background-repair
