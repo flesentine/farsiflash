@@ -4,7 +4,7 @@
 
   const STYLE_ID="iranSingleBackgroundStylesV9";
   const WRAP_ID="iranSingleBackgroundV9";
-  const BACKGROUND="backgrounds/generated/twilight-courtyard.webp?v=twilight-hq1";
+  const BACKGROUND="backgrounds/generated/twilight-courtyard.webp?v=twilight-hq2";
 
   function installStyles(){
     if(document.getElementById(STYLE_ID))return;
