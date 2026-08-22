@@ -1,12 +1,16 @@
 // FSRS-6 memory scheduler for Farsi 2000.
-// Uses real elapsed time, separate FA->EN / EN->FA memories, corrective feedback,
-// short-term learning/relearning, and compact review history.
+// Uses real elapsed time, separate manual FA->EN / EN->FA memories, corrective
+// feedback, short-term learning/relearning, and adaptive reverse-recall checks.
 (()=>{
+  if(window.__farsiMemoryEngineV6)return;
+  window.__farsiMemoryEngineV6=true;
+
   const STATE_KEY_V5="farsi2000-v5";
   const LEGACY_KEY="farsi2000-v4";
   const DIR_PREF="farsi2000-direction";
   const MAX_LOGS=30000;
   const REVIEW_CHUNK=24;
+  const AUTO_REVERSE_GOODS=4;
 
   let memState=null;
   let scheduler=null;
@@ -16,9 +20,11 @@
 
   const parse=(raw,fallback)=>{try{return JSON.parse(raw)}catch{return fallback}};
   const dirNow=()=>localStorage.getItem(DIR_PREF)==="en"?"en":"fa";
+  const activeDirNow=()=>window.FARSI_ACTIVE_DIRECTION==="en"?"en":dirNow();
   const keyFor=(fa,dir=dirNow())=>`${fa}\u241f${dir}`;
   const asMs=v=>{const n=Date.parse(v);return Number.isFinite(n)?n:Infinity};
   const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
+  const hasOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 
   function serializeCard(card){
     return {
@@ -37,18 +43,24 @@
     };
   }
 
+  function normalizeMemory(state){
+    if(!state.reverseProgress||typeof state.reverseProgress!=="object"||Array.isArray(state.reverseProgress))state.reverseProgress={};
+    return state;
+  }
+
   function saveMemory(){
     if(!memState)return;
+    normalizeMemory(memState);
     if(memState.logs.length>MAX_LOGS)memState.logs=memState.logs.slice(-MAX_LOGS);
     localStorage.setItem(STATE_KEY_V5,JSON.stringify(memState));
   }
 
   function migrateLegacy(State){
     const existing=parse(localStorage.getItem(STATE_KEY_V5),null);
-    if(existing&&existing.version===5&&existing.cards&&Array.isArray(existing.logs))return existing;
+    if(existing&&existing.version===5&&existing.cards&&Array.isArray(existing.logs))return normalizeMemory(existing);
 
     const now=Date.now();
-    const next={version:5,cards:{},logs:[],createdAt:new Date(now).toISOString(),migratedFrom:null};
+    const next={version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date(now).toISOString(),migratedFrom:null};
     const old=parse(localStorage.getItem(LEGACY_KEY),null);
     if(old&&Array.isArray(old.known)){
       const oldReview=old.review||{};
@@ -80,6 +92,37 @@
 
   function cardState(c,dir=dirNow()){
     return memState.cards[keyFor(c.fa,dir)]||null;
+  }
+
+  function progressFor(c){
+    normalizeMemory(memState);
+    if(hasOwn(memState.reverseProgress,c.fa)){
+      const n=Number(memState.reverseProgress[c.fa])||0;
+      return Math.max(0,Math.min(AUTO_REVERSE_GOODS,n));
+    }
+
+    // Bootstrap existing users from their recent FA-first review history. Four
+    // consecutive successful recognition reviews are enough to introduce the
+    // harder English->Farsi production check.
+    let streak=0;
+    for(let n=memState.logs.length-1;n>=0;n--){
+      const row=memState.logs[n];
+      if(!Array.isArray(row)||row[1]!==c.fa||row[2]!=="fa")continue;
+      const mode=row[10]||"normal";
+      if(mode==="reverse"){
+        streak=row[3]==="again"?AUTO_REVERSE_GOODS:0;
+        break;
+      }
+      if(row[3]==="good"){
+        streak++;
+        if(streak>=AUTO_REVERSE_GOODS)break;
+      }else{
+        streak=0;
+        break;
+      }
+    }
+    memState.reverseProgress[c.fa]=Math.min(AUTO_REVERSE_GOODS,streak);
+    return memState.reverseProgress[c.fa];
   }
 
   function isKnown(c,State,dir=dirNow()){
@@ -125,14 +168,18 @@
     for(const c of D){
       const m=cardState(c,d);
       if(!m)unseen.push(c);
-      else if(asMs(m.due)<=now)dueCards.push(c);
+      else if(asMs(m.due)<=now){
+        const autoReverse=d==="fa"&&progressFor(c)>=AUTO_REVERSE_GOODS;
+        dueCards.push({...c,_autoReverse:autoReverse});
+      }
     }
     dueCards.sort((a,b)=>asMs(cardState(a,d).due)-asMs(cardState(b,d).due));
 
     let newChunk=[];
     if(unseen.length){
       const stage=unseen[0].stage;
-      newChunk=shuffleCopy(unseen.filter(c=>c.stage===stage).slice(0,REVIEW_CHUNK));
+      newChunk=shuffleCopy(unseen.filter(c=>c.stage===stage).slice(0,REVIEW_CHUNK))
+        .map(c=>({...c,_autoReverse:false}));
     }
 
     Q=[...spreadDueByStage(dueCards),...newChunk];
@@ -170,22 +217,23 @@
 
   function answerIsVisible(){
     if(!E?.card)return false;
-    return dirNow()==="fa"?!!flip:!flip;
+    return activeDirNow()==="fa"?!!flip:!flip;
   }
 
   function revealCorrectAnswer(){
     if(!E?.card)return;
-    flip=dirNow()==="fa";
+    flip=activeDirNow()==="fa";
     E.card.classList.toggle("flip",flip);
     E.card.style.transform="";
   }
 
-  function compactLog(c,dir,rating,responseMs,before,next,retrievability){
+  function compactLog(c,dir,rating,responseMs,before,next,retrievability,mode="normal"){
     memState.logs.push([
       Date.now(),c.fa,dir,rating,Math.round(responseMs),
       before?.due||null,next.due,
       Number(next.stability||0),Number(next.difficulty||0),
       Number.isFinite(retrievability)?Number(retrievability.toFixed(4)):null,
+      mode,
     ]);
   }
 
@@ -216,6 +264,8 @@
         makeDeck();
         if(!Q.length){
           const n=counts(State);
+          window.FARSI_ACTIVE_DIRECTION=dirNow();
+          window.FARSI_AUTO_REVERSE=false;
           E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><p>${nextDueText()||"No review is due right now."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
@@ -224,8 +274,17 @@
           return;
         }
       }
+
+      const c=current();
+      const globalDir=dirNow();
+      const autoReverse=globalDir==="fa"&&!!c?._autoReverse;
+      window.FARSI_ACTIVE_DIRECTION=autoReverse?"en":globalDir;
+      window.FARSI_AUTO_REVERSE=autoReverse;
+      document.documentElement.dataset.reverseRecall=autoReverse?"1":"0";
+
       syncLegacyKnown(State);
       legacyRender();
+      if(autoReverse&&c)E.stageName.textContent=`${c.stage} · Recall Farsi`;
       const n=counts(State);
       E.known.textContent=n.known;
       E.leftCount.textContent=n.left;
@@ -237,9 +296,13 @@
       const c=current();
       if(!c)return;
       const dir=dirNow();
+      const autoReverse=dir==="fa"&&!!c._autoReverse;
       const k=keyFor(c.fa,dir);
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
+      const hadReverseProgress=hasOwn(memState.reverseProgress,c.fa);
+      const oldReverseProgress=hadReverseProgress?memState.reverseProgress[c.fa]:undefined;
+      const progressBefore=dir==="fa"?progressFor(c):0;
       const responseMs=Math.max(0,performance.now()-shownAt);
       grading=true;
 
@@ -251,13 +314,24 @@
         const result=scheduler.next(input,now,know?Rating.Good:Rating.Again);
         const next=serializeCard(result.card);
         memState.cards[k]=next;
-        compactLog(c,dir,know?"good":"again",responseMs,oldStored,next,retrievability);
-        memoryLast={card:c,dir,key:k,oldStored,oldLogLen};
+
+        if(dir==="fa"){
+          if(autoReverse){
+            // Passing the harder production test resets the recognition streak.
+            // Failing keeps reverse recall armed for the next FSRS retry.
+            memState.reverseProgress[c.fa]=know?0:AUTO_REVERSE_GOODS;
+          }else{
+            memState.reverseProgress[c.fa]=know
+              ?Math.min(AUTO_REVERSE_GOODS,progressBefore+1)
+              :0;
+          }
+        }
+
+        compactLog(c,dir,know?"good":"again",responseMs,oldStored,next,retrievability,autoReverse?"reverse":"normal");
+        memoryLast={card:c,dir,key:k,oldStored,oldLogLen,hadReverseProgress,oldReverseProgress};
         saveMemory();
 
         const move=know?1:-1;
-        // Preserve whichever face the learner is already looking at while the
-        // card exits. If they flipped to the answer, it should slide away as-is.
         E.card.classList.toggle("flip",flip);
         E.card.style.transition="transform .16s ease,opacity .14s";
         E.card.style.transform=cardTransform(move*innerWidth,move*9);
@@ -281,6 +355,10 @@
       const u=memoryLast;
       if(u.oldStored)memState.cards[u.key]=u.oldStored;else delete memState.cards[u.key];
       memState.logs.length=u.oldLogLen;
+      if(u.dir==="fa"){
+        if(u.hadReverseProgress)memState.reverseProgress[u.card.fa]=u.oldReverseProgress;
+        else delete memState.reverseProgress[u.card.fa];
+      }
       saveMemory();
       localStorage.setItem(DIR_PREF,u.dir);
       makeDeck();
@@ -294,7 +372,7 @@
 
     E.reset.onclick=()=>{
       if(!confirm("Reset all progress?"))return;
-      memState={version:5,cards:{},logs:[],createdAt:new Date().toISOString(),migratedFrom:null};
+      memState={version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
       localStorage.setItem(STATE_KEY_V5,JSON.stringify(memState));
       localStorage.removeItem("farsi2000-v4");
       localStorage.removeItem("farsi2000-v3");
@@ -310,6 +388,8 @@
       const previous=Q[i]?.fa||"";
       memoryLast=null;
       E.undo.classList.remove("show");
+      window.FARSI_ACTIVE_DIRECTION=dirNow();
+      window.FARSI_AUTO_REVERSE=false;
       makeDeck();
       if(previous&&Q.length>1&&Q[0].fa===previous)Q.push(Q.shift());
       render();
@@ -318,6 +398,10 @@
     window.FARSI_MEMORY_DEBUG=()=>({
       version:memState.version,
       direction:dirNow(),
+      activeDirection:activeDirNow(),
+      autoReverse:!!window.FARSI_AUTO_REVERSE,
+      reverseAfterGoods:AUTO_REVERSE_GOODS,
+      reverseReady:Object.values(memState.reverseProgress||{}).filter(n=>Number(n)>=AUTO_REVERSE_GOODS).length,
       counts:counts(State),
       cards:Object.keys(memState.cards).length,
       reviews:memState.logs.length,
@@ -328,6 +412,6 @@
 
     makeDeck();
     render();
-    document.documentElement.dataset.memoryEngine="fsrs6";
+    document.documentElement.dataset.memoryEngine="fsrs6-reverse-recall";
   });
 })();
