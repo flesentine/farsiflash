@@ -2,6 +2,8 @@ name: Bundle app UI controls
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "data/fsrs-browser.js"
       - "data/memory-engine.js"
@@ -30,6 +32,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import os, re
           manifest = Path("data/audio-manifest.js")
           first = manifest.read_text(encoding="utf-8").splitlines()[0]
           if not first.startswith("window.FARSI_AUDIO="):
@@ -46,13 +49,23 @@ jobs:
               Path("data/audio-quality-lock.js").read_text(encoding="utf-8").rstrip() + "\n",
           ]
           manifest.write_text("".join(chunks), encoding="utf-8")
+
+          # Every bundle rebuild gets a fresh browser URL so Chrome cannot keep
+          # an older memory/audio/UI bundle after a source update.
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          version = "ui-" + os.environ.get("GITHUB_SHA", "local")[:10]
+          s, n = re.subn(r'data/audio-manifest\.js\?v=[^"<]+', f'data/audio-manifest.js?v={version}', s, count=1)
+          if n != 1:
+              raise SystemExit("audio manifest cache key not found in index.html")
+          p.write_text(s, encoding="utf-8")
           PY
       - name: Commit bundled controls
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/audio-manifest.js
+          git add data/audio-manifest.js index.html
           if git diff --cached --quiet; then
             echo "UI bundle already current."
             exit 0
