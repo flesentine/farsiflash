@@ -10,6 +10,9 @@ ts-fsrs/dist/index.mjs:
 // Autoplay/replay controls for Persian pronunciation.
 // Loaded into audio-manifest.js by the UI bundler so future builds preserve it.
 (()=>{
+  if(window.__farsiAudioUiV3)return;
+  window.__farsiAudioUiV3=true;
+
   const PREF="farsi2000-autoplay";
   const DIR_PREF="farsi2000-direction";
   let enabled=localStorage.getItem(PREF)!=="0";
@@ -18,7 +21,10 @@ ts-fsrs/dist/index.mjs:
   let lastFa="";
 
   function currentFa(){return (document.getElementById("fa")?.textContent||"").trim()}
-  function direction(){return localStorage.getItem(DIR_PREF)==="en"?"en":"fa"}
+  function direction(){
+    if(window.FARSI_ACTIVE_DIRECTION==="en"||window.FARSI_ACTIVE_DIRECTION==="fa")return window.FARSI_ACTIVE_DIRECTION;
+    return localStorage.getItem(DIR_PREF)==="en"?"en":"fa";
+  }
   function persianVisible(){
     if(direction()==="fa")return true;
     const card=document.getElementById("card");
@@ -44,8 +50,6 @@ ts-fsrs/dist/index.mjs:
   window.FARSI_AUTOPLAY_REVEAL=()=>playCurrent(true);
 
   window.addEventListener("load",()=>{
-    // audio-ui is also bundled into audio-manifest.js. If that bundled copy
-    // already attached, do not install a second player/observer set.
     if(window.__farsiAudioUiAttached||document.getElementById("autoAudio"))return;
     window.__farsiAudioUiAttached=true;
 
@@ -89,8 +93,7 @@ ts-fsrs/dist/index.mjs:
       }).observe(card,{attributes:true,attributeFilter:["class"]});
     }
 
-    // In EN→FA mode, audio is corrective feedback, not a hint: block manual
-    // pronunciation while the English cue is still showing.
+    // English-first prompts must not leak the answer through pronunciation.
     document.addEventListener("click",e=>{
       if(e.target.closest?.("#speak")&&direction()==="en"&&!persianVisible()){
         e.preventDefault();
@@ -116,14 +119,18 @@ ts-fsrs/dist/index.mjs:
   });
 })();
 // FSRS-6 memory scheduler for Farsi 2000.
-// Uses real elapsed time, separate FA->EN / EN->FA memories, corrective feedback,
-// short-term learning/relearning, and compact review history.
+// Uses real elapsed time, separate manual FA->EN / EN->FA memories, corrective
+// feedback, short-term learning/relearning, and adaptive reverse-recall checks.
 (()=>{
+  if(window.__farsiMemoryEngineV6)return;
+  window.__farsiMemoryEngineV6=true;
+
   const STATE_KEY_V5="farsi2000-v5";
   const LEGACY_KEY="farsi2000-v4";
   const DIR_PREF="farsi2000-direction";
   const MAX_LOGS=30000;
   const REVIEW_CHUNK=24;
+  const AUTO_REVERSE_GOODS=4;
 
   let memState=null;
   let scheduler=null;
@@ -133,9 +140,11 @@ ts-fsrs/dist/index.mjs:
 
   const parse=(raw,fallback)=>{try{return JSON.parse(raw)}catch{return fallback}};
   const dirNow=()=>localStorage.getItem(DIR_PREF)==="en"?"en":"fa";
+  const activeDirNow=()=>window.FARSI_ACTIVE_DIRECTION==="en"?"en":dirNow();
   const keyFor=(fa,dir=dirNow())=>`${fa}\u241f${dir}`;
   const asMs=v=>{const n=Date.parse(v);return Number.isFinite(n)?n:Infinity};
   const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
+  const hasOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 
   function serializeCard(card){
     return {
@@ -154,18 +163,24 @@ ts-fsrs/dist/index.mjs:
     };
   }
 
+  function normalizeMemory(state){
+    if(!state.reverseProgress||typeof state.reverseProgress!=="object"||Array.isArray(state.reverseProgress))state.reverseProgress={};
+    return state;
+  }
+
   function saveMemory(){
     if(!memState)return;
+    normalizeMemory(memState);
     if(memState.logs.length>MAX_LOGS)memState.logs=memState.logs.slice(-MAX_LOGS);
     localStorage.setItem(STATE_KEY_V5,JSON.stringify(memState));
   }
 
   function migrateLegacy(State){
     const existing=parse(localStorage.getItem(STATE_KEY_V5),null);
-    if(existing&&existing.version===5&&existing.cards&&Array.isArray(existing.logs))return existing;
+    if(existing&&existing.version===5&&existing.cards&&Array.isArray(existing.logs))return normalizeMemory(existing);
 
     const now=Date.now();
-    const next={version:5,cards:{},logs:[],createdAt:new Date(now).toISOString(),migratedFrom:null};
+    const next={version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date(now).toISOString(),migratedFrom:null};
     const old=parse(localStorage.getItem(LEGACY_KEY),null);
     if(old&&Array.isArray(old.known)){
       const oldReview=old.review||{};
@@ -197,6 +212,37 @@ ts-fsrs/dist/index.mjs:
 
   function cardState(c,dir=dirNow()){
     return memState.cards[keyFor(c.fa,dir)]||null;
+  }
+
+  function progressFor(c){
+    normalizeMemory(memState);
+    if(hasOwn(memState.reverseProgress,c.fa)){
+      const n=Number(memState.reverseProgress[c.fa])||0;
+      return Math.max(0,Math.min(AUTO_REVERSE_GOODS,n));
+    }
+
+    // Bootstrap existing users from their recent FA-first review history. Four
+    // consecutive successful recognition reviews are enough to introduce the
+    // harder English->Farsi production check.
+    let streak=0;
+    for(let n=memState.logs.length-1;n>=0;n--){
+      const row=memState.logs[n];
+      if(!Array.isArray(row)||row[1]!==c.fa||row[2]!=="fa")continue;
+      const mode=row[10]||"normal";
+      if(mode==="reverse"){
+        streak=row[3]==="again"?AUTO_REVERSE_GOODS:0;
+        break;
+      }
+      if(row[3]==="good"){
+        streak++;
+        if(streak>=AUTO_REVERSE_GOODS)break;
+      }else{
+        streak=0;
+        break;
+      }
+    }
+    memState.reverseProgress[c.fa]=Math.min(AUTO_REVERSE_GOODS,streak);
+    return memState.reverseProgress[c.fa];
   }
 
   function isKnown(c,State,dir=dirNow()){
@@ -242,14 +288,18 @@ ts-fsrs/dist/index.mjs:
     for(const c of D){
       const m=cardState(c,d);
       if(!m)unseen.push(c);
-      else if(asMs(m.due)<=now)dueCards.push(c);
+      else if(asMs(m.due)<=now){
+        const autoReverse=d==="fa"&&progressFor(c)>=AUTO_REVERSE_GOODS;
+        dueCards.push({...c,_autoReverse:autoReverse});
+      }
     }
     dueCards.sort((a,b)=>asMs(cardState(a,d).due)-asMs(cardState(b,d).due));
 
     let newChunk=[];
     if(unseen.length){
       const stage=unseen[0].stage;
-      newChunk=shuffleCopy(unseen.filter(c=>c.stage===stage).slice(0,REVIEW_CHUNK));
+      newChunk=shuffleCopy(unseen.filter(c=>c.stage===stage).slice(0,REVIEW_CHUNK))
+        .map(c=>({...c,_autoReverse:false}));
     }
 
     Q=[...spreadDueByStage(dueCards),...newChunk];
@@ -287,22 +337,23 @@ ts-fsrs/dist/index.mjs:
 
   function answerIsVisible(){
     if(!E?.card)return false;
-    return dirNow()==="fa"?!!flip:!flip;
+    return activeDirNow()==="fa"?!!flip:!flip;
   }
 
   function revealCorrectAnswer(){
     if(!E?.card)return;
-    flip=dirNow()==="fa";
+    flip=activeDirNow()==="fa";
     E.card.classList.toggle("flip",flip);
     E.card.style.transform="";
   }
 
-  function compactLog(c,dir,rating,responseMs,before,next,retrievability){
+  function compactLog(c,dir,rating,responseMs,before,next,retrievability,mode="normal"){
     memState.logs.push([
       Date.now(),c.fa,dir,rating,Math.round(responseMs),
       before?.due||null,next.due,
       Number(next.stability||0),Number(next.difficulty||0),
       Number.isFinite(retrievability)?Number(retrievability.toFixed(4)):null,
+      mode,
     ]);
   }
 
@@ -333,6 +384,8 @@ ts-fsrs/dist/index.mjs:
         makeDeck();
         if(!Q.length){
           const n=counts(State);
+          window.FARSI_ACTIVE_DIRECTION=dirNow();
+          window.FARSI_AUTO_REVERSE=false;
           E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><p>${nextDueText()||"No review is due right now."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
@@ -341,8 +394,17 @@ ts-fsrs/dist/index.mjs:
           return;
         }
       }
+
+      const c=current();
+      const globalDir=dirNow();
+      const autoReverse=globalDir==="fa"&&!!c?._autoReverse;
+      window.FARSI_ACTIVE_DIRECTION=autoReverse?"en":globalDir;
+      window.FARSI_AUTO_REVERSE=autoReverse;
+      document.documentElement.dataset.reverseRecall=autoReverse?"1":"0";
+
       syncLegacyKnown(State);
       legacyRender();
+      if(autoReverse&&c)E.stageName.textContent=`${c.stage} · Recall Farsi`;
       const n=counts(State);
       E.known.textContent=n.known;
       E.leftCount.textContent=n.left;
@@ -354,9 +416,13 @@ ts-fsrs/dist/index.mjs:
       const c=current();
       if(!c)return;
       const dir=dirNow();
+      const autoReverse=dir==="fa"&&!!c._autoReverse;
       const k=keyFor(c.fa,dir);
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
+      const hadReverseProgress=hasOwn(memState.reverseProgress,c.fa);
+      const oldReverseProgress=hadReverseProgress?memState.reverseProgress[c.fa]:undefined;
+      const progressBefore=dir==="fa"?progressFor(c):0;
       const responseMs=Math.max(0,performance.now()-shownAt);
       grading=true;
 
@@ -368,13 +434,24 @@ ts-fsrs/dist/index.mjs:
         const result=scheduler.next(input,now,know?Rating.Good:Rating.Again);
         const next=serializeCard(result.card);
         memState.cards[k]=next;
-        compactLog(c,dir,know?"good":"again",responseMs,oldStored,next,retrievability);
-        memoryLast={card:c,dir,key:k,oldStored,oldLogLen};
+
+        if(dir==="fa"){
+          if(autoReverse){
+            // Passing the harder production test resets the recognition streak.
+            // Failing keeps reverse recall armed for the next FSRS retry.
+            memState.reverseProgress[c.fa]=know?0:AUTO_REVERSE_GOODS;
+          }else{
+            memState.reverseProgress[c.fa]=know
+              ?Math.min(AUTO_REVERSE_GOODS,progressBefore+1)
+              :0;
+          }
+        }
+
+        compactLog(c,dir,know?"good":"again",responseMs,oldStored,next,retrievability,autoReverse?"reverse":"normal");
+        memoryLast={card:c,dir,key:k,oldStored,oldLogLen,hadReverseProgress,oldReverseProgress};
         saveMemory();
 
         const move=know?1:-1;
-        // Preserve whichever face the learner is already looking at while the
-        // card exits. If they flipped to the answer, it should slide away as-is.
         E.card.classList.toggle("flip",flip);
         E.card.style.transition="transform .16s ease,opacity .14s";
         E.card.style.transform=cardTransform(move*innerWidth,move*9);
@@ -398,6 +475,10 @@ ts-fsrs/dist/index.mjs:
       const u=memoryLast;
       if(u.oldStored)memState.cards[u.key]=u.oldStored;else delete memState.cards[u.key];
       memState.logs.length=u.oldLogLen;
+      if(u.dir==="fa"){
+        if(u.hadReverseProgress)memState.reverseProgress[u.card.fa]=u.oldReverseProgress;
+        else delete memState.reverseProgress[u.card.fa];
+      }
       saveMemory();
       localStorage.setItem(DIR_PREF,u.dir);
       makeDeck();
@@ -411,7 +492,7 @@ ts-fsrs/dist/index.mjs:
 
     E.reset.onclick=()=>{
       if(!confirm("Reset all progress?"))return;
-      memState={version:5,cards:{},logs:[],createdAt:new Date().toISOString(),migratedFrom:null};
+      memState={version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
       localStorage.setItem(STATE_KEY_V5,JSON.stringify(memState));
       localStorage.removeItem("farsi2000-v4");
       localStorage.removeItem("farsi2000-v3");
@@ -427,6 +508,8 @@ ts-fsrs/dist/index.mjs:
       const previous=Q[i]?.fa||"";
       memoryLast=null;
       E.undo.classList.remove("show");
+      window.FARSI_ACTIVE_DIRECTION=dirNow();
+      window.FARSI_AUTO_REVERSE=false;
       makeDeck();
       if(previous&&Q.length>1&&Q[0].fa===previous)Q.push(Q.shift());
       render();
@@ -435,6 +518,10 @@ ts-fsrs/dist/index.mjs:
     window.FARSI_MEMORY_DEBUG=()=>({
       version:memState.version,
       direction:dirNow(),
+      activeDirection:activeDirNow(),
+      autoReverse:!!window.FARSI_AUTO_REVERSE,
+      reverseAfterGoods:AUTO_REVERSE_GOODS,
+      reverseReady:Object.values(memState.reverseProgress||{}).filter(n=>Number(n)>=AUTO_REVERSE_GOODS).length,
       counts:counts(State),
       cards:Object.keys(memState.cards).length,
       reviews:memState.logs.length,
@@ -445,12 +532,15 @@ ts-fsrs/dist/index.mjs:
 
     makeDeck();
     render();
-    document.documentElement.dataset.memoryEngine="fsrs6";
+    document.documentElement.dataset.memoryEngine="fsrs6-reverse-recall";
   });
 })();
 // Slide a clone of the currently visible FACE, not the 3D card.
 // Grade exits always preserve exactly what the learner is looking at.
 (()=>{
+  if(window.__farsiGradeAnimationFixV2)return;
+  window.__farsiGradeAnimationFixV2=true;
+
   window.addEventListener("load",()=>{
     if(typeof grade!=="function")return;
     const baseGrade=grade;
@@ -500,6 +590,9 @@ ts-fsrs/dist/index.mjs:
   });
 })();
 (()=>{
+  if(window.__farsiReadingModeV2)return;
+  window.__farsiReadingModeV2=true;
+
   const DIR_PREF="farsi2000-direction";
   const PHON_PREF="farsi2000-hide-phonetics";
   const OLD_PREF="farsi2000-reading-mode";
@@ -510,6 +603,12 @@ ts-fsrs/dist/index.mjs:
   if(localStorage.getItem(PHON_PREF)===null&&localStorage.getItem(OLD_PREF)==="1"){
     hidePhonetics=true;
     localStorage.setItem(PHON_PREF,"1");
+  }
+
+  function activeDirection(){
+    return window.FARSI_ACTIVE_DIRECTION==="en"||window.FARSI_ACTIVE_DIRECTION==="fa"
+      ?window.FARSI_ACTIVE_DIRECTION
+      :direction;
   }
 
   function ensureStyle(){
@@ -523,9 +622,9 @@ ts-fsrs/dist/index.mjs:
       body.english-first .back .mini{display:none}
       #directionMode,#phoneticsMode{font-variant-numeric:tabular-nums;white-space:nowrap}
       body.hide-phonetics #phoneticsMode{text-decoration:line-through;background:#0000000b;font-weight:700}
-      body.farsi-first #directionMode{background:#0000000b;font-weight:700}
+      body.direction-pref-fa #directionMode{background:#0000000b;font-weight:700}
       @media(prefers-color-scheme:dark){
-        body.hide-phonetics #phoneticsMode,body.farsi-first #directionMode{background:#ffffff10}
+        body.hide-phonetics #phoneticsMode,body.direction-pref-fa #directionMode{background:#ffffff10}
       }
       :fullscreen body.hide-phonetics .face:not(.back) .farsi{font-size:clamp(64px,7vw,104px)}
     `;
@@ -534,18 +633,33 @@ ts-fsrs/dist/index.mjs:
 
   function applyStartSide(){
     if(!E?.card||!Q?.length)return;
-    flip=direction==="en";
+    const active=activeDirection();
+    const farsiFirst=active==="fa";
+    document.body.classList.toggle("farsi-first",farsiFirst);
+    document.body.classList.toggle("english-first",!farsiFirst);
+    flip=!farsiFirst;
     E.card.classList.toggle("flip",flip);
     E.card.style.transform="";
+
+    const frontHint=E.card.querySelector(".face:not(.back) .hint");
+    const backHint=E.card.querySelector(".face.back .hint");
+    if(farsiFirst){
+      if(frontHint)frontHint.textContent="tap · ↑ ↓ to flip";
+      if(backHint)backHint.textContent="meaning";
+    }else{
+      if(backHint)backHint.textContent=window.FARSI_AUTO_REVERSE
+        ?"recall Farsi · tap to reveal"
+        :"say it in Farsi · tap to reveal";
+      if(frontHint)frontHint.textContent="Farsi answer · tap to flip";
+    }
   }
 
   function syncDirection(btn){
     const farsiFirst=direction==="fa";
-    document.body.classList.toggle("farsi-first",farsiFirst);
-    document.body.classList.toggle("english-first",!farsiFirst);
+    document.body.classList.toggle("direction-pref-fa",farsiFirst);
     btn.textContent=farsiFirst?"FA→EN":"EN→FA";
     btn.title=farsiFirst
-      ?"Farsi first: Persian + phonetics, then English"
+      ?"Farsi first, with automatic English-to-Farsi recall checks after mastery"
       :"English first: English, then Persian + phonetics";
     btn.setAttribute("aria-label",farsiFirst
       ?"Switch to English-first cards"
@@ -604,7 +718,11 @@ ts-fsrs/dist/index.mjs:
       localStorage.setItem(DIR_PREF,direction);
       syncDirection(directionBtn);
       if(typeof window.FARSI_DIRECTION_CHANGED==="function")window.FARSI_DIRECTION_CHANGED(direction);
-      else render();
+      else{
+        window.FARSI_ACTIVE_DIRECTION=direction;
+        window.FARSI_AUTO_REVERSE=false;
+        render();
+      }
     };
 
     phoneticsBtn.onclick=e=>{
