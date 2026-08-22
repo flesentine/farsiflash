@@ -1,6 +1,9 @@
 // Autoplay/replay controls for Persian pronunciation.
 // Loaded into audio-manifest.js by the UI bundler so future builds preserve it.
 (()=>{
+  if(window.__farsiAudioUiV3)return;
+  window.__farsiAudioUiV3=true;
+
   const PREF="farsi2000-autoplay";
   const DIR_PREF="farsi2000-direction";
   let enabled=localStorage.getItem(PREF)!=="0";
@@ -9,7 +12,10 @@
   let lastFa="";
 
   function currentFa(){return (document.getElementById("fa")?.textContent||"").trim()}
-  function direction(){return localStorage.getItem(DIR_PREF)==="en"?"en":"fa"}
+  function direction(){
+    if(window.FARSI_ACTIVE_DIRECTION==="en"||window.FARSI_ACTIVE_DIRECTION==="fa")return window.FARSI_ACTIVE_DIRECTION;
+    return localStorage.getItem(DIR_PREF)==="en"?"en":"fa";
+  }
   function persianVisible(){
     if(direction()==="fa")return true;
     const card=document.getElementById("card");
@@ -35,8 +41,6 @@
   window.FARSI_AUTOPLAY_REVEAL=()=>playCurrent(true);
 
   window.addEventListener("load",()=>{
-    // audio-ui is also bundled into audio-manifest.js. If that bundled copy
-    // already attached, do not install a second player/observer set.
     if(window.__farsiAudioUiAttached||document.getElementById("autoAudio"))return;
     window.__farsiAudioUiAttached=true;
 
@@ -80,8 +84,7 @@
       }).observe(card,{attributes:true,attributeFilter:["class"]});
     }
 
-    // In EN→FA mode, audio is corrective feedback, not a hint: block manual
-    // pronunciation while the English cue is still showing.
+    // English-first prompts must not leak the answer through pronunciation.
     document.addEventListener("click",e=>{
       if(e.target.closest?.("#speak")&&direction()==="en"&&!persianVisible()){
         e.preventDefault();
