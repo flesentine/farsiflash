@@ -49,8 +49,7 @@ main{display:grid;place-items:center;min-height:0}
 
 <script src="data/00.js"></script><script src="data/01.js"></script><script src="data/02.js"></script><script src="data/03.js"></script><script src="data/04.js"></script><script src="data/05.js"></script><script src="data/06.js"></script><script src="data/07.js"></script>
 <script src="data/miller-00.js"></script><script src="data/miller-01.js"></script><script src="data/miller-02.js"></script><script src="data/miller-03.js"></script><script src="data/miller-04.js"></script><script src="data/miller-05.js"></script><script src="data/miller-06.js"></script><script src="data/miller-07.js"></script>
-<script src="data/path.js"></script><script src="data/audio-manifest.js?v=ui-e6549288cc"></script>
-<script src="data/background-ui.js?v=gen10-sharp2"></script>
+<script src="data/path.js"></script><script src="data/audio-manifest.js?v=ui-7db541c7af"></script>
 <script>
 const OLD_D=(window.FARSI_CHUNKS||[]).flat();
 const STATIC_D=(window.FARSI_MILLER_CHUNKS||[]).flat();
@@ -99,12 +98,5 @@ migrateState();
 if(D.length!==TOTAL){console.error(`Static deck has ${D.length} cards; expected ${TOTAL}`);E.main.innerHTML=`<div class="loading error"><strong>Couldn’t load the word list</strong><span>Please reload. Your progress is safe.</span></div>`}else{const words=new Set(D.map(c=>c.fa));K=new Set([...K].filter(fa=>words.has(fa)));const cleanMiss={};for(const [fa,n] of Object.entries(miss))if(words.has(fa))cleanMiss[fa]=n;miss=cleanMiss;review=Object.fromEntries(Object.entries(review).filter(([fa])=>words.has(fa)));due=Object.fromEntries(Object.entries(due).filter(([fa])=>words.has(fa)));save();makeDeck();render()}
 </script>
 
-<!-- Farsi Flip enhancement stack: scheduler first, then UI/animation wrappers. -->
-<script src="data/fsrs-browser.js?v=stack-20260821-2"></script>
-<script src="data/memory-engine.js?v=stack-20260821-2"></script>
-<script src="data/grade-animation-fix.js?v=stack-20260821-2"></script>
-<script src="data/reading-mode.js?v=stack-20260821-2"></script>
-<script src="data/audio-ui.js?v=stack-20260821-2"></script>
-<script src="data/responsive-ui.js?v=stack-20260821-2"></script>
 </body>
 </html>
