@@ -58,6 +58,17 @@ jobs:
           s, n = re.subn(r'data/audio-manifest\.js\?v=[^"<]+', f'data/audio-manifest.js?v={version}', s, count=1)
           if n != 1:
               raise SystemExit("audio manifest cache key not found in index.html")
+
+          # The manifest is the single runtime bundle. Remove legacy standalone
+          # copies so cached older modules cannot attach a second scheduler,
+          # audio player, card wrapper, or background controller.
+          standalone = [
+              "fsrs-browser.js", "memory-engine.js", "grade-animation-fix.js",
+              "reading-mode.js", "audio-ui.js", "responsive-ui.js", "background-ui.js",
+          ]
+          for name in standalone:
+              s = re.sub(r'\s*<script src="data/' + re.escape(name) + r'(?:\?v=[^"<]+)?"></script>\s*', '\n', s)
+          s = re.sub(r'\n?<!-- Farsi Flip enhancement stack:[^\n]*-->\n?', '\n', s)
           p.write_text(s, encoding="utf-8")
           PY
       - name: Commit bundled controls
@@ -73,5 +84,3 @@ jobs:
           git commit -m "Bundle app UI controls"
           git pull --rebase origin main
           git push origin main
-
-# rollout trigger: adaptive reverse recall
