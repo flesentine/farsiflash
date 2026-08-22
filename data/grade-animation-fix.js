@@ -1,6 +1,9 @@
 // Slide a clone of the currently visible FACE, not the 3D card.
 // Grade exits always preserve exactly what the learner is looking at.
 (()=>{
+  if(window.__farsiGradeAnimationFixV2)return;
+  window.__farsiGradeAnimationFixV2=true;
+
   window.addEventListener("load",()=>{
     if(typeof grade!=="function")return;
     const baseGrade=grade;
