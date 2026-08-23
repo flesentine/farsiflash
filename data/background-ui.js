@@ -1,26 +1,44 @@
 (()=>{
-  if(window.__farsiDualBackgroundV10)return;
-  window.__farsiDualBackgroundV10=true;
+  if(window.__farsiBackgroundGalleryV11)return;
+  window.__farsiBackgroundGalleryV11=true;
 
-  const STYLE_ID="iranDualBackgroundStylesV10";
-  const WRAP_ID="iranDualBackgroundV10";
+  const STYLE_ID="iranBackgroundGalleryStylesV11";
+  const WRAP_ID="iranBackgroundGalleryV11";
   const SWITCH_EVERY=6;
   const BACKGROUNDS=[
     "backgrounds/generated/twilight-courtyard-2.jpg?v=twilight-local2",
-    "backgrounds/generated/twilight-courtyard.jpg?v=twilight-local1"
+    "backgrounds/generated/twilight-courtyard.jpg?v=twilight-local1",
+    "backgrounds/generated/hq-set-2/twilight_courtyard_of_lanterns.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/lantern_lit_bazaar_at_blue_dusk.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/twilight_adobe_rooftops_and_windcatchers.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/twilight_persian_garden_reflections.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/lanternlit_mountain_village_at_blue_hour.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/twilight_lanterns_in_a_desert_courtyard.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/luminous_persian_hall_of_mosaic_light.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/moonlit_ruins_under_golden_light.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/rainy_twilight_alley_with_tower_glow.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-2/twilight_courtyard_of_blue_mosaic_domes.png?v=hqset2-v1"
   ];
 
+  const loaded=new Set([BACKGROUNDS[0],BACKGROUNDS[1]]);
+  let available=BACKGROUNDS.filter(src=>loaded.has(src));
   let bgIndex=0;
   let answerCount=0;
   let activeLayer=0;
   let gradeLocked=false;
+
+  function refreshAvailable(){
+    available=BACKGROUNDS.filter(src=>loaded.has(src));
+    if(!available.length)available=[BACKGROUNDS[0]];
+    bgIndex=Math.min(bgIndex,available.length-1);
+  }
 
   function installStyles(){
     if(document.getElementById(STYLE_ID))return;
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
       #${WRAP_ID} .farsi-bg-layer{position:absolute;inset:0;background-position:center center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.002);transition:opacity .9s ease}
@@ -50,24 +68,31 @@
     wrap.innerHTML='<div class="farsi-bg-layer is-active"></div><div class="farsi-bg-layer"></div>';
     document.body.prepend(wrap);
     const layers=wrap.querySelectorAll(".farsi-bg-layer");
-    layers[0].style.backgroundImage=`url("${BACKGROUNDS[0]}")`;
+    layers[0].style.backgroundImage=`url("${available[0]}")`;
   }
 
   function preload(){
-    BACKGROUNDS.forEach(src=>{const img=new Image();img.src=src});
+    BACKGROUNDS.forEach(src=>{
+      const img=new Image();
+      img.onload=()=>{loaded.add(src);refreshAvailable()};
+      img.onerror=()=>{};
+      img.src=src;
+    });
   }
 
   function swapBackground(){
+    refreshAvailable();
+    if(available.length<2)return;
     const wrap=document.getElementById(WRAP_ID);
     if(!wrap)return;
     const layers=wrap.querySelectorAll(".farsi-bg-layer");
     if(layers.length<2)return;
 
-    bgIndex=(bgIndex+1)%BACKGROUNDS.length;
+    bgIndex=(bgIndex+1)%available.length;
     const incomingIndex=activeLayer===0?1:0;
     const incoming=layers[incomingIndex];
     const outgoing=layers[activeLayer];
-    incoming.style.backgroundImage=`url("${BACKGROUNDS[bgIndex]}")`;
+    incoming.style.backgroundImage=`url("${available[bgIndex]}")`;
 
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       incoming.classList.add("is-active");
