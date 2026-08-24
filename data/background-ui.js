@@ -1,11 +1,11 @@
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV15)return;
-  window.__farsiResponsiveBackgroundsV15=true;
+  if(window.__farsiResponsiveBackgroundsV16)return;
+  window.__farsiResponsiveBackgroundsV16=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV15";
-  const WRAP_ID="farsiResponsiveBackgroundsV15";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV16";
+  const WRAP_ID="farsiResponsiveBackgroundsV16";
   const SWITCH_EVERY=6;
-  const SWAP_DELAY_MS=520;
+  const SWAP_DELAY_MS=560;
   const VEIL_IN_MS=280;
   const VEIL_HOLD_MS=70;
   const VEIL_OUT_MS=620;
@@ -41,7 +41,6 @@
   let mode="";
   let bgIndex=0;
   let answerCount=0;
-  let gradeLocked=false;
   let swapInProgress=false;
   const preparedImages=new Map();
 
@@ -58,7 +57,7 @@
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
       #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
@@ -69,9 +68,15 @@
       header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
       .tiny,.grade,.undo{background:rgba(13,13,12,.18)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
 
-      /* Keep the glass on the stationary stage, not on the rotating faces. */
-      .stage::before{content:"";position:absolute;inset:0;border-radius:22px;pointer-events:none;z-index:0;background:rgba(25,25,22,.60);border:1px solid rgba(255,255,255,.15);box-shadow:0 22px 70px rgba(0,0,0,.43),0 1px 2px rgba(0,0,0,.36);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-      .card{z-index:1}
+      /* The outer shell is the physical glass card. The inner card only flips. */
+      .card-shell{
+        border-radius:22px;
+        background:rgba(25,25,22,.60);
+        border:1px solid rgba(255,255,255,.15);
+        box-shadow:0 22px 70px rgba(0,0,0,.43),0 1px 2px rgba(0,0,0,.36);
+        backdrop-filter:blur(8px);
+        -webkit-backdrop-filter:blur(8px);
+      }
       .face{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 
       .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
@@ -83,8 +88,9 @@
       @media(max-width:700px) and (orientation:portrait){
         #${WRAP_ID}{inset:auto;top:0;left:0;width:100vw;height:100lvh;min-height:100lvh}
         #${WRAP_ID} .farsi-bg-tone{background:linear-gradient(to bottom,rgba(7,8,9,.18),rgba(7,8,9,.06) 30%,rgba(7,8,9,.10) 72%,rgba(7,8,9,.24))}
-        .stage::before{background:rgba(25,25,22,.56);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+        .card-shell{background:rgba(25,25,22,.56);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
       }
+      @media(max-width:430px){.card-shell{border-radius:18px}}
       @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-veil{transition:none!important}}
     `;
     document.head.appendChild(style);
@@ -154,8 +160,6 @@
     const img=await prepareImage(src);
     if(!img){swapInProgress=false;return}
 
-    // Do not composite two large full-screen images at once. Fade a dark veil in,
-    // swap one already-decoded image underneath it, then reveal the new scene.
     veil.classList.add("is-on");
     await wait(VEIL_IN_MS+40);
     photo.src=src;
@@ -183,34 +187,11 @@
     if(answerCount%SWITCH_EVERY===0)setTimeout(swapBackground,SWAP_DELAY_MS);
   }
 
-  function hookGrade(attempt=0){
-    if(typeof grade!=="function"){
-      if(attempt<30)setTimeout(()=>hookGrade(attempt+1),100);
-      return;
-    }
-    if(grade.__farsiResponsiveBackgroundRotation)return;
-
-    const baseGrade=grade;
-    const wrapped=function(know){
-      if(gradeLocked)return baseGrade(know);
-      const card=document.getElementById("card");
-      const result=baseGrade(know);
-      const accepted=!!card&&card.style.opacity==="0";
-      if(accepted){
-        gradeLocked=true;
-        registerAnswer();
-        setTimeout(()=>{gradeLocked=false},260);
-      }
-      return result;
-    };
-    wrapped.__farsiResponsiveBackgroundRotation=true;
-    grade=wrapped;
-  }
-
   function init(){
     installStyles();
     installMarkup();
     syncMode(true);
+    window.addEventListener("farsi:graded",registerAnswer);
     let resizeTimer=0;
     window.addEventListener("resize",()=>{
       clearTimeout(resizeTimer);
@@ -221,6 +202,4 @@
 
   if(document.readyState==="loading")window.addEventListener("DOMContentLoaded",init,{once:true});
   else init();
-
-  window.addEventListener("load",()=>setTimeout(()=>hookGrade(),0),{once:true});
 })();
