@@ -1,12 +1,14 @@
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV13)return;
-  window.__farsiResponsiveBackgroundsV13=true;
+  if(window.__farsiResponsiveBackgroundsV14)return;
+  window.__farsiResponsiveBackgroundsV14=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV13";
-  const WRAP_ID="farsiResponsiveBackgroundsV13";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV14";
+  const WRAP_ID="farsiResponsiveBackgroundsV14";
   const SWITCH_EVERY=6;
-  const SWAP_DELAY_MS=500;
-  const CROSSFADE_MS=1800;
+  const SWAP_DELAY_MS=520;
+  const VEIL_IN_MS=280;
+  const VEIL_HOLD_MS=70;
+  const VEIL_OUT_MS=620;
 
   const DESKTOP_BACKGROUNDS=[
     "backgrounds/generated/twilight-courtyard-2.jpg?v=twilight-local2",
@@ -39,7 +41,6 @@
   let mode="";
   let bgIndex=0;
   let answerCount=0;
-  let activeLayer=0;
   let gradeLocked=false;
   let swapInProgress=false;
   const preparedImages=new Map();
@@ -57,12 +58,13 @@
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
-      #${WRAP_ID} .farsi-bg-layer{position:absolute;inset:0;background-position:center center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity ${CROSSFADE_MS}ms cubic-bezier(.22,.61,.36,1);will-change:opacity}
-      #${WRAP_ID} .farsi-bg-layer.is-active{opacity:1}
-      #${WRAP_ID}::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.16),rgba(7,8,9,.07) 28%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.28)),radial-gradient(circle at center,transparent 30%,rgba(7,8,9,.10) 78%,rgba(7,8,9,.20))}
+      #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
+      #${WRAP_ID} .farsi-bg-tone{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.16),rgba(7,8,9,.07) 28%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.28)),radial-gradient(circle at center,transparent 30%,rgba(7,8,9,.10) 78%,rgba(7,8,9,.20))}
+      #${WRAP_ID} .farsi-bg-veil{position:absolute;inset:0;background:rgba(8,9,10,.72);opacity:0;transition:opacity ${VEIL_OUT_MS}ms cubic-bezier(.22,.61,.36,1);will-change:opacity}
+      #${WRAP_ID} .farsi-bg-veil.is-on{opacity:1;transition-duration:${VEIL_IN_MS}ms}
       .app{position:relative!important;z-index:1!important;background:transparent!important}
       header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
       .tiny,.grade,.undo{background:rgba(13,13,12,.18)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
@@ -74,10 +76,11 @@
       .sw{background:rgba(14,14,12,.66)!important;border:1px solid rgba(255,255,255,.12)}
       @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.13)!important}}
       @media(max-width:700px) and (orientation:portrait){
-        #${WRAP_ID}::after{background:linear-gradient(to bottom,rgba(7,8,9,.18),rgba(7,8,9,.06) 30%,rgba(7,8,9,.10) 72%,rgba(7,8,9,.24))}
+        #${WRAP_ID}{inset:auto;top:0;left:0;width:100vw;height:100lvh;min-height:100lvh}
+        #${WRAP_ID} .farsi-bg-tone{background:linear-gradient(to bottom,rgba(7,8,9,.18),rgba(7,8,9,.06) 30%,rgba(7,8,9,.10) 72%,rgba(7,8,9,.24))}
         .face{background:rgba(25,25,22,.56)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
       }
-      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-layer{transition:none!important}}
+      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-veil{transition:none!important}}
     `;
     document.head.appendChild(style);
   }
@@ -87,7 +90,7 @@
     const wrap=document.createElement("div");
     wrap.id=WRAP_ID;
     wrap.setAttribute("aria-hidden","true");
-    wrap.innerHTML='<div class="farsi-bg-layer is-active"></div><div class="farsi-bg-layer"></div>';
+    wrap.innerHTML='<img class="farsi-bg-photo" alt=""><div class="farsi-bg-tone"></div><div class="farsi-bg-veil"></div>';
     document.body.prepend(wrap);
   }
 
@@ -97,11 +100,8 @@
       const img=new Image();
       img.decoding="async";
       img.onload=()=>{
-        if(typeof img.decode==="function"){
-          img.decode().then(()=>resolve(img)).catch(()=>resolve(img));
-        }else{
-          resolve(img);
-        }
+        if(typeof img.decode==="function")img.decode().then(()=>resolve(img)).catch(()=>resolve(img));
+        else resolve(img);
       };
       img.onerror=()=>{
         preparedImages.delete(src);
@@ -116,55 +116,50 @@
   function preloadNext(){
     const list=listForMode();
     if(list.length<2)return;
-    const next=list[(bgIndex+1)%list.length];
-    prepareImage(next);
+    prepareImage(list[(bgIndex+1)%list.length]);
   }
 
-  function setBackgroundNow(src){
+  async function setBackgroundNow(src){
     const wrap=document.getElementById(WRAP_ID);
     if(!wrap)return;
-    const layers=wrap.querySelectorAll(".farsi-bg-layer");
-    if(layers.length<2)return;
-    layers[0].style.backgroundImage=`url("${src}")`;
-    layers[0].classList.add("is-active");
-    layers[1].classList.remove("is-active");
-    layers[1].style.backgroundImage="";
-    activeLayer=0;
-    prepareImage(src);
+    const photo=wrap.querySelector(".farsi-bg-photo");
+    if(!photo)return;
+    const img=await prepareImage(src);
+    if(!img)return;
+    photo.src=src;
     preloadNext();
   }
 
-  function swapBackground(){
+  function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+
+  async function swapBackground(){
     if(swapInProgress)return;
     const list=listForMode();
     if(list.length<2)return;
     const wrap=document.getElementById(WRAP_ID);
     if(!wrap)return;
-    const layers=wrap.querySelectorAll(".farsi-bg-layer");
-    if(layers.length<2)return;
+    const photo=wrap.querySelector(".farsi-bg-photo");
+    const veil=wrap.querySelector(".farsi-bg-veil");
+    if(!photo||!veil)return;
 
     const nextIndex=(bgIndex+1)%list.length;
     const src=list[nextIndex];
-    const incomingIndex=activeLayer===0?1:0;
-    const incoming=layers[incomingIndex];
-    const outgoing=layers[activeLayer];
-
     swapInProgress=true;
-    prepareImage(src).then(img=>{
-      if(!img){
-        swapInProgress=false;
-        return;
-      }
-      incoming.style.backgroundImage=`url("${src}")`;
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        incoming.classList.add("is-active");
-        outgoing.classList.remove("is-active");
-        activeLayer=incomingIndex;
-        bgIndex=nextIndex;
-        preloadNext();
-        setTimeout(()=>{swapInProgress=false},CROSSFADE_MS+80);
-      }));
-    });
+
+    const img=await prepareImage(src);
+    if(!img){swapInProgress=false;return}
+
+    // Do not composite two large full-screen images at once. Fade a dark veil in,
+    // swap one already-decoded image underneath it, then reveal the new scene.
+    veil.classList.add("is-on");
+    await wait(VEIL_IN_MS+40);
+    photo.src=src;
+    await wait(VEIL_HOLD_MS);
+    bgIndex=nextIndex;
+    preloadNext();
+    veil.classList.remove("is-on");
+    await wait(VEIL_OUT_MS+40);
+    swapInProgress=false;
   }
 
   function syncMode(force=false){
@@ -214,9 +209,9 @@
     let resizeTimer=0;
     window.addEventListener("resize",()=>{
       clearTimeout(resizeTimer);
-      resizeTimer=setTimeout(()=>syncMode(false),120);
+      resizeTimer=setTimeout(()=>syncMode(false),160);
     });
-    window.addEventListener("orientationchange",()=>setTimeout(()=>syncMode(false),180));
+    window.addEventListener("orientationchange",()=>setTimeout(()=>syncMode(false),220));
   }
 
   if(document.readyState==="loading")window.addEventListener("DOMContentLoaded",init,{once:true});
