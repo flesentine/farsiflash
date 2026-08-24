@@ -49,9 +49,8 @@
   }
 
   function shellFor(){
-    const card=window.E?.card;
-    if(!card)return null;
-    return card.closest(".card-shell");
+    if(typeof E==="undefined"||!E?.card)return null;
+    return E.card.closest(".card-shell");
   }
 
   function resetShell(shell){
@@ -63,24 +62,24 @@
   }
 
   function finishPointer(){
-    if(!window.down)return;
-    window.down=false;
+    if(!down)return;
+    down=false;
     const shell=shellFor();
     shell?.classList.remove("is-dragging");
     const t=Math.min(110,innerWidth*.22),tapSlop=14;
-    if(window.dx<-t)grade(false);
-    else if(window.dx>t)grade(true);
+    if(dx<-t)grade(false);
+    else if(dx>t)grade(true);
     else{
       if(shell){
         shell.style.transition="transform .16s ease";
         shell.style.transform="translateX(0) rotate(0deg)";
         setTimeout(()=>{if(shell.isConnected)shell.style.transition=""},180);
       }
-      if(window.E){E.left.style.opacity=E.right.style.opacity=0}
-      if(Math.abs(window.dx)<=tapSlop)turn();
+      E.left.style.opacity=E.right.style.opacity=0;
+      if(Math.abs(dx)<=tapSlop)turn();
     }
-    window.dx=0;
-    window.suppress=false;
+    dx=0;
+    suppress=false;
   }
 
   function installPointerHandlers(stage){
@@ -88,28 +87,28 @@
     stage.dataset.cardShellPointers="1";
 
     stage.onpointerdown=e=>{
-      if(!window.Q?.length||e.target.closest(".speak")||answering)return;
+      if(!Q.length||e.target.closest(".speak")||answering)return;
       const shell=shellFor();
       if(!shell)return;
-      window.down=true;
-      window.start=e.clientX;
-      window.dx=0;
-      window.suppress=false;
+      down=true;
+      start=e.clientX;
+      dx=0;
+      suppress=false;
       stage.setPointerCapture?.(e.pointerId);
       shell.classList.add("is-dragging");
       shell.style.transition="none";
     };
 
     stage.onpointermove=e=>{
-      if(!window.down||answering)return;
+      if(!down||answering)return;
       const shell=shellFor();
       if(!shell)return;
-      window.dx=e.clientX-window.start;
-      if(Math.abs(window.dx)>14)window.suppress=true;
-      shell.style.transform=`translateX(${window.dx}px) rotate(${window.dx/28}deg)`;
-      const n=Math.min(Math.abs(window.dx)/110,1);
-      E.left.style.opacity=window.dx<0?n:0;
-      E.right.style.opacity=window.dx>0?n:0;
+      dx=e.clientX-start;
+      if(Math.abs(dx)>14)suppress=true;
+      shell.style.transform=`translateX(${dx}px) rotate(${dx/28}deg)`;
+      const n=Math.min(Math.abs(dx)/110,1);
+      E.left.style.opacity=dx<0?n:0;
+      E.right.style.opacity=dx>0?n:0;
     };
 
     stage.onpointerup=finishPointer;
@@ -119,8 +118,9 @@
 
   function ensureShell(){
     installStyles();
-    const stage=window.E?.stage;
-    const card=window.E?.card;
+    if(typeof E==="undefined")return null;
+    const stage=E?.stage;
+    const card=E?.card;
     if(!stage||!card||!card.isConnected)return null;
 
     let shell=card.closest(".card-shell");
@@ -129,8 +129,8 @@
       shell.className="card-shell";
       stage.insertBefore(shell,card);
       shell.appendChild(card);
-      if(window.E?.speak&&E.speak.parentElement===stage)shell.appendChild(E.speak);
-    }else if(window.E?.speak&&E.speak.parentElement!==shell){
+      if(E?.speak&&E.speak.parentElement===stage)shell.appendChild(E.speak);
+    }else if(E?.speak&&E.speak.parentElement!==shell){
       shell.appendChild(E.speak);
     }
 
@@ -140,7 +140,7 @@
 
   function animateAnswer(move){
     const shell=ensureShell();
-    if(!shell)return;
+    if(!shell)return false;
     answering=true;
     shell.classList.add("is-answering");
     shell.style.transition="transform .22s cubic-bezier(.35,.05,.65,.95),opacity .18s ease";
@@ -169,6 +169,7 @@
         answering=false;
       },240);
     },230);
+    return true;
   }
 
   window.addEventListener("load",()=>{
@@ -177,10 +178,10 @@
     const baseGrade=grade;
 
     grade=function(know){
-      if(answering||!window.E?.card||!window.Q?.length)return;
+      if(answering||!E?.card||!Q?.length)return;
       const card=E.card;
       const move=know?1:-1;
-      animateAnswer(move);
+      if(!animateAnswer(move))return baseGrade(know);
       const result=baseGrade(know);
 
       // The scheduler marks an accepted answer by setting inline opacity=0.
@@ -196,9 +197,8 @@
       return result;
     };
 
-    const main=window.E?.main;
-    if(main){
-      new MutationObserver(()=>ensureShell()).observe(main,{childList:true});
+    if(E?.main){
+      new MutationObserver(()=>ensureShell()).observe(E.main,{childList:true});
     }
   });
 })();
