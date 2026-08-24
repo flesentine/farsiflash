@@ -894,14 +894,14 @@ ts-fsrs/dist/index.mjs:
       .app{position:relative!important;z-index:1!important;background:transparent!important}
       header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
       .tiny,.grade,.undo{background:rgba(13,13,12,.18)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
-      .face{background:rgba(25,25,22,.72)!important;border-color:rgba(255,255,255,.15)!important;box-shadow:0 22px 70px rgba(0,0,0,.43),0 1px 2px rgba(0,0,0,.36)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+      .face{background:rgba(25,25,22,.60)!important;border-color:rgba(255,255,255,.15)!important;box-shadow:0 22px 70px rgba(0,0,0,.43),0 1px 2px rgba(0,0,0,.36)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
       .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
       .farsi{color:#f4e9dc!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
       .mini,.hint{color:#e2d9ce!important}
       .speak{color:#faf5ed!important;background:rgba(16,16,14,.48)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 4px 18px rgba(0,0,0,.28)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
       .sw{background:rgba(14,14,12,.66)!important;border:1px solid rgba(255,255,255,.12)}
       @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.13)!important}}
-      @media(max-width:700px){#${WRAP_ID} .farsi-bg-layer{background-position:center center}#${WRAP_ID}::after{background:linear-gradient(to bottom,rgba(7,8,9,.26),rgba(7,8,9,.12) 30%,rgba(7,8,9,.18) 72%,rgba(7,8,9,.36))}.face{background:rgba(25,25,22,.79)!important}}
+      @media(max-width:700px){#${WRAP_ID} .farsi-bg-layer{background-position:center center}#${WRAP_ID}::after{background:linear-gradient(to bottom,rgba(7,8,9,.26),rgba(7,8,9,.12) 30%,rgba(7,8,9,.18) 72%,rgba(7,8,9,.36))}.face{background:rgba(25,25,22,.66)!important}}
       @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-layer{transition:none!important}}
     `;
     document.head.appendChild(style);
