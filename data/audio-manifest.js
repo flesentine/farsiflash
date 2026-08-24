@@ -846,12 +846,14 @@ ts-fsrs/dist/index.mjs:
   else install();
 })();
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV12)return;
-  window.__farsiResponsiveBackgroundsV12=true;
+  if(window.__farsiResponsiveBackgroundsV13)return;
+  window.__farsiResponsiveBackgroundsV13=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV12";
-  const WRAP_ID="farsiResponsiveBackgroundsV12";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV13";
+  const WRAP_ID="farsiResponsiveBackgroundsV13";
   const SWITCH_EVERY=6;
+  const SWAP_DELAY_MS=500;
+  const CROSSFADE_MS=1800;
 
   const DESKTOP_BACKGROUNDS=[
     "backgrounds/generated/twilight-courtyard-2.jpg?v=twilight-local2",
@@ -886,6 +888,8 @@ ts-fsrs/dist/index.mjs:
   let answerCount=0;
   let activeLayer=0;
   let gradeLocked=false;
+  let swapInProgress=false;
+  const preparedImages=new Map();
 
   function isMobilePortrait(){
     return window.matchMedia("(max-width:700px) and (orientation:portrait)").matches;
@@ -900,10 +904,10 @@ ts-fsrs/dist/index.mjs:
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
-      #${WRAP_ID} .farsi-bg-layer{position:absolute;inset:0;background-position:center center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.002);transition:opacity .9s ease}
+      #${WRAP_ID} .farsi-bg-layer{position:absolute;inset:0;background-position:center center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity ${CROSSFADE_MS}ms cubic-bezier(.22,.61,.36,1);will-change:opacity}
       #${WRAP_ID} .farsi-bg-layer.is-active{opacity:1}
       #${WRAP_ID}::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.16),rgba(7,8,9,.07) 28%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.28)),radial-gradient(circle at center,transparent 30%,rgba(7,8,9,.10) 78%,rgba(7,8,9,.20))}
       .app{position:relative!important;z-index:1!important;background:transparent!important}
@@ -934,19 +938,33 @@ ts-fsrs/dist/index.mjs:
     document.body.prepend(wrap);
   }
 
-  function loadImage(src,onload,onerror){
-    const img=new Image();
-    img.onload=onload;
-    img.onerror=onerror||(()=>{});
-    img.src=src;
+  function prepareImage(src){
+    if(preparedImages.has(src))return preparedImages.get(src);
+    const promise=new Promise(resolve=>{
+      const img=new Image();
+      img.decoding="async";
+      img.onload=()=>{
+        if(typeof img.decode==="function"){
+          img.decode().then(()=>resolve(img)).catch(()=>resolve(img));
+        }else{
+          resolve(img);
+        }
+      };
+      img.onerror=()=>{
+        preparedImages.delete(src);
+        resolve(null);
+      };
+      img.src=src;
+    });
+    preparedImages.set(src,promise);
+    return promise;
   }
 
   function preloadNext(){
     const list=listForMode();
     if(list.length<2)return;
     const next=list[(bgIndex+1)%list.length];
-    const img=new Image();
-    img.src=next;
+    prepareImage(next);
   }
 
   function setBackgroundNow(src){
@@ -959,10 +977,12 @@ ts-fsrs/dist/index.mjs:
     layers[1].classList.remove("is-active");
     layers[1].style.backgroundImage="";
     activeLayer=0;
+    prepareImage(src);
     preloadNext();
   }
 
   function swapBackground(){
+    if(swapInProgress)return;
     const list=listForMode();
     if(list.length<2)return;
     const wrap=document.getElementById(WRAP_ID);
@@ -976,7 +996,12 @@ ts-fsrs/dist/index.mjs:
     const incoming=layers[incomingIndex];
     const outgoing=layers[activeLayer];
 
-    loadImage(src,()=>{
+    swapInProgress=true;
+    prepareImage(src).then(img=>{
+      if(!img){
+        swapInProgress=false;
+        return;
+      }
       incoming.style.backgroundImage=`url("${src}")`;
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         incoming.classList.add("is-active");
@@ -984,6 +1009,7 @@ ts-fsrs/dist/index.mjs:
         activeLayer=incomingIndex;
         bgIndex=nextIndex;
         preloadNext();
+        setTimeout(()=>{swapInProgress=false},CROSSFADE_MS+80);
       }));
     });
   }
@@ -994,13 +1020,14 @@ ts-fsrs/dist/index.mjs:
     mode=nextMode;
     bgIndex=0;
     answerCount=0;
+    swapInProgress=false;
     const list=listForMode();
     if(list.length)setBackgroundNow(list[0]);
   }
 
   function registerAnswer(){
     answerCount++;
-    if(answerCount%SWITCH_EVERY===0)setTimeout(swapBackground,170);
+    if(answerCount%SWITCH_EVERY===0)setTimeout(swapBackground,SWAP_DELAY_MS);
   }
 
   function hookGrade(attempt=0){
