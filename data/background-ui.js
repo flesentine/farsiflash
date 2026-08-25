@@ -1,9 +1,9 @@
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV18)return;
-  window.__farsiResponsiveBackgroundsV18=true;
+  if(window.__farsiResponsiveBackgroundsV19)return;
+  window.__farsiResponsiveBackgroundsV19=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV18";
-  const WRAP_ID="farsiResponsiveBackgroundsV18";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV19";
+  const WRAP_ID="farsiResponsiveBackgroundsV19";
   const SWITCH_EVERY=6;
   const SWAP_DELAY_MS=560;
   const VEIL_IN_MS=280;
@@ -57,7 +57,7 @@
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
       #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
@@ -89,9 +89,9 @@
       @media(max-width:700px) and (orientation:portrait){
         #${WRAP_ID}{inset:auto;top:0;left:0;width:100vw;height:100lvh;min-height:100lvh}
         #${WRAP_ID} .farsi-bg-tone{background:linear-gradient(to bottom,rgba(7,8,9,.18),rgba(7,8,9,.06) 30%,rgba(7,8,9,.10) 72%,rgba(7,8,9,.24))}
-        /* Stable clear tint on mobile: no backdrop-filter for WebKit to drop/repaint. */
+        /* Slightly darker stable clear tint on mobile; still no WebKit backdrop blur. */
         .card-glass{
-          background:rgba(25,25,22,.40);
+          background:rgba(25,25,22,.46);
           backdrop-filter:none;
           -webkit-backdrop-filter:none;
         }
