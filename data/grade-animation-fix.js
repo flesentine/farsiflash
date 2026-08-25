@@ -4,10 +4,10 @@
 // - .card owns only the 3D front/back flip
 // Mobile portrait avoids transform/opacity animation on the glass hierarchy.
 (()=>{
-  if(window.__farsiCardShellMotionV5)return;
-  window.__farsiCardShellMotionV5=true;
+  if(window.__farsiCardShellMotionV6)return;
+  window.__farsiCardShellMotionV6=true;
 
-  const STYLE_ID="farsiCardShellMotionStylesV5";
+  const STYLE_ID="farsiCardShellMotionStylesV6";
   let answering=false;
 
   function mobileSafeMotion(){
@@ -97,14 +97,14 @@
     if(mobileSafeMotion()){
       shell.style.transform="";
       shell.style.opacity="1";
-      shell.style.transition="left .16s ease";
+      shell.style.transition="left .12s ease-out";
       shell.style.left="0px";
     }else{
       shell.style.left="";
       shell.style.transition="transform .16s ease";
       shell.style.transform="translateX(0) rotate(0deg)";
     }
-    setTimeout(()=>{if(shell.isConnected)shell.style.transition=""},180);
+    setTimeout(()=>{if(shell.isConnected)shell.style.transition=""},140);
   }
 
   function finishPointer(){
@@ -125,8 +125,8 @@
   }
 
   function installPointerHandlers(stage){
-    if(!stage||stage.dataset.cardShellPointers==="2")return;
-    stage.dataset.cardShellPointers="2";
+    if(!stage||stage.dataset.cardShellPointers==="3")return;
+    stage.dataset.cardShellPointers="3";
 
     stage.onpointerdown=e=>{
       if(!Q.length||e.target.closest(".speak")||answering)return;
@@ -195,13 +195,13 @@
     shell.style.transform="";
     shell.style.opacity="1";
     shell.style.left="0px";
-    shell.style.transition="left .22s cubic-bezier(.35,.05,.65,.95)";
+    shell.style.transition="left .16s cubic-bezier(.30,.70,.40,1)";
     requestAnimationFrame(()=>{
       shell.style.left=`${move*112}vw`;
     });
 
-    // The scheduler renders the next card at ~200ms. Bring the same full glass
-    // card back with layout-position motion only, so WebKit never drops blur.
+    // The scheduler renders the next card at about 200ms. Re-enter as soon as
+    // the new content exists, with a shorter settle distance and faster timing.
     setTimeout(()=>{
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
@@ -209,17 +209,17 @@
       nextShell.style.transform="";
       nextShell.style.opacity="1";
       nextShell.style.transition="none";
-      nextShell.style.left=`${-move*24}px`;
+      nextShell.style.left=`${-move*18}px`;
       void nextShell.offsetWidth;
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        nextShell.style.transition="left .20s cubic-bezier(.22,.61,.36,1)";
+        nextShell.style.transition="left .14s cubic-bezier(.22,.61,.36,1)";
         nextShell.style.left="0px";
       }));
       setTimeout(()=>{
         if(nextShell.isConnected)resetShell(nextShell);
         answering=false;
-      },240);
-    },230);
+      },170);
+    },205);
   }
 
   function animateDesktopAnswer(shell,move){
