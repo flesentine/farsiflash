@@ -541,10 +541,10 @@ ts-fsrs/dist/index.mjs:
 // - .card owns only the 3D front/back flip
 // Mobile portrait avoids transform/opacity animation on the glass hierarchy.
 (()=>{
-  if(window.__farsiCardShellMotionV5)return;
-  window.__farsiCardShellMotionV5=true;
+  if(window.__farsiCardShellMotionV6)return;
+  window.__farsiCardShellMotionV6=true;
 
-  const STYLE_ID="farsiCardShellMotionStylesV5";
+  const STYLE_ID="farsiCardShellMotionStylesV6";
   let answering=false;
 
   function mobileSafeMotion(){
@@ -634,14 +634,14 @@ ts-fsrs/dist/index.mjs:
     if(mobileSafeMotion()){
       shell.style.transform="";
       shell.style.opacity="1";
-      shell.style.transition="left .16s ease";
+      shell.style.transition="left .12s ease-out";
       shell.style.left="0px";
     }else{
       shell.style.left="";
       shell.style.transition="transform .16s ease";
       shell.style.transform="translateX(0) rotate(0deg)";
     }
-    setTimeout(()=>{if(shell.isConnected)shell.style.transition=""},180);
+    setTimeout(()=>{if(shell.isConnected)shell.style.transition=""},140);
   }
 
   function finishPointer(){
@@ -662,8 +662,8 @@ ts-fsrs/dist/index.mjs:
   }
 
   function installPointerHandlers(stage){
-    if(!stage||stage.dataset.cardShellPointers==="2")return;
-    stage.dataset.cardShellPointers="2";
+    if(!stage||stage.dataset.cardShellPointers==="3")return;
+    stage.dataset.cardShellPointers="3";
 
     stage.onpointerdown=e=>{
       if(!Q.length||e.target.closest(".speak")||answering)return;
@@ -732,13 +732,13 @@ ts-fsrs/dist/index.mjs:
     shell.style.transform="";
     shell.style.opacity="1";
     shell.style.left="0px";
-    shell.style.transition="left .22s cubic-bezier(.35,.05,.65,.95)";
+    shell.style.transition="left .16s cubic-bezier(.30,.70,.40,1)";
     requestAnimationFrame(()=>{
       shell.style.left=`${move*112}vw`;
     });
 
-    // The scheduler renders the next card at ~200ms. Bring the same full glass
-    // card back with layout-position motion only, so WebKit never drops blur.
+    // The scheduler renders the next card at about 200ms. Re-enter as soon as
+    // the new content exists, with a shorter settle distance and faster timing.
     setTimeout(()=>{
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
@@ -746,17 +746,17 @@ ts-fsrs/dist/index.mjs:
       nextShell.style.transform="";
       nextShell.style.opacity="1";
       nextShell.style.transition="none";
-      nextShell.style.left=`${-move*24}px`;
+      nextShell.style.left=`${-move*18}px`;
       void nextShell.offsetWidth;
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        nextShell.style.transition="left .20s cubic-bezier(.22,.61,.36,1)";
+        nextShell.style.transition="left .14s cubic-bezier(.22,.61,.36,1)";
         nextShell.style.left="0px";
       }));
       setTimeout(()=>{
         if(nextShell.isConnected)resetShell(nextShell);
         answering=false;
-      },240);
-    },230);
+      },170);
+    },205);
   }
 
   function animateDesktopAnswer(shell,move){
@@ -1076,11 +1076,11 @@ ts-fsrs/dist/index.mjs:
   else install();
 })();
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV18)return;
-  window.__farsiResponsiveBackgroundsV18=true;
+  if(window.__farsiResponsiveBackgroundsV19)return;
+  window.__farsiResponsiveBackgroundsV19=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV18";
-  const WRAP_ID="farsiResponsiveBackgroundsV18";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV19";
+  const WRAP_ID="farsiResponsiveBackgroundsV19";
   const SWITCH_EVERY=6;
   const SWAP_DELAY_MS=560;
   const VEIL_IN_MS=280;
@@ -1134,7 +1134,7 @@ ts-fsrs/dist/index.mjs:
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
       #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
@@ -1166,9 +1166,9 @@ ts-fsrs/dist/index.mjs:
       @media(max-width:700px) and (orientation:portrait){
         #${WRAP_ID}{inset:auto;top:0;left:0;width:100vw;height:100lvh;min-height:100lvh}
         #${WRAP_ID} .farsi-bg-tone{background:linear-gradient(to bottom,rgba(7,8,9,.18),rgba(7,8,9,.06) 30%,rgba(7,8,9,.10) 72%,rgba(7,8,9,.24))}
-        /* Stable clear tint on mobile: no backdrop-filter for WebKit to drop/repaint. */
+        /* Slightly darker stable clear tint on mobile; still no WebKit backdrop blur. */
         .card-glass{
-          background:rgba(25,25,22,.40);
+          background:rgba(25,25,22,.46);
           backdrop-filter:none;
           -webkit-backdrop-filter:none;
         }
