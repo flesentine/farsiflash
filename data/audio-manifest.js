@@ -1082,16 +1082,14 @@ ts-fsrs/dist/index.mjs:
   else install();
 })();
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV19)return;
-  window.__farsiResponsiveBackgroundsV19=true;
+  if(window.__farsiResponsiveBackgroundsV20)return;
+  window.__farsiResponsiveBackgroundsV20=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV19";
-  const WRAP_ID="farsiResponsiveBackgroundsV19";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV20";
+  const WRAP_ID="farsiResponsiveBackgroundsV20";
   const SWITCH_EVERY=6;
   const SWAP_DELAY_MS=560;
-  const VEIL_IN_MS=280;
-  const VEIL_HOLD_MS=70;
-  const VEIL_OUT_MS=620;
+  const DISSOLVE_MS=5000;
 
   const DESKTOP_BACKGROUNDS=[
     "backgrounds/generated/twilight-courtyard-2.jpg?v=twilight-local2",
@@ -1124,7 +1122,10 @@ ts-fsrs/dist/index.mjs:
   let mode="";
   let bgIndex=0;
   let answerCount=0;
+  let activeLayer=0;
   let swapInProgress=false;
+  let queuedSwap=false;
+  let modeGeneration=0;
   const preparedImages=new Map();
 
   function isMobilePortrait(){
@@ -1140,13 +1141,12 @@ ts-fsrs/dist/index.mjs:
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18,#farsiResponsiveBackgroundsV19{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
-      #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
+      #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;opacity:0;transition:opacity ${DISSOLVE_MS}ms linear;will-change:opacity}
+      #${WRAP_ID} .farsi-bg-photo.is-active{opacity:1}
       #${WRAP_ID} .farsi-bg-tone{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.16),rgba(7,8,9,.07) 28%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.28)),radial-gradient(circle at center,transparent 30%,rgba(7,8,9,.10) 78%,rgba(7,8,9,.20))}
-      #${WRAP_ID} .farsi-bg-veil{position:absolute;inset:0;background:rgba(8,9,10,.72);opacity:0;transition:opacity ${VEIL_OUT_MS}ms cubic-bezier(.22,.61,.36,1);will-change:opacity}
-      #${WRAP_ID} .farsi-bg-veil.is-on{opacity:1;transition-duration:${VEIL_IN_MS}ms}
       .app{position:relative!important;z-index:1!important;background:transparent!important}
       header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
       .tiny,.grade,.undo{background:rgba(13,13,12,.18)!important;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
@@ -1180,7 +1180,7 @@ ts-fsrs/dist/index.mjs:
         }
       }
       @media(max-width:430px){.card-glass{border-radius:18px}}
-      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-veil{transition:none!important}}
+      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-photo{transition:none!important}}
     `;
     document.head.appendChild(style);
   }
@@ -1190,7 +1190,7 @@ ts-fsrs/dist/index.mjs:
     const wrap=document.createElement("div");
     wrap.id=WRAP_ID;
     wrap.setAttribute("aria-hidden","true");
-    wrap.innerHTML='<img class="farsi-bg-photo" alt=""><div class="farsi-bg-tone"></div><div class="farsi-bg-veil"></div>';
+    wrap.innerHTML='<img class="farsi-bg-photo is-active" alt=""><img class="farsi-bg-photo" alt=""><div class="farsi-bg-tone"></div>';
     document.body.prepend(wrap);
   }
 
@@ -1222,51 +1222,84 @@ ts-fsrs/dist/index.mjs:
   async function setBackgroundNow(src){
     const wrap=document.getElementById(WRAP_ID);
     if(!wrap)return;
-    const photo=wrap.querySelector(".farsi-bg-photo");
-    if(!photo)return;
+    const photos=[...wrap.querySelectorAll(".farsi-bg-photo")];
+    if(photos.length<2)return;
     const img=await prepareImage(src);
     if(!img)return;
-    photo.src=src;
+
+    activeLayer=0;
+    photos[0].style.transition="none";
+    photos[1].style.transition="none";
+    photos[0].src=src;
+    photos[0].classList.add("is-active");
+    photos[1].classList.remove("is-active");
+    photos[1].removeAttribute("src");
+    void photos[0].offsetWidth;
+    photos[0].style.transition="";
+    photos[1].style.transition="";
     preloadNext();
   }
 
   function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
   async function swapBackground(){
-    if(swapInProgress)return;
+    if(swapInProgress){queuedSwap=true;return}
     const list=listForMode();
     if(list.length<2)return;
     const wrap=document.getElementById(WRAP_ID);
     if(!wrap)return;
-    const photo=wrap.querySelector(".farsi-bg-photo");
-    const veil=wrap.querySelector(".farsi-bg-veil");
-    if(!photo||!veil)return;
+    const photos=[...wrap.querySelectorAll(".farsi-bg-photo")];
+    if(photos.length<2)return;
 
+    const generation=modeGeneration;
     const nextIndex=(bgIndex+1)%list.length;
     const src=list[nextIndex];
     swapInProgress=true;
 
     const img=await prepareImage(src);
-    if(!img){swapInProgress=false;return}
+    if(!img||generation!==modeGeneration){swapInProgress=false;return}
 
-    veil.classList.add("is-on");
-    await wait(VEIL_IN_MS+40);
-    photo.src=src;
-    await wait(VEIL_HOLD_MS);
+    const outgoing=photos[activeLayer];
+    const incoming=photos[1-activeLayer];
+    const nextLayer=1-activeLayer;
+
+    incoming.style.transition="none";
+    incoming.classList.remove("is-active");
+    incoming.src=src;
+    void incoming.offsetWidth;
+    incoming.style.transition="";
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      incoming.classList.add("is-active");
+      outgoing.classList.remove("is-active");
+    }));
+
     bgIndex=nextIndex;
+    activeLayer=nextLayer;
     preloadNext();
-    veil.classList.remove("is-on");
-    await wait(VEIL_OUT_MS+40);
+    await wait(DISSOLVE_MS+80);
+
+    if(generation===modeGeneration&&outgoing.isConnected&&!outgoing.classList.contains("is-active")){
+      outgoing.removeAttribute("src");
+    }
     swapInProgress=false;
+
+    if(queuedSwap&&generation===modeGeneration){
+      queuedSwap=false;
+      setTimeout(swapBackground,120);
+    }
   }
 
   function syncMode(force=false){
     const nextMode=isMobilePortrait()?"mobile":"desktop";
     if(!force&&nextMode===mode)return;
     mode=nextMode;
+    modeGeneration++;
     bgIndex=0;
     answerCount=0;
+    activeLayer=0;
     swapInProgress=false;
+    queuedSwap=false;
     const list=listForMode();
     if(list.length)setBackgroundNow(list[0]);
   }
