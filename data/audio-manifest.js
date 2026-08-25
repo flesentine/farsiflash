@@ -1012,6 +1012,13 @@ ts-fsrs/dist/index.mjs:
           height:min(60dvh,560px);
           max-height:calc(100dvh - 176px);
         }
+        .stage,.card{
+          -webkit-tap-highlight-color:transparent;
+        }
+        .card:focus,.card:focus-visible{
+          outline:none!important;
+          box-shadow:none!important;
+        }
         .face{padding:32px 24px}
         .roman,.english{font-size:clamp(36px,11vw,58px)}
         .farsi{font-size:clamp(31px,9vw,50px)}
@@ -1032,7 +1039,6 @@ ts-fsrs/dist/index.mjs:
           max-height:calc(100dvh - 164px);
         }
         .face{padding:28px 20px;border-radius:18px}
-        .card:focus-visible{border-radius:18px}
         .roman,.english{font-size:clamp(34px,12vw,52px)}
         .farsi{margin-top:18px;font-size:clamp(30px,10vw,46px)}
         .mini{bottom:22px;left:20px;right:20px;font-size:14px}
