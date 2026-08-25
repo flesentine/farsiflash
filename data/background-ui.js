@@ -1,11 +1,10 @@
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV20)return;
-  window.__farsiResponsiveBackgroundsV20=true;
+  if(window.__farsiResponsiveBackgroundsV21)return;
+  window.__farsiResponsiveBackgroundsV21=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV20";
-  const WRAP_ID="farsiResponsiveBackgroundsV20";
-  const SWITCH_EVERY=6;
-  const SWAP_DELAY_MS=560;
+  const STYLE_ID="farsiResponsiveBackgroundStylesV21";
+  const WRAP_ID="farsiResponsiveBackgroundsV21";
+  const BACKGROUND_INTERVAL_MS=60000;
   const DISSOLVE_MS=5000;
 
   const DESKTOP_BACKGROUNDS=[
@@ -38,11 +37,13 @@
 
   let mode="";
   let bgIndex=0;
-  let answerCount=0;
   let activeLayer=0;
   let swapInProgress=false;
   let queuedSwap=false;
   let modeGeneration=0;
+  let backgroundTimer=null;
+  let timerStartedAt=0;
+  let timerRemaining=BACKGROUND_INTERVAL_MS;
   const preparedImages=new Map();
 
   function isMobilePortrait(){
@@ -58,7 +59,7 @@
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18,#farsiResponsiveBackgroundsV19{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18,#farsiResponsiveBackgroundsV19,#farsiResponsiveBackgroundsV20{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
       #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;opacity:0;transition:opacity ${DISSOLVE_MS}ms linear;will-change:opacity}
@@ -207,13 +208,46 @@
     }
   }
 
+  function clearBackgroundTimer(){
+    if(backgroundTimer!==null){
+      clearTimeout(backgroundTimer);
+      backgroundTimer=null;
+    }
+  }
+
+  function scheduleBackgroundTimer(delay=timerRemaining){
+    clearBackgroundTimer();
+    if(document.hidden)return;
+    timerRemaining=Math.max(0,delay);
+    timerStartedAt=performance.now();
+    backgroundTimer=setTimeout(()=>{
+      backgroundTimer=null;
+      timerStartedAt=0;
+      timerRemaining=BACKGROUND_INTERVAL_MS;
+      swapBackground();
+      scheduleBackgroundTimer(BACKGROUND_INTERVAL_MS);
+    },timerRemaining);
+  }
+
+  function pauseBackgroundTimer(){
+    if(backgroundTimer===null)return;
+    const elapsed=Math.max(0,performance.now()-timerStartedAt);
+    timerRemaining=Math.max(0,timerRemaining-elapsed);
+    clearBackgroundTimer();
+    timerStartedAt=0;
+  }
+
+  function resumeBackgroundTimer(){
+    if(document.hidden||backgroundTimer!==null)return;
+    scheduleBackgroundTimer(timerRemaining);
+  }
+
   function syncMode(force=false){
     const nextMode=isMobilePortrait()?"mobile":"desktop";
     if(!force&&nextMode===mode)return;
     mode=nextMode;
     modeGeneration++;
     bgIndex=0;
-    answerCount=0;
     activeLayer=0;
     swapInProgress=false;
     queuedSwap=false;
@@ -221,16 +255,15 @@
     if(list.length)setBackgroundNow(list[0]);
   }
 
-  function registerAnswer(){
-    answerCount++;
-    if(answerCount%SWITCH_EVERY===0)setTimeout(swapBackground,SWAP_DELAY_MS);
-  }
-
   function init(){
     installStyles();
     installMarkup();
     syncMode(true);
-    window.addEventListener("farsi:graded",registerAnswer);
+    scheduleBackgroundTimer(BACKGROUND_INTERVAL_MS);
+    document.addEventListener("visibilitychange",()=>{
+      if(document.hidden)pauseBackgroundTimer();
+      else resumeBackgroundTimer();
+    });
     let resizeTimer=0;
     window.addEventListener("resize",()=>{
       clearTimeout(resizeTimer);
