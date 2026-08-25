@@ -13,6 +13,7 @@ on:
       - "data/responsive-ui.js"
       - "data/background-ui.js"
       - "data/audio-quality-lock.js"
+      - "data/sync-ui.js"
       - ".github/workflows/bundle-ui.yml"
   workflow_dispatch:
 
@@ -47,6 +48,7 @@ jobs:
               Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/background-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-quality-lock.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/sync-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
           ]
           manifest.write_text("".join(chunks), encoding="utf-8")
 
@@ -61,10 +63,11 @@ jobs:
 
           # The manifest is the single runtime bundle. Remove legacy standalone
           # copies so cached older modules cannot attach a second scheduler,
-          # audio player, card wrapper, or background controller.
+          # audio player, card wrapper, background controller, or sync client.
           standalone = [
               "fsrs-browser.js", "memory-engine.js", "grade-animation-fix.js",
               "reading-mode.js", "audio-ui.js", "responsive-ui.js", "background-ui.js",
+              "sync-ui.js",
           ]
           for name in standalone:
               s = re.sub(r'\s*<script src="data/' + re.escape(name) + r'(?:\?v=[^"<]+)?"></script>\s*', '\n', s)
