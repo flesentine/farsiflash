@@ -7,6 +7,65 @@ ts-fsrs/dist/index.mjs:
 ts-fsrs/dist/index.mjs:
   (* istanbul ignore next -- @preserve *)
 */
+// Prevent global study shortcuts from firing while the user is interacting
+// with form controls, links, buttons, or editable UI such as the Sync modal.
+(()=>{
+  if(window.__farsiKeyboardGuardV1)return;
+  window.__farsiKeyboardGuardV1=true;
+
+  function isInteractiveTarget(target){
+    if(!(target instanceof Element))return false;
+    return !!target.closest('input,textarea,select,button,a,[contenteditable=""],[contenteditable="true"],[role="textbox"]');
+  }
+
+  document.addEventListener("keydown",event=>{
+    if(!isInteractiveTarget(event.target))return;
+    event.stopImmediatePropagation();
+  },true);
+})();
+// Keep review history comfortably below browser/cloud storage limits without
+// touching FSRS card scheduling state. Compaction runs before the memory engine
+// loads and again when the page is leaving, never mid-study.
+(()=>{
+  if(window.__farsiStorageGuardV1)return;
+  window.__farsiStorageGuardV1=true;
+
+  const MEMORY_KEY="farsi2000-v5";
+  const MAX_LOGS=12000;
+  const TARGET_CHARS=1400000;
+  const MIN_LOGS=4000;
+
+  function parse(raw){try{return raw?JSON.parse(raw):null}catch{return null}}
+
+  function compact(){
+    const raw=localStorage.getItem(MEMORY_KEY);
+    const memory=parse(raw);
+    if(!memory||memory.version!==5||!Array.isArray(memory.logs))return false;
+    if(memory.logs.length<=MAX_LOGS&&raw.length<=TARGET_CHARS)return false;
+
+    let keep=Math.min(memory.logs.length,MAX_LOGS);
+    let next={...memory,logs:memory.logs.slice(-keep)};
+    let encoded=JSON.stringify(next);
+
+    while(encoded.length>TARGET_CHARS&&keep>MIN_LOGS){
+      keep=Math.max(MIN_LOGS,Math.floor(keep*.75));
+      next={...memory,logs:memory.logs.slice(-keep)};
+      encoded=JSON.stringify(next);
+    }
+
+    try{
+      localStorage.setItem(MEMORY_KEY,encoded);
+      console.info(`Farsi 2000: compacted review history to ${keep} recent logs.`);
+      return true;
+    }catch(err){
+      console.warn("Farsi 2000: review history compaction failed",err);
+      return false;
+    }
+  }
+
+  compact();
+  window.addEventListener("pagehide",compact,{capture:true});
+})();
 // Autoplay/replay controls for Persian pronunciation.
 // Loaded into audio-manifest.js by the UI bundler so future builds preserve it.
 (()=>{
