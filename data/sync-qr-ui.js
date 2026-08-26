@@ -1,12 +1,13 @@
 (()=>{
-  if(window.__farsiCloudSyncQrV2)return;
-  window.__farsiCloudSyncQrV2=true;
+  if(window.__farsiCloudSyncQrV3)return;
+  window.__farsiCloudSyncQrV3=true;
 
   const SYNC_CODE_KEY="farsi2000-sync-code";
   const LOCAL_UPDATED_KEY="farsi2000-sync-local-updated";
-  const STYLE_ID="farsiCloudSyncQrStylesV2";
+  const STYLE_ID="farsiCloudSyncQrStylesV3";
   const QR_LIB_URL="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
   let qrLibPromise=null;
+  let enhanceQueued=false;
 
   const normalize=code=>String(code||"").replace(/[^0-9a-f]/gi,"").toLowerCase();
   const valid=code=>/^[0-9a-f]{32}$/.test(normalize(code));
@@ -48,8 +49,6 @@
     localStorage.setItem(SYNC_CODE_KEY,incoming);
     localStorage.setItem(LOCAL_UPDATED_KEY,String(Date.now()));
     history.replaceState(null,"",location.pathname+location.search);
-
-    // The main sync client listens for online and will immediately merge/push.
     setTimeout(()=>window.dispatchEvent(new Event("online")),80);
     return true;
   }
@@ -91,6 +90,13 @@
 
   async function renderQr(panel,code){
     if(!panel||!valid(code))return;
+    if(panel.dataset.qrAutoCode===code)return;
+
+    // Mark this panel before touching its DOM. The QR renderer and text updates
+    // create mutations; marking first prevents the observer from recursively
+    // rebuilding the modal until the browser appears frozen.
+    panel.dataset.qrAutoCode=code;
+
     const url=syncUrl(code);
     const codeEl=panel.querySelector(".sync-code");
     if(codeEl){
@@ -121,6 +127,7 @@
       if(codeEl)codeEl.insertAdjacentElement("beforebegin",box);
       else panel.querySelector(".sync-actions")?.insertAdjacentElement("beforebegin",box);
     }
+
     let help=panel.querySelector("#farsiSyncQrHelp");
     if(!help){
       help=document.createElement("div");
@@ -130,11 +137,10 @@
       else box.insertAdjacentElement("afterend",help);
     }
 
-    if(panel.dataset.qrAutoCode===code)return;
-    panel.dataset.qrAutoCode=code;
     try{
       await ensureQrLib();
-      box.innerHTML="";
+      if(!panel.isConnected||panel.dataset.qrAutoCode!==code)return;
+      box.replaceChildren();
       new window.QRCode(box,{
         text:url,
         width:220,
@@ -145,13 +151,16 @@
       });
     }catch(err){
       console.warn("Farsi sync QR:",err);
-      box.textContent="QR unavailable — use the sync link below.";
-      panel.dataset.qrAutoCode="";
+      if(panel.isConnected){
+        box.textContent="QR unavailable — use the sync link below.";
+        panel.dataset.qrAutoCode="error:"+code;
+      }
     }
   }
 
   function streamlineSetup(panel){
-    if(!panel)return;
+    if(!panel||panel.dataset.qrSetupDone==="1")return;
+    panel.dataset.qrSetupDone="1";
     const input=panel.querySelector("#syncCodeInput");
     if(input)input.placeholder="Paste sync link or 32-character code";
     const create=panel.querySelector("#syncCreate");
@@ -174,11 +183,24 @@
     else streamlineSetup(panel);
   }
 
+  function scheduleEnhance(){
+    if(enhanceQueued)return;
+    enhanceQueued=true;
+    requestAnimationFrame(()=>{
+      enhanceQueued=false;
+      enhanceSyncModal();
+    });
+  }
+
   function init(){
     ensureStyles();
     const connectedFromQr=consumeQrLink();
-    const observer=new MutationObserver(()=>enhanceSyncModal());
-    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]});
+    const modal=document.getElementById("farsiCloudSyncModalV1");
+    if(modal){
+      const observer=new MutationObserver(scheduleEnhance);
+      observer.observe(modal,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]});
+    }
+
     document.addEventListener("click",e=>{
       const connect=e.target.closest?.("#syncConnect");
       if(connect){
@@ -187,8 +209,9 @@
         const parsed=extractSyncCode(input?.value||"");
         if(parsed&&input)input.value=parsed;
       }
-      setTimeout(enhanceSyncModal,0);
+      if(e.target.closest?.("#cloudSync,#syncCreate,#syncConnect"))scheduleEnhance();
     },true);
+
     if(connectedFromQr)setTimeout(()=>{
       const b=document.getElementById("cloudSync");
       if(b)b.textContent="Syncing…";
