@@ -1733,12 +1733,12 @@ ts-fsrs/dist/index.mjs:
   else init();
 })();
 (()=>{
-  if(window.__farsiCloudSyncQrV1)return;
-  window.__farsiCloudSyncQrV1=true;
+  if(window.__farsiCloudSyncQrV2)return;
+  window.__farsiCloudSyncQrV2=true;
 
   const SYNC_CODE_KEY="farsi2000-sync-code";
   const LOCAL_UPDATED_KEY="farsi2000-sync-local-updated";
-  const STYLE_ID="farsiCloudSyncQrStylesV1";
+  const STYLE_ID="farsiCloudSyncQrStylesV2";
   const QR_LIB_URL="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
   let qrLibPromise=null;
 
@@ -1746,18 +1746,33 @@ ts-fsrs/dist/index.mjs:
   const valid=code=>/^[0-9a-f]{32}$/.test(normalize(code));
   const codeRaw=()=>normalize(localStorage.getItem(SYNC_CODE_KEY)||"");
 
+  function extractSyncCode(value){
+    const text=String(value||"").trim();
+    if(!text)return "";
+    let candidate=text;
+    try{
+      const url=new URL(text,location.href);
+      const hashParams=new URLSearchParams(url.hash.replace(/^#/,""));
+      candidate=hashParams.get("sync")||url.searchParams.get("sync")||text;
+    }catch{}
+    const match=text.match(/(?:#|\?|&)sync=([^&#\s]+)/i);
+    if(match)candidate=match[1];
+    const clean=normalize(candidate);
+    return valid(clean)?clean:"";
+  }
+
   function syncUrl(code){
     return `${location.origin}${location.pathname}#sync=${normalize(code)}`;
   }
 
   function consumeQrLink(){
-    const raw=location.hash.startsWith("#sync=")?location.hash.slice(6):"";
-    const incoming=normalize(raw);
+    const hashParams=new URLSearchParams(location.hash.replace(/^#/,""));
+    const incoming=extractSyncCode(hashParams.get("sync")||"");
     if(!valid(incoming))return false;
 
     const existing=codeRaw();
     if(valid(existing)&&existing!==incoming){
-      const replace=confirm("Connect this device to the scanned Farsi sync code? This replaces its current sync connection, but keeps local progress for merging.");
+      const replace=confirm("Connect this device to the scanned Farsi sync link? This replaces its current sync connection, but keeps local progress for merging.");
       if(!replace){
         history.replaceState(null,"",location.pathname+location.search);
         return false;
@@ -1778,11 +1793,10 @@ ts-fsrs/dist/index.mjs:
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #farsiSyncQrBox{display:none;margin:16px auto 4px;padding:14px;width:max-content;max-width:100%;border-radius:16px;background:#fff;text-align:center}
-      #farsiSyncQrBox.show{display:block}
+      #farsiSyncQrBox{display:block;margin:12px auto 10px;padding:14px;width:max-content;max-width:100%;border-radius:16px;background:#fff;text-align:center;min-width:180px;min-height:180px;color:#333;font-size:12px}
       #farsiSyncQrBox img,#farsiSyncQrBox canvas{display:block;max-width:min(220px,68vw);height:auto!important;margin:auto}
-      #farsiSyncQrHelp{display:none;margin:10px 2px 0;color:#c9c0b5;font-size:12px;line-height:1.4;text-align:center}
-      #farsiSyncQrHelp.show{display:block}
+      #farsiSyncQrHelp{margin:9px 2px 12px;color:#c9c0b5;font-size:12px;line-height:1.4;text-align:center}
+      #farsiCloudSyncModalV1 .sync-code.sync-link{font-size:11px;line-height:1.45;letter-spacing:0;word-break:break-all;text-align:left}
     `;
     document.head.appendChild(style);
   }
@@ -1793,6 +1807,7 @@ ts-fsrs/dist/index.mjs:
     qrLibPromise=new Promise((resolve,reject)=>{
       const existing=document.querySelector(`script[src="${QR_LIB_URL}"]`);
       if(existing){
+        if(window.QRCode){resolve(window.QRCode);return}
         existing.addEventListener("load",()=>resolve(window.QRCode),{once:true});
         existing.addEventListener("error",()=>reject(new Error("QR library failed to load")),{once:true});
         return;
@@ -1808,70 +1823,89 @@ ts-fsrs/dist/index.mjs:
     return qrLibPromise;
   }
 
-  async function showQr(button){
-    const code=codeRaw();
-    if(!valid(code))return;
-    const panel=button.closest(".sync-panel");
-    if(!panel)return;
-
-    let box=panel.querySelector("#farsiSyncQrBox");
-    let help=panel.querySelector("#farsiSyncQrHelp");
-    if(box?.classList.contains("show")){
-      box.classList.remove("show");
-      help?.classList.remove("show");
-      button.textContent="Show QR";
-      return;
+  async function renderQr(panel,code){
+    if(!panel||!valid(code))return;
+    const url=syncUrl(code);
+    const codeEl=panel.querySelector(".sync-code");
+    if(codeEl){
+      codeEl.textContent=url;
+      codeEl.classList.add("sync-link");
+      codeEl.title=url;
     }
 
-    button.disabled=true;
-    button.textContent="Making QR…";
+    const copy=panel.querySelector("#syncCopy");
+    if(copy){
+      copy.textContent="Copy link";
+      copy.onclick=async e=>{
+        try{await navigator.clipboard.writeText(url);e.currentTarget.textContent="Copied ✓"}
+        catch{e.currentTarget.textContent="Select link below"}
+      };
+    }
+
+    const intro=panel.querySelector("p");
+    if(intro)intro.textContent="Scan this QR on your other device. It opens Farsi 2000 and connects sync automatically.";
+    const note=panel.querySelector(".sync-note");
+    if(note)note.textContent="Keep this link private. Anyone with it could sync this study progress.";
+
+    let box=panel.querySelector("#farsiSyncQrBox");
+    if(!box){
+      box=document.createElement("div");
+      box.id="farsiSyncQrBox";
+      box.textContent="Making QR…";
+      if(codeEl)codeEl.insertAdjacentElement("beforebegin",box);
+      else panel.querySelector(".sync-actions")?.insertAdjacentElement("beforebegin",box);
+    }
+    let help=panel.querySelector("#farsiSyncQrHelp");
+    if(!help){
+      help=document.createElement("div");
+      help.id="farsiSyncQrHelp";
+      help.textContent="Or copy the sync link underneath and open it on another device.";
+      if(codeEl)codeEl.insertAdjacentElement("afterend",help);
+      else box.insertAdjacentElement("afterend",help);
+    }
+
+    if(panel.dataset.qrAutoCode===code)return;
+    panel.dataset.qrAutoCode=code;
     try{
       await ensureQrLib();
-      if(!box){
-        box=document.createElement("div");
-        box.id="farsiSyncQrBox";
-        panel.querySelector(".sync-actions")?.insertAdjacentElement("afterend",box);
-      }
-      if(!help){
-        help=document.createElement("div");
-        help.id="farsiSyncQrHelp";
-        help.textContent="Scan this with the Camera app on your other phone or tablet. It opens Farsi 2000 and connects that device automatically.";
-        box.insertAdjacentElement("afterend",help);
-      }
       box.innerHTML="";
       new window.QRCode(box,{
-        text:syncUrl(code),
+        text:url,
         width:220,
         height:220,
         colorDark:"#111111",
         colorLight:"#ffffff",
         correctLevel:window.QRCode.CorrectLevel.M,
       });
-      box.classList.add("show");
-      help.classList.add("show");
-      button.textContent="Hide QR";
     }catch(err){
       console.warn("Farsi sync QR:",err);
-      button.textContent="QR unavailable";
-    }finally{
-      button.disabled=false;
+      box.textContent="QR unavailable — use the sync link below.";
+      panel.dataset.qrAutoCode="";
     }
+  }
+
+  function streamlineSetup(panel){
+    if(!panel)return;
+    const input=panel.querySelector("#syncCodeInput");
+    if(input)input.placeholder="Paste sync link or 32-character code";
+    const create=panel.querySelector("#syncCreate");
+    if(create)create.textContent="Create sync link";
+    const connect=panel.querySelector("#syncConnect");
+    if(connect)connect.textContent="Connect link";
+    const intro=panel.querySelector("p");
+    if(intro)intro.textContent="Create a private sync link for this progress, or paste one from another device.";
+    const note=panel.querySelector(".sync-note");
+    if(note)note.textContent="No account is required. Keep the sync link private.";
   }
 
   function enhanceSyncModal(){
     const modal=document.getElementById("farsiCloudSyncModalV1");
     if(!modal||!modal.classList.contains("open"))return;
+    const panel=modal.querySelector(".sync-panel");
+    if(!panel)return;
     const code=codeRaw();
-    if(!valid(code))return;
-    const actions=modal.querySelector(".sync-actions");
-    if(!actions||modal.querySelector("#syncQr"))return;
-
-    const button=document.createElement("button");
-    button.id="syncQr";
-    button.type="button";
-    button.textContent="Show QR";
-    button.onclick=()=>showQr(button);
-    actions.insertBefore(button,actions.querySelector("#syncDisconnect")||null);
+    if(valid(code))renderQr(panel,code);
+    else streamlineSetup(panel);
   }
 
   function init(){
@@ -1879,7 +1913,16 @@ ts-fsrs/dist/index.mjs:
     const connectedFromQr=consumeQrLink();
     const observer=new MutationObserver(()=>enhanceSyncModal());
     observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]});
-    document.addEventListener("click",()=>setTimeout(enhanceSyncModal,0),true);
+    document.addEventListener("click",e=>{
+      const connect=e.target.closest?.("#syncConnect");
+      if(connect){
+        const panel=connect.closest(".sync-panel");
+        const input=panel?.querySelector("#syncCodeInput");
+        const parsed=extractSyncCode(input?.value||"");
+        if(parsed&&input)input.value=parsed;
+      }
+      setTimeout(enhanceSyncModal,0);
+    },true);
     if(connectedFromQr)setTimeout(()=>{
       const b=document.getElementById("cloudSync");
       if(b)b.textContent="Syncing…";
