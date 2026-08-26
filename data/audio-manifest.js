@@ -1733,12 +1733,12 @@ ts-fsrs/dist/index.mjs:
   else init();
 })();
 (()=>{
-  if(window.__farsiCloudSyncQrV3)return;
-  window.__farsiCloudSyncQrV3=true;
+  if(window.__farsiCloudSyncQrV4)return;
+  window.__farsiCloudSyncQrV4=true;
 
   const SYNC_CODE_KEY="farsi2000-sync-code";
   const LOCAL_UPDATED_KEY="farsi2000-sync-local-updated";
-  const STYLE_ID="farsiCloudSyncQrStylesV3";
+  const STYLE_ID="farsiCloudSyncQrStylesV4";
   const QR_LIB_URL="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
   let qrLibPromise=null;
   let enhanceQueued=false;
@@ -1792,10 +1792,22 @@ ts-fsrs/dist/index.mjs:
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #farsiSyncQrBox{display:block;margin:12px auto 10px;padding:14px;width:max-content;max-width:100%;border-radius:16px;background:#fff;text-align:center;min-width:180px;min-height:180px;color:#333;font-size:12px}
-      #farsiSyncQrBox img,#farsiSyncQrBox canvas{display:block;max-width:min(220px,68vw);height:auto!important;margin:auto}
-      #farsiSyncQrHelp{margin:9px 2px 12px;color:#c9c0b5;font-size:12px;line-height:1.4;text-align:center}
-      #farsiCloudSyncModalV1 .sync-code.sync-link{font-size:11px;line-height:1.45;letter-spacing:0;word-break:break-all;text-align:left}
+      #farsiCloudSyncModalV1 .sync-panel{width:min(92vw,400px)!important;padding:20px!important}
+      #farsiCloudSyncModalV1 .sync-panel>p{margin:6px 0 12px!important;line-height:1.4!important}
+      #farsiSyncQrBox{display:block;margin:10px auto 10px;padding:10px;width:max-content;max-width:100%;border-radius:18px;background:#fff;text-align:center;min-width:194px;min-height:194px;color:#333;font-size:12px}
+      #farsiSyncQrBox img,#farsiSyncQrBox canvas{display:block;width:min(206px,62vw)!important;max-width:206px;height:auto!important;margin:auto}
+      #farsiCloudSyncModalV1 .sync-code.sync-link{display:block;margin:8px 0 6px!important;padding:10px 11px!important;border-radius:11px!important;background:rgba(255,255,255,.075)!important;font-size:10px!important;line-height:1.4!important;letter-spacing:0!important;word-break:break-all;text-align:left;color:#eee8df}
+      #farsiSyncQrHelp{margin:0 0 12px;color:#aaa297;font-size:11px;line-height:1.35;text-align:center}
+      #farsiCloudSyncModalV1 .sync-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;margin-top:10px!important}
+      #farsiCloudSyncModalV1 .sync-actions button{width:100%;min-height:42px}
+      #farsiCloudSyncModalV1 #syncCopy{grid-column:1}
+      #farsiCloudSyncModalV1 #syncNowBtn{grid-column:2}
+      #farsiCloudSyncModalV1 #syncDisconnect{grid-column:1/-1;background:transparent!important;border-color:rgba(255,255,255,.10)!important;color:#c9c0b5!important;min-height:38px!important}
+      #farsiCloudSyncModalV1 .sync-note{margin-top:10px!important;text-align:center;font-size:11px!important;line-height:1.35!important;color:#8f887f!important}
+      @media(max-width:430px){
+        #farsiCloudSyncModalV1 .sync-panel{width:min(94vw,380px)!important;padding:18px!important}
+        #farsiSyncQrBox img,#farsiSyncQrBox canvas{width:min(196px,60vw)!important;max-width:196px}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -1825,10 +1837,6 @@ ts-fsrs/dist/index.mjs:
   async function renderQr(panel,code){
     if(!panel||!valid(code))return;
     if(panel.dataset.qrAutoCode===code)return;
-
-    // Mark this panel before touching its DOM. The QR renderer and text updates
-    // create mutations; marking first prevents the observer from recursively
-    // rebuilding the modal until the browser appears frozen.
     panel.dataset.qrAutoCode=code;
 
     const url=syncUrl(code);
@@ -1844,14 +1852,14 @@ ts-fsrs/dist/index.mjs:
       copy.textContent="Copy link";
       copy.onclick=async e=>{
         try{await navigator.clipboard.writeText(url);e.currentTarget.textContent="Copied ✓"}
-        catch{e.currentTarget.textContent="Select link below"}
+        catch{e.currentTarget.textContent="Select link above"}
       };
     }
 
     const intro=panel.querySelector("p");
-    if(intro)intro.textContent="Scan this QR on your other device. It opens Farsi 2000 and connects sync automatically.";
+    if(intro)intro.textContent="Scan on your other device to open Farsi 2000 and connect sync automatically.";
     const note=panel.querySelector(".sync-note");
-    if(note)note.textContent="Keep this link private. Anyone with it could sync this study progress.";
+    if(note)note.textContent="Keep this pairing link private.";
 
     let box=panel.querySelector("#farsiSyncQrBox");
     if(!box){
@@ -1866,7 +1874,7 @@ ts-fsrs/dist/index.mjs:
     if(!help){
       help=document.createElement("div");
       help.id="farsiSyncQrHelp";
-      help.textContent="Or copy the sync link underneath and open it on another device.";
+      help.textContent="Scan the QR, or copy the link above.";
       if(codeEl)codeEl.insertAdjacentElement("afterend",help);
       else box.insertAdjacentElement("afterend",help);
     }
@@ -1877,8 +1885,8 @@ ts-fsrs/dist/index.mjs:
       box.replaceChildren();
       new window.QRCode(box,{
         text:url,
-        width:220,
-        height:220,
+        width:206,
+        height:206,
         colorDark:"#111111",
         colorLight:"#ffffff",
         correctLevel:window.QRCode.CorrectLevel.M,
