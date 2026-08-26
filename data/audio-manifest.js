@@ -1365,8 +1365,8 @@ ts-fsrs/dist/index.mjs:
   window.addEventListener("load",()=>document.body.classList.remove("audio-quality-lock"));
 })();
 (()=>{
-  if(window.__farsiCloudSyncV1)return;
-  window.__farsiCloudSyncV1=true;
+  if(window.__farsiCloudSyncV2)return;
+  window.__farsiCloudSyncV2=true;
 
   const ENDPOINT="https://qifvbdwdawmuwptdxgvu.supabase.co/functions/v1/farsi-sync";
   const MEMORY_KEY="farsi2000-v5";
@@ -1376,18 +1376,21 @@ ts-fsrs/dist/index.mjs:
   const SYNC_CODE_KEY="farsi2000-sync-code";
   const LOCAL_UPDATED_KEY="farsi2000-sync-local-updated";
   const RESET_AT_KEY="farsi2000-reset-at";
-  const STYLE_ID="farsiCloudSyncStylesV1";
+  const STARTUP_APPLIED_KEY="farsi2000-sync-startup-applied";
+  const STYLE_ID="farsiCloudSyncStylesV2";
   const MODAL_ID="farsiCloudSyncModalV1";
   const POLL_MS=1500;
   const CLOUD_POLL_MS=45000;
 
   let syncing=false;
   let queued=false;
+  let queuedApply=false;
   let applying=false;
   let debounceTimer=0;
   let lastFingerprint="";
   let localUpdatedAt=0;
   let lastCardCount=0;
+  let userActive=false;
 
   const parse=(raw,fallback)=>{try{return raw==null?fallback:JSON.parse(raw)}catch{return fallback}};
   const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
@@ -1452,10 +1455,14 @@ ts-fsrs/dist/index.mjs:
   }
 
   function mergeMemory(a,b){
-    if(!a&& !b)return null;
+    if(!a&&!b)return null;
     if(!a)return clone(b);
     if(!b)return clone(a);
-    if(a.version!==5||b.version!==5)return clone((Number(a?.logs?.at?.(-1)?.[0])||0)>=(Number(b?.logs?.at?.(-1)?.[0])||0)?a:b);
+    if(a.version!==5||b.version!==5){
+      const at=Number(a?.logs?.at?.(-1)?.[0])||0;
+      const bt=Number(b?.logs?.at?.(-1)?.[0])||0;
+      return clone(at>=bt?a:b);
+    }
 
     const out=emptyMemory();
     out.createdAt=[a.createdAt,b.createdAt].filter(Boolean).sort()[0]||new Date().toISOString();
@@ -1469,10 +1476,7 @@ ts-fsrs/dist/index.mjs:
       if(!cb){out.cards[key]=clone(ca);continue}
       const ta=asTime(ca.last_review),tb=asTime(cb.last_review);
       if(ta!==tb)out.cards[key]=clone(ta>tb?ca:cb);
-      else{
-        const ra=Number(ca.reps)||0,rb=Number(cb.reps)||0;
-        out.cards[key]=clone(ra>=rb?ca:cb);
-      }
+      else out.cards[key]=clone((Number(ca.reps)||0)>=(Number(cb.reps)||0)?ca:cb);
     }
 
     const seen=new Set();
@@ -1489,17 +1493,16 @@ ts-fsrs/dist/index.mjs:
     const ta=latestLogTimes(a),tb=latestLogTimes(b);
     const words=new Set([...Object.keys(a.reverseProgress||{}),...Object.keys(b.reverseProgress||{})]);
     for(const fa of words){
-      if((ta[fa]||0)>=(tb[fa]||0))out.reverseProgress[fa]=Number(a.reverseProgress?.[fa])||0;
-      else out.reverseProgress[fa]=Number(b.reverseProgress?.[fa])||0;
+      out.reverseProgress[fa]=(ta[fa]||0)>=(tb[fa]||0)
+        ?Number(a.reverseProgress?.[fa])||0
+        :Number(b.reverseProgress?.[fa])||0;
     }
     return out;
   }
 
   function sanitizedSide(side,resetAt){
     if(!side)return null;
-    if(resetAt&&Number(side.savedAt||0)<resetAt){
-      return {...side,memory:emptyMemory(),legacy:null};
-    }
+    if(resetAt&&Number(side.savedAt||0)<resetAt)return {...side,memory:emptyMemory(),legacy:null};
     return side;
   }
 
@@ -1566,6 +1569,7 @@ ts-fsrs/dist/index.mjs:
   }
 
   function button(){return document.getElementById("cloudSync")}
+
   function setStatus(status){
     const b=button();if(!b)return;
     b.dataset.status=status;
@@ -1577,37 +1581,63 @@ ts-fsrs/dist/index.mjs:
     b.title=validCode(codeRaw())?"Cross-device progress sync":"Set up cross-device progress sync";
   }
 
+  function shouldApplyStartup(){
+    return !userActive&&!sessionStorage.getItem(STARTUP_APPLIED_KEY);
+  }
+
   function scheduleSync(delay=900){
     if(!validCode(codeRaw()))return;
     clearTimeout(debounceTimer);
-    debounceTimer=setTimeout(()=>syncNow(),delay);
+    debounceTimer=setTimeout(()=>syncNow({applyRemote:false}),delay);
   }
 
-  async function syncNow(){
+  async function syncNow({applyRemote=false}={}){
     if(!validCode(codeRaw())){setStatus("idle");return}
     if(!navigator.onLine){setStatus("offline");return}
     if(document.visibilityState==="hidden")return;
-    if(syncing){queued=true;return}
-    syncing=true;setStatus("syncing");
+    if(syncing){
+      queued=true;
+      queuedApply=queuedApply||applyRemote;
+      return;
+    }
+
+    syncing=true;
+    setStatus("syncing");
     let changed=false;
     try{
       const local=localPayload();
       const pulled=await api("pull");
       const merged=mergePayload(local,pulled.state);
-      changed=applyPayload(merged);
+
+      // Automatic sync deliberately leaves the active deck alone. We still
+      // merge both devices and push that combined state to the cloud, but only
+      // apply remote changes locally during startup (before study begins) or
+      // when the user explicitly taps Sync now / connects a device.
+      if(applyRemote)changed=applyPayload(merged);
       await api("push",merged);
+
+      if(applyRemote)sessionStorage.setItem(STARTUP_APPLIED_KEY,"1");
       setStatus("synced");
     }catch(err){
       console.warn("Farsi cloud sync:",err);
       setStatus(navigator.onLine?"error":"offline");
     }finally{
       syncing=false;
-      if(queued){queued=false;scheduleSync(250)}
+      if(queued){
+        const nextApply=queuedApply;
+        queued=false;queuedApply=false;
+        setTimeout(()=>syncNow({applyRemote:nextApply}),250);
+      }
     }
+
     if(changed){
       sessionStorage.setItem("farsi2000-sync-reloaded","1");
-      setTimeout(()=>location.reload(),220);
+      setTimeout(()=>location.reload(),160);
     }
+  }
+
+  function autoSync(){
+    return syncNow({applyRemote:shouldApplyStartup()});
   }
 
   function installStyle(){
@@ -1648,12 +1678,15 @@ ts-fsrs/dist/index.mjs:
       modal.innerHTML=`<div class="sync-panel"><button class="sync-close" id="syncClose" aria-label="Close">×</button><h2>Cloud Sync</h2><p>This private code connects your progress on your other phone, tablet, or computer.</p><code class="sync-code">${formatCode(code)}</code><div class="sync-actions"><button class="primary" id="syncCopy">Copy code</button><button id="syncNowBtn">Sync now</button><button id="syncDisconnect">Disconnect this device</button></div><div class="sync-note">Treat this code like a password. Anyone with it could sync this study progress.</div></div>`;
       modal.querySelector("#syncClose").onclick=closeModal;
       modal.querySelector("#syncCopy").onclick=async e=>{
-        try{await navigator.clipboard.writeText(formatCode(code));e.currentTarget.textContent="Copied ✓"}catch{e.currentTarget.textContent="Select code above"}
+        try{await navigator.clipboard.writeText(formatCode(code));e.currentTarget.textContent="Copied ✓"}
+        catch{e.currentTarget.textContent="Select code above"}
       };
-      modal.querySelector("#syncNowBtn").onclick=()=>{closeModal();syncNow()};
+      modal.querySelector("#syncNowBtn").onclick=()=>{closeModal();syncNow({applyRemote:true})};
       modal.querySelector("#syncDisconnect").onclick=()=>{
         if(!confirm("Disconnect cloud sync on this device? Your local progress will stay here."))return;
-        localStorage.removeItem(SYNC_CODE_KEY);setStatus("idle");renderModal();
+        localStorage.removeItem(SYNC_CODE_KEY);
+        sessionStorage.removeItem(STARTUP_APPLIED_KEY);
+        setStatus("idle");renderModal();
       };
     }else{
       modal.innerHTML=`<div class="sync-panel"><button class="sync-close" id="syncClose" aria-label="Close">×</button><h2>Cloud Sync</h2><p>Create a private sync code for this progress, or paste the code from another device.</p><input id="syncCodeInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EF01-2345-6789-ABCD-EF01-2345-6789"><div class="sync-actions"><button class="primary" id="syncCreate">Create sync code</button><button id="syncConnect">Use existing code</button></div><div class="sync-note">No account is required. Keep the code private.</div></div>`;
@@ -1661,16 +1694,21 @@ ts-fsrs/dist/index.mjs:
       modal.querySelector("#syncCreate").onclick=()=>{
         const next=randomCode();
         localStorage.setItem(SYNC_CODE_KEY,next);
-        localUpdatedAt=Date.now();localStorage.setItem(LOCAL_UPDATED_KEY,String(localUpdatedAt));
-        renderModal();syncNow();
+        localUpdatedAt=Date.now();
+        localStorage.setItem(LOCAL_UPDATED_KEY,String(localUpdatedAt));
+        sessionStorage.setItem(STARTUP_APPLIED_KEY,"1");
+        renderModal();syncNow({applyRemote:false});
       };
       modal.querySelector("#syncConnect").onclick=()=>{
         const input=modal.querySelector("#syncCodeInput");
         const next=String(input.value||"").replace(/[^0-9a-f]/gi,"").toLowerCase();
-        if(!validCode(next)){input.focus();input.setCustomValidity("Enter the full 32-character sync code");input.reportValidity();return}
+        if(!validCode(next)){
+          input.focus();input.setCustomValidity("Enter the full 32-character sync code");input.reportValidity();return;
+        }
         input.setCustomValidity("");
         localStorage.setItem(SYNC_CODE_KEY,next);
-        renderModal();syncNow();
+        sessionStorage.removeItem(STARTUP_APPLIED_KEY);
+        renderModal();syncNow({applyRemote:true});
       };
     }
   }
@@ -1681,7 +1719,8 @@ ts-fsrs/dist/index.mjs:
     const header=document.querySelector(".header-actions");if(!header)return;
     let b=button();
     if(!b){
-      b=document.createElement("button");b.id="cloudSync";b.type="button";b.className="tiny";b.onclick=e=>{e.stopPropagation();openModal()};
+      b=document.createElement("button");b.id="cloudSync";b.type="button";b.className="tiny";
+      b.onclick=e=>{e.stopPropagation();openModal()};
       const reset=document.getElementById("reset");
       if(reset)reset.insertAdjacentElement("beforebegin",b);else header.appendChild(b);
     }
@@ -1709,7 +1748,8 @@ ts-fsrs/dist/index.mjs:
         if(before>0&&after===0){
           const now=Date.now();
           localStorage.setItem(RESET_AT_KEY,String(now));
-          localUpdatedAt=now;localStorage.setItem(LOCAL_UPDATED_KEY,String(now));
+          localUpdatedAt=now;
+          localStorage.setItem(LOCAL_UPDATED_KEY,String(now));
           lastFingerprint=fingerprint();
           scheduleSync(150);
         }
@@ -1717,16 +1757,27 @@ ts-fsrs/dist/index.mjs:
     });
   }
 
+  function markUserActive(e){
+    if(e?.target?.closest?.(`#${MODAL_ID}`))return;
+    userActive=true;
+  }
+
   function init(){
     installStyle();installModal();installButton();ensureLocalClock();
     lastFingerprint=fingerprint();lastCardCount=memoryCardCount();
     installResetWatch();
+
+    document.addEventListener("pointerdown",markUserActive,true);
+    document.addEventListener("keydown",markUserActive,true);
+    window.addEventListener("farsi:graded",()=>{userActive=true});
+
     setInterval(watchLocal,POLL_MS);
-    setInterval(()=>{if(document.visibilityState==="visible")syncNow()},CLOUD_POLL_MS);
-    window.addEventListener("online",()=>syncNow());
+    setInterval(()=>{if(document.visibilityState==="visible")autoSync()},CLOUD_POLL_MS);
+    window.addEventListener("online",()=>autoSync());
     window.addEventListener("offline",()=>setStatus("offline"));
-    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncNow()});
-    if(validCode(codeRaw()))setTimeout(syncNow,800);
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")autoSync()});
+
+    if(validCode(codeRaw()))setTimeout(()=>autoSync(),250);
   }
 
   if(document.readyState==="loading")window.addEventListener("DOMContentLoaded",init,{once:true});
