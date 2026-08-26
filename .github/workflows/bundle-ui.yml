@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "data/fsrs-browser.js"
+      - "data/keyboard-guard.js"
+      - "data/storage-guard.js"
       - "data/memory-engine.js"
       - "data/grade-animation-fix.js"
       - "data/audio-ui.js"
@@ -42,6 +44,8 @@ jobs:
           chunks = [
               first.rstrip() + "\n",
               Path("data/fsrs-browser.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/keyboard-guard.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/storage-guard.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/memory-engine.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/grade-animation-fix.js").read_text(encoding="utf-8").rstrip() + "\n",
@@ -67,14 +71,53 @@ jobs:
           # copies so cached older modules cannot attach a second scheduler,
           # audio player, card wrapper, background controller, sync client, or QR helper.
           standalone = [
-              "fsrs-browser.js", "memory-engine.js", "grade-animation-fix.js",
-              "reading-mode.js", "audio-ui.js", "responsive-ui.js", "background-ui.js",
+              "fsrs-browser.js", "keyboard-guard.js", "storage-guard.js",
+              "memory-engine.js", "grade-animation-fix.js", "reading-mode.js",
+              "audio-ui.js", "responsive-ui.js", "background-ui.js",
               "sync-ui.js", "sync-qr-ui.js",
           ]
           for name in standalone:
               s = re.sub(r'\s*<script src="data/' + re.escape(name) + r'(?:\?v=[^"<]+)?"></script>\s*', '\n', s)
           s = re.sub(r'\n?<!-- Farsi Flip enhancement stack:[^\n]*-->\n?', '\n', s)
           p.write_text(s, encoding="utf-8")
+          PY
+      - name: Validate UI JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            data/keyboard-guard.js \
+            data/storage-guard.js \
+            data/audio-ui.js \
+            data/memory-engine.js \
+            data/grade-animation-fix.js \
+            data/reading-mode.js \
+            data/responsive-ui.js \
+            data/background-ui.js \
+            data/audio-quality-lock.js \
+            data/sync-ui.js \
+            data/sync-qr-ui.js; do
+            node --check "$file"
+          done
+          node --check data/audio-manifest.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          bundle = Path("data/audio-manifest.js").read_text(encoding="utf-8")
+          index = Path("index.html").read_text(encoding="utf-8")
+          required = [
+              "__farsiKeyboardGuardV1",
+              "__farsiStorageGuardV1",
+              "__farsiMemoryEngineV6",
+              "__farsiCardShellMotionV6",
+              "__farsiCloudSyncV2",
+          ]
+          for marker in required:
+              if bundle.count(marker) != 2:
+                  # Each module guard appears once in the read and once in the write.
+                  raise SystemExit(f"unexpected bundle marker count for {marker}: {bundle.count(marker)}")
+          if len(re.findall(r'data/audio-manifest\.js\?v=[^"<]+', index)) != 1:
+              raise SystemExit("index must contain exactly one audio-manifest bundle reference")
           PY
       - name: Commit bundled controls
         shell: bash
