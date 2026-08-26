@@ -1033,6 +1033,17 @@ ts-fsrs/dist/index.mjs:
       .progress{min-width:0}
       .header-actions{flex:0 0 auto}
 
+      /* Keep the desktop focus outline on the same stationary glass layer as
+         the dark card tint, so flipping only rotates the card content. */
+      @media(min-width:701px){
+        @supports selector(.card-shell:has(>.card:focus-visible)){
+          .card:focus-visible{box-shadow:none!important}
+          .card-shell:has(>.card:focus-visible)>.card-glass{
+            box-shadow:0 22px 70px rgba(0,0,0,.43),0 1px 2px rgba(0,0,0,.36),0 0 0 3px rgba(255,255,255,.22)!important;
+          }
+        }
+      }
+
       @media(max-width:700px){
         .app{
           grid-template-rows:auto minmax(0,1fr) auto;
