@@ -1172,7 +1172,17 @@ ts-fsrs/dist/index.mjs:
     "backgrounds/generated/hq-set-2/luminous_persian_hall_of_mosaic_light.png?v=hqset2-v1",
     "backgrounds/generated/hq-set-2/moonlit_ruins_under_golden_light.png?v=hqset2-v1",
     "backgrounds/generated/hq-set-2/rainy_twilight_alley_with_tower_glow.png?v=hqset2-v1",
-    "backgrounds/generated/hq-set-2/twilight_courtyard_of_blue_mosaic_domes.png?v=hqset2-v1"
+    "backgrounds/generated/hq-set-2/twilight_courtyard_of_blue_mosaic_domes.png?v=hqset2-v1",
+    "backgrounds/generated/hq-set-3/golden_autumn_persian_courtyard.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/lantern_lit_snowy_mountain_village.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/milky_way_over_desert_fortress.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/misty_mountain_cabin_retreat.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/moonlit_rooftops_over_an_ancient_city.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/persian_canyon_oasis_gardens.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/persian_garden_pavilion_in_bloom.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/rain_soaked_bridge_at_twilight.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/sunlit_persian_palace_with_stained_glass.jpg?v=hqset3-v1",
+    "backgrounds/generated/hq-set-3/sunset_salt_flats_and_wind_towers.jpg?v=hqset3-v1"
   ];
 
   const MOBILE_BACKGROUNDS=[
