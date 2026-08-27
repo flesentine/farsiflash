@@ -1195,7 +1195,17 @@ ts-fsrs/dist/index.mjs:
     "backgrounds/generated/mobile-portrait-set-1/luminous_persian_mosque_interior.png?v=mobileportrait1",
     "backgrounds/generated/mobile-portrait-set-1/moonlit_ruins_among_ancient_columns.png?v=mobileportrait1",
     "backgrounds/generated/mobile-portrait-set-1/rainy_lanterns_in_an_historic_alley.png?v=mobileportrait1",
-    "backgrounds/generated/mobile-portrait-set-1/twilight_persian_courtyard_reflections.png?v=mobileportrait1"
+    "backgrounds/generated/mobile-portrait-set-1/twilight_persian_courtyard_reflections.png?v=mobileportrait1",
+    "backgrounds/generated/mobile-portrait-set-2/twilight_persian_rose_courtyard.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/starlit_desert_courtyard_sanctuary.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/snowy_mountain_village_at_twilight.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/misty_si_o_se_pol_bridge_at_dawn.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/sunlit_persian_mosaic_hall.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/sunset_reflections_over_ancient_wind_towers.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/moonlit_oasis_canyon_garden.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/moonlit_persian_cityscape_at_night.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/rainy_lanterns_in_the_ancient_bazaar.jpg?v=mobileportrait2-v1",
+    "backgrounds/generated/mobile-portrait-set-2/lantern_lit_persian_garden_pavilion.jpg?v=mobileportrait2-v1"
   ];
 
   let mode="";
