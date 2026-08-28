@@ -1152,13 +1152,14 @@ ts-fsrs/dist/index.mjs:
   else install();
 })();
 (()=>{
-  if(window.__farsiResponsiveBackgroundsV21)return;
-  window.__farsiResponsiveBackgroundsV21=true;
+  if(window.__farsiResponsiveBackgroundsV22)return;
+  window.__farsiResponsiveBackgroundsV22=true;
 
-  const STYLE_ID="farsiResponsiveBackgroundStylesV21";
-  const WRAP_ID="farsiResponsiveBackgroundsV21";
+  const STYLE_ID="farsiResponsiveBackgroundStylesV22";
+  const WRAP_ID="farsiResponsiveBackgroundsV22";
   const BACKGROUND_INTERVAL_MS=60000;
   const DISSOLVE_MS=5000;
+  const MOTION_MS=BACKGROUND_INTERVAL_MS+DISSOLVE_MS;
 
   const DESKTOP_BACKGROUNDS=[
     "backgrounds/generated/twilight-courtyard-2.jpg?v=twilight-local2",
@@ -1227,16 +1228,55 @@ ts-fsrs/dist/index.mjs:
     return isMobilePortrait()?MOBILE_BACKGROUNDS:DESKTOP_BACKGROUNDS;
   }
 
+  function motionTransforms(index){
+    const mobile=isMobilePortrait();
+    const near=mobile?1.012:1.016;
+    const far=mobile?1.032:1.050;
+    const drift=mobile?.22:.38;
+    const patterns=[
+      [`scale(${near}) translate3d(${-drift}%,${drift*.35}%,0)`,`scale(${far}) translate3d(${drift}%,${-drift*.25}%,0)`],
+      [`scale(${far}) translate3d(${drift*.25}%,${-drift*.25}%,0)`,`scale(${near}) translate3d(${-drift*.2}%,${drift*.2}%,0)`],
+      [`scale(${near}) translate3d(${drift*.3}%,${drift*.15}%,0)`,`scale(${far}) translate3d(${-drift}%,${-drift*.2}%,0)`],
+      [`scale(${far}) translate3d(${-drift*.25}%,${drift*.15}%,0)`,`scale(${near}) translate3d(${drift*.2}%,${-drift*.15}%,0)`]
+    ];
+    return patterns[index%patterns.length];
+  }
+
+  function applyBackgroundMotion(photo,index){
+    if(!photo)return;
+    const [from,to]=motionTransforms(index);
+    photo.classList.remove("has-bg-motion");
+    photo.style.setProperty("--bg-motion-from",from);
+    photo.style.setProperty("--bg-motion-to",to);
+    void photo.offsetWidth;
+    photo.classList.add("has-bg-motion");
+  }
+
+  function clearBackgroundMotion(photo){
+    if(!photo)return;
+    photo.classList.remove("has-bg-motion");
+    photo.style.removeProperty("--bg-motion-from");
+    photo.style.removeProperty("--bg-motion-to");
+  }
+
+  function setMotionPaused(paused){
+    const wrap=document.getElementById(WRAP_ID);
+    if(wrap)wrap.classList.toggle("is-motion-paused",paused);
+  }
+
   function installStyles(){
     if(document.getElementById(STYLE_ID))return;
     const style=document.createElement("style");
     style.id=STYLE_ID;
     style.textContent=`
-      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18,#farsiResponsiveBackgroundsV19,#farsiResponsiveBackgroundsV20{display:none!important}
+      #iranBackgrounds,#iranPhotoBackgroundsV4,#iranRecoveredBackgroundsV5,#iranGeneratedBackgroundsV6,#iranGeneratedBackgroundsV7,#iranGeneratedBackgroundsV8,#iranSingleBackgroundV9,#iranDualBackgroundV10,#iranBackgroundGalleryV11,#farsiResponsiveBackgroundsV12,#farsiResponsiveBackgroundsV13,#farsiResponsiveBackgroundsV14,#farsiResponsiveBackgroundsV15,#farsiResponsiveBackgroundsV16,#farsiResponsiveBackgroundsV17,#farsiResponsiveBackgroundsV18,#farsiResponsiveBackgroundsV19,#farsiResponsiveBackgroundsV20,#farsiResponsiveBackgroundsV21{display:none!important}
       body{background:#11110f!important;background-image:none!important}
       #${WRAP_ID}{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#11110f}
-      #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;opacity:0;transition:opacity ${DISSOLVE_MS}ms linear;will-change:opacity}
+      #${WRAP_ID} .farsi-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;opacity:0;transition:opacity ${DISSOLVE_MS}ms linear;will-change:opacity,transform;backface-visibility:hidden;-webkit-backface-visibility:hidden}
       #${WRAP_ID} .farsi-bg-photo.is-active{opacity:1}
+      #${WRAP_ID} .farsi-bg-photo.has-bg-motion{animation:farsiBgMotion ${MOTION_MS}ms linear both}
+      #${WRAP_ID}.is-motion-paused .farsi-bg-photo.has-bg-motion{animation-play-state:paused}
+      @keyframes farsiBgMotion{from{transform:var(--bg-motion-from,scale(1.012))}to{transform:var(--bg-motion-to,scale(1.032))}}
       #${WRAP_ID} .farsi-bg-tone{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,8,9,.16),rgba(7,8,9,.07) 28%,rgba(7,8,9,.12) 72%,rgba(7,8,9,.28)),radial-gradient(circle at center,transparent 30%,rgba(7,8,9,.10) 78%,rgba(7,8,9,.20))}
       .app{position:relative!important;z-index:1!important;background:transparent!important}
       header,.grade,.undo,.tiny{color:#f6f0e8!important;text-shadow:0 1px 5px rgba(0,0,0,.72)}
@@ -1271,7 +1311,7 @@ ts-fsrs/dist/index.mjs:
         }
       }
       @media(max-width:430px){.card-glass{border-radius:18px}}
-      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-photo{transition:none!important}}
+      @media(prefers-reduced-motion:reduce){#${WRAP_ID} .farsi-bg-photo{transition:none!important;animation:none!important;transform:none!important}}
     `;
     document.head.appendChild(style);
   }
@@ -1324,7 +1364,9 @@ ts-fsrs/dist/index.mjs:
     photos[0].src=src;
     photos[0].classList.add("is-active");
     photos[1].classList.remove("is-active");
+    clearBackgroundMotion(photos[1]);
     photos[1].removeAttribute("src");
+    applyBackgroundMotion(photos[0],bgIndex);
     void photos[0].offsetWidth;
     photos[0].style.transition="";
     photos[1].style.transition="";
@@ -1356,7 +1398,9 @@ ts-fsrs/dist/index.mjs:
 
     incoming.style.transition="none";
     incoming.classList.remove("is-active");
+    clearBackgroundMotion(incoming);
     incoming.src=src;
+    applyBackgroundMotion(incoming,nextIndex);
     void incoming.offsetWidth;
     incoming.style.transition="";
 
@@ -1372,6 +1416,7 @@ ts-fsrs/dist/index.mjs:
 
     if(generation===modeGeneration&&outgoing.isConnected&&!outgoing.classList.contains("is-active")){
       outgoing.removeAttribute("src");
+      clearBackgroundMotion(outgoing);
     }
     swapInProgress=false;
 
@@ -1434,8 +1479,13 @@ ts-fsrs/dist/index.mjs:
     syncMode(true);
     scheduleBackgroundTimer(BACKGROUND_INTERVAL_MS);
     document.addEventListener("visibilitychange",()=>{
-      if(document.hidden)pauseBackgroundTimer();
-      else resumeBackgroundTimer();
+      if(document.hidden){
+        pauseBackgroundTimer();
+        setMotionPaused(true);
+      }else{
+        setMotionPaused(false);
+        resumeBackgroundTimer();
+      }
     });
     let resizeTimer=0;
     window.addEventListener("resize",()=>{
