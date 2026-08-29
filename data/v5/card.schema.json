@@ -4,7 +4,7 @@
   "title": "FarsiFlash v5 card",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "fa", "roman", "en", "register", "category"],
+  "required": ["id", "fa", "roman", "en", "register", "category", "selection"],
   "properties": {
     "id": {
       "type": "string",
@@ -28,8 +28,37 @@
     "exampleFa": {"type": ["string", "null"]},
     "exampleRoman": {"type": ["string", "null"]},
     "exampleEn": {"type": ["string", "null"]},
-    "spokenScore": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
     "millerRank": {"type": ["integer", "null"], "minimum": 1},
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "signals"],
+      "properties": {
+        "score": {"type": "number", "minimum": 0, "maximum": 100, "description": "Derived v5 curriculum score after bonuses and penalties."},
+        "signals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["conversationalFrequency", "speakerDispersion", "practicalUsefulness", "generativeValue", "modernRelevance", "writtenFrequency"],
+          "properties": {
+            "conversationalFrequency": {"type": "number", "minimum": 0, "maximum": 100},
+            "speakerDispersion": {"type": "number", "minimum": 0, "maximum": 100},
+            "practicalUsefulness": {"type": "number", "minimum": 0, "maximum": 100},
+            "generativeValue": {"type": "number", "minimum": 0, "maximum": 100},
+            "modernRelevance": {"type": "number", "minimum": 0, "maximum": 100},
+            "writtenFrequency": {"type": "number", "minimum": 0, "maximum": 100}
+          }
+        },
+        "editorialOverride": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["direction", "reason"],
+          "properties": {
+            "direction": {"type": "string", "enum": ["promote", "demote"]},
+            "reason": {"type": "string", "minLength": 12}
+          }
+        }
+      }
+    },
     "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "default": []},
     "notes": {"type": ["string", "null"]}
   }
