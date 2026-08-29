@@ -30,7 +30,7 @@ The original `data/miller-*.js` files are preserved as archival source data. The
 
 v5 code must load Miller data through `tools/lib/v5-miller.mjs`, which applies `miller-spelling-overrides.json` by source rank before the data is used for curriculum work. Do not read the raw Miller chunks directly when generating v5 cards.
 
-The correction file currently contains 39 confirmed spelling repairs. `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
+The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions where alef-lam is legitimate (for example `حالت`, `عدالت`, `ایالت`, `ولایت`, and `فولاد`). `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
 
 ## Foundation mode
 
