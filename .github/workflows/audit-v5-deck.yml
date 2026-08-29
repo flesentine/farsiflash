@@ -9,6 +9,7 @@ on:
       - 'data/miller-*.js'
       - 'tools/audit-v5-deck.mjs'
       - 'tools/audit-miller-source.mjs'
+      - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - 'data/miller-*.js'
       - 'tools/audit-v5-deck.mjs'
       - 'tools/audit-miller-source.mjs'
+      - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
 
 permissions:
@@ -31,5 +33,5 @@ jobs:
           node-version: '22'
       - name: Audit v5 deck
         run: node tools/audit-v5-deck.mjs
-      - name: Report suspicious Miller source spellings
+      - name: Audit and normalize Miller source spellings
         run: node tools/audit-miller-source.mjs
