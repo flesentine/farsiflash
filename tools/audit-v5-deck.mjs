@@ -12,7 +12,7 @@ const scoringRules = loadScoringRules();
 
 const REGISTERS = new Set(['spoken', 'everyday', 'neutral', 'formal', 'written', 'slang', 'literary']);
 const CATEGORIES = new Set(['conversation', 'grammar', 'verbs', 'people', 'home', 'food', 'shopping', 'travel', 'social', 'work', 'school', 'health', 'technology', 'culture', 'reading-news']);
-const ID_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
+const ID_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 const ROMAN_RE = /^[a-z0-9' /.,!?()-]+$/;
 const ARABIC_YEH = /ي/;
 const ARABIC_KAF = /ك/;
