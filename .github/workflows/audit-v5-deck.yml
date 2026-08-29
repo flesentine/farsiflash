@@ -1,0 +1,29 @@
+name: Audit v5 curriculum
+
+on:
+  push:
+    branches:
+      - feature/v5-curriculum-foundation
+    paths:
+      - 'data/v5/**'
+      - 'tools/audit-v5-deck.mjs'
+      - '.github/workflows/audit-v5-deck.yml'
+  pull_request:
+    paths:
+      - 'data/v5/**'
+      - 'tools/audit-v5-deck.mjs'
+      - '.github/workflows/audit-v5-deck.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit v5 deck
+        run: node tools/audit-v5-deck.mjs
