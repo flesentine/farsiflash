@@ -2,6 +2,7 @@
   "version": 5,
   "status": "foundation",
   "idPolicy": "explicit-semantic-v1",
+  "scoringPolicy": "everyday-iranian-v1",
   "targetCards": 2000,
   "cards": []
 }
