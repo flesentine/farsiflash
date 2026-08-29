@@ -6,12 +6,16 @@ on:
       - feature/v5-curriculum-foundation
     paths:
       - 'data/v5/**'
+      - 'data/miller-*.js'
       - 'tools/audit-v5-deck.mjs'
+      - 'tools/audit-miller-source.mjs'
       - '.github/workflows/audit-v5-deck.yml'
   pull_request:
     paths:
       - 'data/v5/**'
+      - 'data/miller-*.js'
       - 'tools/audit-v5-deck.mjs'
+      - 'tools/audit-miller-source.mjs'
       - '.github/workflows/audit-v5-deck.yml'
 
 permissions:
@@ -27,3 +31,5 @@ jobs:
           node-version: '22'
       - name: Audit v5 deck
         run: node tools/audit-v5-deck.mjs
+      - name: Report suspicious Miller source spellings
+        run: node tools/audit-miller-source.mjs
