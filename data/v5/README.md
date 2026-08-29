@@ -12,7 +12,7 @@ Every v5 card must have an explicit semantic ID such as:
 - `verb.call`
 - `verb.find`
 
-IDs are permanent identity keys for progress and sync. They must not be generated from Persian spelling, English glosses, rank, or array position. Once an ID ships, changing Persian wording, romanization, examples, register, or ordering must not change the ID.
+IDs are permanent identity keys for progress and sync. They must not be generated from Persian spelling, English glosses, rank, or array position. Once an ID ships, changing Persian wording, romanization, examples, register, or ordering must not change the ID. Dot-separated ID segments may contain internal hyphens for readability.
 
 If one concept later needs to split into two meanings, keep the original ID for the closest existing meaning and create a new ID for the new concept. Do not recycle retired IDs.
 
@@ -60,9 +60,17 @@ v5 code must load Miller data through `tools/lib/v5-miller.mjs`, which applies `
 
 The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions where alef-lam is legitimate (for example `حالت`, `عدالت`, `ایالت`, `ولایت`, and `فولاد`). `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
 
+## Core 100
+
+Step 8 is complete: `deck.json` now contains the first 100 reviewed-candidate concepts for the v5 survival core while remaining in `foundation` status.
+
+The batch prioritizes greetings, high-value conversational chunks, question words, spoken grammar forms, core verbs and compound verbs, time basics, and a small set of practical nouns. Spoken-first entries include `اون`, `اونا`, `کدوم`, `اگه`, `واسه`, `توی`, `رو`, `اومدن`, `خونه`, and `تموم کردن`, with formal equivalents stored alongside them where useful.
+
+The entire 100-card batch passes the v5 scoring and position gates, Unicode/spelling checks, duplicate-ID checks, and Miller normalization audit. It remains isolated from the live app pending later native-speaker review and the rest of the v5 curriculum build.
+
 ## Foundation mode
 
-`deck.json` starts with `status: "foundation"` and zero production cards. The audit allows that while we build infrastructure. When the first reviewed curriculum is ready, change the status to `curriculum`; the audit will then require exactly 2,000 unique cards.
+`deck.json` remains `status: "foundation"` while we build and review the curriculum. The audit allows the first 100 cards at this stage. When the complete reviewed curriculum is ready, change the status to `curriculum`; the audit will then require exactly 2,000 unique cards.
 
 ## Safety rule
 
