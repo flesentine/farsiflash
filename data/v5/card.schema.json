@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flesentine.github.io/farsiflash/data/v5/card.schema.json",
+  "title": "FarsiFlash v5 card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "fa", "roman", "en", "register", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z0-9]+)+$",
+      "description": "Permanent semantic concept ID. Never derive this from mutable Persian text."
+    },
+    "fa": {"type": "string", "minLength": 1, "description": "Preferred learner-facing Persian form."},
+    "spokenFa": {"type": ["string", "null"], "minLength": 1},
+    "formalFa": {"type": ["string", "null"], "minLength": 1},
+    "roman": {"type": "string", "minLength": 1},
+    "en": {"type": "string", "minLength": 1},
+    "register": {
+      "type": "string",
+      "enum": ["spoken", "everyday", "neutral", "formal", "written", "slang", "literary"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["conversation", "grammar", "verbs", "people", "home", "food", "shopping", "travel", "social", "work", "school", "health", "technology", "culture", "reading-news"]
+    },
+    "partOfSpeech": {"type": ["string", "null"]},
+    "exampleFa": {"type": ["string", "null"]},
+    "exampleRoman": {"type": ["string", "null"]},
+    "exampleEn": {"type": ["string", "null"]},
+    "spokenScore": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+    "millerRank": {"type": ["integer", "null"], "minimum": 1},
+    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "default": []},
+    "notes": {"type": ["string", "null"]}
+  }
+}
