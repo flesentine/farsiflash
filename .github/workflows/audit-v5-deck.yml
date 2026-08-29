@@ -8,6 +8,7 @@ on:
       - 'data/v5/**'
       - 'data/miller-*.js'
       - 'tools/audit-v5-deck.mjs'
+      - 'tools/audit-v5-scoring.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -16,6 +17,7 @@ on:
       - 'data/v5/**'
       - 'data/miller-*.js'
       - 'tools/audit-v5-deck.mjs'
+      - 'tools/audit-v5-scoring.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -31,6 +33,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Audit v5 scoring policy
+        run: node tools/audit-v5-scoring.mjs
       - name: Audit v5 deck
         run: node tools/audit-v5-deck.mjs
       - name: Audit and normalize Miller source spellings
