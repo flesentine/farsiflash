@@ -24,6 +24,14 @@ Each card also carries register and category metadata so conversational usefulne
 
 `millerRank` is supporting evidence, not curriculum order. `spokenScore` is a 0–100 editorial score for everyday conversational value.
 
+## Miller source normalization
+
+The original `data/miller-*.js` files are preserved as archival source data. They contain confirmed Persian-script extraction errors from the published frequency list, primarily reversed lam-alef sequences such as `اسالم`, `الزم`, `کالس`, and `سالمت`.
+
+v5 code must load Miller data through `tools/lib/v5-miller.mjs`, which applies `miller-spelling-overrides.json` by source rank before the data is used for curriculum work. Do not read the raw Miller chunks directly when generating v5 cards.
+
+The correction file currently contains 39 confirmed spelling repairs. `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
+
 ## Foundation mode
 
 `deck.json` starts with `status: "foundation"` and zero production cards. The audit allows that while we build infrastructure. When the first reviewed curriculum is ready, change the status to `curriculum`; the audit will then require exactly 2,000 unique cards.
