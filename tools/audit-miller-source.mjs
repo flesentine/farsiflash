@@ -8,7 +8,8 @@ const files = fs.readdirSync(dataDir)
   .filter((name) => /^miller-\d\d\.js$/.test(name))
   .sort();
 
-const sandbox = { window: {} };
+const chunks = [];
+const sandbox = { window: { FARSI_MILLER_CHUNKS: chunks }, FARSI_MILLER_CHUNKS: chunks };
 sandbox.window.window = sandbox.window;
 vm.createContext(sandbox);
 
