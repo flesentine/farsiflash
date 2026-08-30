@@ -70,8 +70,8 @@ function checkPersian(label, value, position) {
 }
 
 if (deck.cards.length !== 100) fail(`foundation core must remain exactly 100 cards; found ${deck.cards.length}`);
-if (batchCards.length !== 200) fail(`effective 101–300 batch must contain exactly 200 cards; found ${batchCards.length}`);
-if (cards.length !== 300) fail(`effective v5 curriculum must contain 300 cards; found ${cards.length}`);
+if (batchCards.length !== 650) fail(`effective 101–750 batches must contain exactly 650 cards; found ${batchCards.length}`);
+if (cards.length !== 750) fail(`effective v5 curriculum must contain 750 cards at Step 14; found ${cards.length}`);
 
 const ids = new Map();
 const forms = new Map();
@@ -121,9 +121,7 @@ cards.forEach((card, index) => {
   }
 });
 
-// Step 11 policy: high-value light-verb constructions must be present before
-// card 300, and their weak isolated noun components must not consume an early
-// action-learning slot before the constructions are established.
+// Step 11 policy remains scoped to the first 300.
 for (const id of compoundPolicy.requiredBeforeOrAt300 || []) {
   const position = ids.get(id);
   if (!position) fail(`compound policy missing required early construction: ${id}`);
@@ -140,9 +138,7 @@ cards.slice(0, 300).forEach((card, index) => {
   }
 });
 
-// Step 12 policy: where spoken and standard/formal Persian materially differ,
-// both forms must live on the same stable concept card. A card may lead with
-// either form; the counterpart belongs in spokenFa or formalFa accordingly.
+// Step 12+ policy: every codified spoken/standard pair must remain on one stable concept card.
 for (const pair of registerPolicy.requiredPairs || []) {
   const position = ids.get(pair.id);
   if (!position) {
@@ -154,13 +150,9 @@ for (const pair of registerPolicy.requiredPairs || []) {
   const spoken = normalizeFa(pair.spoken);
   const formal = normalizeFa(pair.formal);
   if (primary === spoken) {
-    if (normalizeFa(card.formalFa) !== formal) {
-      fail(`#${position} ${pair.id} must pair spoken ${pair.spoken} with formal ${pair.formal}`);
-    }
+    if (normalizeFa(card.formalFa) !== formal) fail(`#${position} ${pair.id} must pair spoken ${pair.spoken} with formal ${pair.formal}`);
   } else if (primary === formal) {
-    if (normalizeFa(card.spokenFa) !== spoken) {
-      fail(`#${position} ${pair.id} must pair formal ${pair.formal} with spoken ${pair.spoken}`);
-    }
+    if (normalizeFa(card.spokenFa) !== spoken) fail(`#${position} ${pair.id} must pair formal ${pair.formal} with spoken ${pair.spoken}`);
   } else {
     fail(`#${position} ${pair.id} primary form ${card.fa} matches neither required spoken ${pair.spoken} nor formal ${pair.formal}`);
   }
