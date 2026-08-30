@@ -36,7 +36,7 @@ Examples:
 - `مادر` → `maadar`; spoken `مامان` → `maamaan`
 - `نون` → `noon`; formal `نان` → `naan`
 - `خوندن` → `khoondan`; formal `خواندن` → `khaandan`
-- `گرسنه‌ام` → `gorosne-am` is normalized to the learner scheme while spoken `گشنمه` gets `goshname`
+- `گرسنه‌ام` → `gorosne am`; spoken `گشنمه` → `goshname`
 
 ## Specific cleanup caught in this pass
 
