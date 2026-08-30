@@ -7,161 +7,72 @@ import { loadScoringRules, scoreCandidate, checkCandidateAtPosition } from './li
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const deck = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'deck.json'), 'utf8'));
-const compoundPolicy = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'compound-verb-policy.json'), 'utf8'));
-const registerPolicy = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'register-pairs.json'), 'utf8'));
-const batchesDir = path.join(root, 'data', 'v5', 'batches');
+const deck = JSON.parse(fs.readFileSync(path.join(root,'data','v5','deck.json'),'utf8'));
+const compoundPolicy = JSON.parse(fs.readFileSync(path.join(root,'data','v5','compound-verb-policy.json'),'utf8'));
+const registerPolicy = JSON.parse(fs.readFileSync(path.join(root,'data','v5','register-pairs.json'),'utf8'));
 const scoringRules = loadScoringRules();
-const allBatchFiles = fs.existsSync(batchesDir)
-  ? fs.readdirSync(batchesDir).filter((name) => name.endsWith('.mjs')).sort()
-  : [];
+const batchesDir = path.join(root,'data','v5','batches');
 
-// Preserve every editorial stage for provenance, but load only the highest-
-// precedence companion for each batch: registers > compounds > reviewed > candidate.
-function batchKey(name) {
-  return name.replace(/(?:\.reviewed|\.compounds|\.registers)?\.mjs$/, '');
-}
-function batchPrecedence(name) {
-  if (name.endsWith('.registers.mjs')) return 3;
-  if (name.endsWith('.compounds.mjs')) return 2;
-  if (name.endsWith('.reviewed.mjs')) return 1;
-  return 0;
-}
+function batchKey(name){ return name.replace(/(?:\.reviewed|\.compounds|\.registers)?\.mjs$/,''); }
+function precedence(name){ if(name.endsWith('.registers.mjs')) return 3; if(name.endsWith('.compounds.mjs')) return 2; if(name.endsWith('.reviewed.mjs')) return 1; return 0; }
+function batchStart(name){ const m=name.match(/^core-(\d+)/); return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER; }
+
+const all = fs.existsSync(batchesDir) ? fs.readdirSync(batchesDir).filter(n=>n.endsWith('.mjs')) : [];
 const chosen = new Map();
-for (const name of allBatchFiles) {
-  const key = batchKey(name);
-  const current = chosen.get(key);
-  if (!current || batchPrecedence(name) > batchPrecedence(current)) chosen.set(key, name);
-}
-const batchFiles = [...chosen.values()].sort();
+for(const name of all){ const key=batchKey(name); const cur=chosen.get(key); if(!cur || precedence(name)>precedence(cur)) chosen.set(key,name); }
+const batchFiles=[...chosen.values()].sort((a,b)=>batchStart(a)-batchStart(b) || a.localeCompare(b));
+const batchCards=[];
+for(const file of batchFiles){ const mod=await import(pathToFileURL(path.join(batchesDir,file)).href); if(!Array.isArray(mod.default)) throw new Error(`${file} must default-export an array`); batchCards.push(...mod.default); }
+const cards=[...deck.cards,...batchCards];
 
-const batchCards = [];
-for (const file of batchFiles) {
-  const mod = await import(pathToFileURL(path.join(batchesDir, file)).href);
-  if (!Array.isArray(mod.default)) throw new Error(`${file} must default-export an array`);
-  batchCards.push(...mod.default);
-}
+const errors=[]; const warnings=[]; const fail=m=>errors.push(m); const warn=m=>warnings.push(m);
+const ID_RE=/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
+const ROMAN_RE=/^[a-z0-9' /.,!?()-]+$/;
+const REGISTERS=new Set(['spoken','everyday','neutral','formal','written','slang','literary']);
+const CATEGORIES=new Set(['conversation','grammar','verbs','people','home','food','shopping','travel','social','work','school','health','technology','culture','reading-news']);
+const SIGNALS=['conversationalFrequency','speakerDispersion','practicalUsefulness','generativeValue','modernRelevance','writtenFrequency'];
+const PERSIAN=/[\u0600-\u06ff]/; const ASCII=/[A-Za-z]/;
+function normalizeFa(v){ return String(v||'').normalize('NFC').replace(/[\u064B-\u0652\u0670]/g,'').replace(/\u200c/g,'').replace(/ي/g,'ی').replace(/ك/g,'ک').trim(); }
+function checkFa(label,v,pos){ if(v==null) return; if(typeof v!=='string'||!v.trim()) return fail(`#${pos} ${label} must be non-empty or null`); if(v!==v.trim()) fail(`#${pos} ${label} has outer whitespace`); if(!PERSIAN.test(v)) fail(`#${pos} ${label} lacks Persian text`); if(ASCII.test(v)) fail(`#${pos} ${label} contains ASCII letters: ${v}`); if(/ي/.test(v)) fail(`#${pos} ${label} uses Arabic ي: ${v}`); if(/ك/.test(v)) fail(`#${pos} ${label} uses Arabic ك: ${v}`); }
 
-const cards = [...deck.cards, ...batchCards];
-const errors = [];
-const warnings = [];
-const fail = (msg) => errors.push(msg);
-const warn = (msg) => warnings.push(msg);
-const ID_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
-const ROMAN_RE = /^[a-z0-9' /.,!?()-]+$/;
-const REGISTERS = new Set(['spoken', 'everyday', 'neutral', 'formal', 'written', 'slang', 'literary']);
-const CATEGORIES = new Set(['conversation', 'grammar', 'verbs', 'people', 'home', 'food', 'shopping', 'travel', 'social', 'work', 'school', 'health', 'technology', 'culture', 'reading-news']);
-const SIGNALS = ['conversationalFrequency', 'speakerDispersion', 'practicalUsefulness', 'generativeValue', 'modernRelevance', 'writtenFrequency'];
-const PERSIAN_LETTER = /[\u0600-\u06ff]/;
-const ASCII_LETTER = /[A-Za-z]/;
+if(deck.cards.length!==100) fail(`foundation core must remain 100; found ${deck.cards.length}`);
+if(batchCards.length!==1150) fail(`effective 101–1250 batches must contain 1150 cards; found ${batchCards.length}`);
+if(cards.length!==1250) fail(`effective v5 curriculum must contain 1250 cards at Step 15; found ${cards.length}`);
 
-function normalizeFa(value) {
-  return String(value || '').normalize('NFC').replace(/[\u064B-\u0652\u0670]/g, '').replace(/\u200c/g, '').replace(/ي/g, 'ی').replace(/ك/g, 'ک').trim();
-}
-
-function checkPersian(label, value, position) {
-  if (value == null) return;
-  if (typeof value !== 'string' || !value.trim()) return fail(`#${position} ${label} must be a non-empty string or null`);
-  if (value !== value.trim()) fail(`#${position} ${label} has leading/trailing whitespace`);
-  if (!PERSIAN_LETTER.test(value)) fail(`#${position} ${label} lacks Persian text: ${JSON.stringify(value)}`);
-  if (ASCII_LETTER.test(value)) fail(`#${position} ${label} contains ASCII letters: ${JSON.stringify(value)}`);
-  if (/ي/.test(value)) fail(`#${position} ${label} uses Arabic ي instead of Persian ی: ${value}`);
-  if (/ك/.test(value)) fail(`#${position} ${label} uses Arabic ك instead of Persian ک: ${value}`);
-}
-
-if (deck.cards.length !== 100) fail(`foundation core must remain exactly 100 cards; found ${deck.cards.length}`);
-if (batchCards.length !== 650) fail(`effective 101–750 batches must contain exactly 650 cards; found ${batchCards.length}`);
-if (cards.length !== 750) fail(`effective v5 curriculum must contain 750 cards at Step 14; found ${cards.length}`);
-
-const ids = new Map();
-const forms = new Map();
-
-cards.forEach((card, index) => {
-  const position = index + 1;
-  if (!card || typeof card !== 'object' || Array.isArray(card)) return fail(`#${position} card must be an object`);
-  for (const key of ['id', 'fa', 'roman', 'en', 'register', 'category']) {
-    if (typeof card[key] !== 'string' || !card[key].trim()) fail(`#${position} missing required string field ${key}`);
-  }
-  if (!ID_RE.test(card.id || '')) fail(`#${position} invalid stable id ${card.id}`);
-  if (ids.has(card.id)) fail(`#${position} duplicate id ${card.id}; first at #${ids.get(card.id)}`);
-  else ids.set(card.id, position);
-
-  checkPersian('fa', card.fa, position);
-  checkPersian('spokenFa', card.spokenFa, position);
-  checkPersian('formalFa', card.formalFa, position);
-  if (typeof card.roman === 'string' && (!ROMAN_RE.test(card.roman) || card.roman !== card.roman.toLowerCase())) {
-    fail(`#${position} invalid romanization ${JSON.stringify(card.roman)}`);
-  }
-  if (!REGISTERS.has(card.register)) fail(`#${position} invalid register ${card.register}`);
-  if (!CATEGORIES.has(card.category)) fail(`#${position} invalid category ${card.category}`);
-  if (!Array.isArray(card.tags)) fail(`#${position} tags must be an array`);
-
-  const normalized = normalizeFa(card.fa);
-  if (normalized) {
-    if (forms.has(normalized) && !(card.tags || []).includes('homograph')) {
-      warn(`#${position} Persian form duplicates #${forms.get(normalized)}: ${card.fa}`);
-    } else if (!forms.has(normalized)) forms.set(normalized, position);
-  }
-
-  if (!card.selection || typeof card.selection !== 'object') return fail(`#${position} missing selection`);
-  if (!card.selection.signals || typeof card.selection.signals !== 'object') return fail(`#${position} missing selection.signals`);
-  for (const signal of SIGNALS) {
-    const value = card.selection.signals[signal];
-    if (!Number.isFinite(value) || value < 0 || value > 100) fail(`#${position} signal ${signal} must be 0..100`);
-  }
-
-  try {
-    const candidate = { register: card.register, category: card.category, millerRank: card.millerRank, tags: card.tags || [], signals: card.selection.signals };
-    const derived = scoreCandidate(candidate, scoringRules);
-    if (Math.abs(derived.score - card.selection.score) > 0.11) fail(`#${position} stored score ${card.selection.score} != derived ${derived.score}`);
-    const gate = checkCandidateAtPosition(candidate, position, scoringRules);
-    if (!gate.gatePassed) fail(`#${position} fails ordering gate: ${gate.gateFailures.join('; ')}`);
-  } catch (error) {
-    fail(`#${position} scoring failed: ${error.message}`);
-  }
+const ids=new Map(); const forms=new Map();
+cards.forEach((card,index)=>{
+  const pos=index+1;
+  if(!card||typeof card!=='object'||Array.isArray(card)) return fail(`#${pos} card must be object`);
+  for(const key of ['id','fa','roman','en','register','category']) if(typeof card[key]!=='string'||!card[key].trim()) fail(`#${pos} missing ${key}`);
+  if(!ID_RE.test(card.id||'')) fail(`#${pos} invalid stable id ${card.id}`);
+  if(ids.has(card.id)) fail(`#${pos} duplicate id ${card.id}; first at #${ids.get(card.id)}`); else ids.set(card.id,pos);
+  checkFa('fa',card.fa,pos); checkFa('spokenFa',card.spokenFa,pos); checkFa('formalFa',card.formalFa,pos);
+  if(typeof card.roman==='string' && (!ROMAN_RE.test(card.roman)||card.roman!==card.roman.toLowerCase())) fail(`#${pos} invalid romanization ${JSON.stringify(card.roman)}`);
+  if(!REGISTERS.has(card.register)) fail(`#${pos} invalid register ${card.register}`);
+  if(!CATEGORIES.has(card.category)) fail(`#${pos} invalid category ${card.category}`);
+  if(!Array.isArray(card.tags)) fail(`#${pos} tags must be array`);
+  const form=normalizeFa(card.fa); if(form){ if(forms.has(form)&&!(card.tags||[]).includes('homograph')) warn(`#${pos} Persian form duplicates #${forms.get(form)}: ${card.fa}`); else if(!forms.has(form)) forms.set(form,pos); }
+  if(!card.selection||typeof card.selection!=='object'||!card.selection.signals) return fail(`#${pos} missing selection/signals`);
+  for(const s of SIGNALS){ const v=card.selection.signals[s]; if(!Number.isFinite(v)||v<0||v>100) fail(`#${pos} signal ${s} must be 0..100`); }
+  try{
+    const candidate={register:card.register,category:card.category,millerRank:card.millerRank,tags:card.tags||[],signals:card.selection.signals};
+    const derived=scoreCandidate(candidate,scoringRules); if(Math.abs(derived.score-card.selection.score)>0.11) fail(`#${pos} stored score ${card.selection.score} != derived ${derived.score}`);
+    const gate=checkCandidateAtPosition(candidate,pos,scoringRules); if(!gate.gatePassed) fail(`#${pos} fails ordering gate: ${gate.gateFailures.join('; ')}`);
+  }catch(e){ fail(`#${pos} scoring failed: ${e.message}`); }
 });
 
-// Step 11 policy remains scoped to the first 300.
-for (const id of compoundPolicy.requiredBeforeOrAt300 || []) {
-  const position = ids.get(id);
-  if (!position) fail(`compound policy missing required early construction: ${id}`);
-  else if (position > 300) fail(`compound policy requires ${id} by 300; found at #${position}`);
-  const card = cards[position - 1];
-  if (!(card.tags || []).includes('productive-compound-verb')) {
-    fail(`compound policy card ${id} must carry productive-compound-verb tag`);
-  }
-}
-const deferredForms = new Set((compoundPolicy.deferIsolatedFormsBefore300 || []).map(normalizeFa));
-cards.slice(0, 300).forEach((card, index) => {
-  if (deferredForms.has(normalizeFa(card.fa))) {
-    fail(`#${index + 1} isolated light-verb component should be deferred until after the full construction: ${card.fa}`);
-  }
-});
+for(const id of compoundPolicy.requiredBeforeOrAt300||[]){ const pos=ids.get(id); if(!pos) fail(`compound policy missing ${id}`); else if(pos>300) fail(`compound policy requires ${id} by 300; found #${pos}`); else if(!(cards[pos-1].tags||[]).includes('productive-compound-verb')) fail(`${id} must carry productive-compound-verb`); }
+const deferred=new Set((compoundPolicy.deferIsolatedFormsBefore300||[]).map(normalizeFa));
+cards.slice(0,300).forEach((c,i)=>{ if(deferred.has(normalizeFa(c.fa))) fail(`#${i+1} isolated light-verb component should be deferred: ${c.fa}`); });
 
-// Step 12+ policy: every codified spoken/standard pair must remain on one stable concept card.
-for (const pair of registerPolicy.requiredPairs || []) {
-  const position = ids.get(pair.id);
-  if (!position) {
-    fail(`register-pair policy missing required concept: ${pair.id}`);
-    continue;
-  }
-  const card = cards[position - 1];
-  const primary = normalizeFa(card.fa);
-  const spoken = normalizeFa(pair.spoken);
-  const formal = normalizeFa(pair.formal);
-  if (primary === spoken) {
-    if (normalizeFa(card.formalFa) !== formal) fail(`#${position} ${pair.id} must pair spoken ${pair.spoken} with formal ${pair.formal}`);
-  } else if (primary === formal) {
-    if (normalizeFa(card.spokenFa) !== spoken) fail(`#${position} ${pair.id} must pair formal ${pair.formal} with spoken ${pair.spoken}`);
-  } else {
-    fail(`#${position} ${pair.id} primary form ${card.fa} matches neither required spoken ${pair.spoken} nor formal ${pair.formal}`);
-  }
+for(const pair of registerPolicy.requiredPairs||[]){
+  const pos=ids.get(pair.id); if(!pos){ fail(`register-pair policy missing ${pair.id}`); continue; }
+  const c=cards[pos-1], primary=normalizeFa(c.fa), spoken=normalizeFa(pair.spoken), formal=normalizeFa(pair.formal);
+  if(primary===spoken){ if(normalizeFa(c.formalFa)!==formal) fail(`#${pos} ${pair.id} missing formal ${pair.formal}`); }
+  else if(primary===formal){ if(normalizeFa(c.spokenFa)!==spoken) fail(`#${pos} ${pair.id} missing spoken ${pair.spoken}`); }
+  else fail(`#${pos} ${pair.id} primary ${c.fa} is outside required pair`);
 }
 
-for (const message of warnings) console.warn(`WARN ${message}`);
-for (const message of errors) console.error(`ERROR ${message}`);
-if (errors.length) {
-  console.error(`\nv5 batch audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`);
-  process.exit(1);
-}
-console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, compoundPolicy=${compoundPolicy.version}, registerPolicy=${registerPolicy.version}, registerPairs=${(registerPolicy.requiredPairs || []).length}`);
+for(const m of warnings) console.warn(`WARN ${m}`); for(const m of errors) console.error(`ERROR ${m}`);
+if(errors.length){ console.error(`\nv5 batch audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`); process.exit(1); }
+console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, registerPairs=${(registerPolicy.requiredPairs||[]).length}`);
