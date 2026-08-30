@@ -12,7 +12,7 @@ Every v5 card must have an explicit semantic ID such as:
 - `verb.call`
 - `verb.find`
 
-IDs are permanent identity keys for progress and sync. They must not be generated from Persian spelling, English glosses, rank, or array position. Once an ID ships, changing Persian wording, romanization, examples, register, or ordering must not change the ID. Dot-separated ID segments may contain internal hyphens for readability.
+IDs are permanent identity keys for progress and sync. They must not be generated from Persian spelling, English glosses, rank, or array position. Once an ID ships, changing Persian wording, romanization, examples, register, or ordering must not change the ID.
 
 If one concept later needs to split into two meanings, keep the original ID for the closest existing meaning and create a new ID for the new concept. Do not recycle retired IDs.
 
@@ -52,6 +52,16 @@ Category targets sum to exactly 2,000 and act as planning targets rather than ri
 
 Editorial overrides must retain the numeric score and include a written reason. They are for documented judgment calls, not a way to hide weak evidence.
 
+## Core 1–300
+
+The first 100 cards remain in `deck.json`. Cards 101–300 live in `data/v5/batches/core-101-300.mjs` so later curriculum batches can be reviewed and changed independently without rewriting one giant file.
+
+The 101–300 batch adds high-value family and people words, numbers and time, food and restaurant vocabulary, home and clothing, shopping and money, directions and transportation, a larger set of everyday verbs and compound verbs, social adjectives and feelings, and current phone/technology terms.
+
+Spoken-first forms continue to be preferred where that is what learners will normally hear: examples include `مهمون`, `نون`, `آشپزخونه`, `گرون`, `ارزون`, `کوچیک`, `خیابون`, `تونستن`, `موندن`, `خوندن`, `مهربون`, and `آسون`, with formal equivalents stored on the same concept.
+
+`tools/audit-v5-batches.mjs` combines the 100-card core with all batch modules and validates the effective curriculum. At step 9 it requires exactly 300 cards, checks IDs and Persian forms across batch boundaries, recalculates every score, and applies the strict position gate to every card.
+
 ## Miller source normalization
 
 The original `data/miller-*.js` files are preserved as archival source data. They contain confirmed Persian-script extraction errors from the published frequency list, primarily reversed lam-alef sequences such as `اسالم`, `الزم`, `کالس`, and `سالمت`.
@@ -60,17 +70,9 @@ v5 code must load Miller data through `tools/lib/v5-miller.mjs`, which applies `
 
 The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions where alef-lam is legitimate (for example `حالت`, `عدالت`, `ایالت`, `ولایت`, and `فولاد`). `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
 
-## Core 100
-
-Step 8 is complete: `deck.json` now contains the first 100 reviewed-candidate concepts for the v5 survival core while remaining in `foundation` status.
-
-The batch prioritizes greetings, high-value conversational chunks, question words, spoken grammar forms, core verbs and compound verbs, time basics, and a small set of practical nouns. Spoken-first entries include `اون`, `اونا`, `کدوم`, `اگه`, `واسه`, `توی`, `رو`, `اومدن`, `خونه`, and `تموم کردن`, with formal equivalents stored alongside them where useful.
-
-The entire 100-card batch passes the v5 scoring and position gates, Unicode/spelling checks, duplicate-ID checks, and Miller normalization audit. It remains isolated from the live app pending later native-speaker review and the rest of the v5 curriculum build.
-
 ## Foundation mode
 
-`deck.json` remains `status: "foundation"` while we build and review the curriculum. The audit allows the first 100 cards at this stage. When the complete reviewed curriculum is ready, change the status to `curriculum`; the audit will then require exactly 2,000 unique cards.
+`deck.json` remains `status: "foundation"` while the curriculum is built and reviewed in controlled batches. Do not switch to `curriculum` until the full reviewed 2,000-card deck exists.
 
 ## Safety rule
 
