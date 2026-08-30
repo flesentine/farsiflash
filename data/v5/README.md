@@ -22,6 +22,8 @@ The learner-facing `fa` field is the form we want the learner to recognize first
 
 Each card also carries register and category metadata so conversational usefulness can control sequencing instead of raw corpus frequency alone.
 
+`roman` belongs to the primary `fa` form. When a card has an alternate `spokenFa` or `formalFa`, Step 13 materializes the matching `spokenRoman` or `formalRoman` through `tools/lib/v5-romanization.mjs`.
+
 `millerRank` is supporting evidence, not curriculum order.
 
 ## Curriculum scoring: everyday-iranian-v1
@@ -54,13 +56,24 @@ Editorial overrides must retain the numeric score and include a written reason. 
 
 ## Core 1–300
 
-The first 100 cards remain in `deck.json`. Cards 101–300 live in `data/v5/batches/core-101-300.mjs` so later curriculum batches can be reviewed and changed independently without rewriting one giant file.
+The first 100 cards remain in `deck.json`. Cards 101–300 preserve multiple editorial layers in `data/v5/batches/`: candidate, human-reviewed, compound-first, and register-pair versions. The highest-precedence register layer is currently the effective source for 101–300.
 
-The 101–300 batch adds high-value family and people words, numbers and time, food and restaurant vocabulary, home and clothing, shopping and money, directions and transportation, a larger set of everyday verbs and compound verbs, social adjectives and feelings, and current phone/technology terms.
+The curriculum emphasizes conversational survival, family and people, numbers/time, food/restaurants, home, shopping/money, directions/transport, productive compound verbs, social language, and modern phone/technology terms.
 
-Spoken-first forms continue to be preferred where that is what learners will normally hear: examples include `مهمون`, `نون`, `آشپزخونه`, `گرون`, `ارزون`, `کوچیک`, `خیابون`, `تونستن`, `موندن`, `خوندن`, `مهربون`, and `آسون`, with formal equivalents stored on the same concept.
+`tools/audit-v5-batches.mjs` combines the 100-card core with the effective batch layer and validates exactly 300 cards, IDs, Persian forms, scoring, ordering gates, compound-verb policy, and 55 spoken/formal register pairs.
 
-`tools/audit-v5-batches.mjs` combines the 100-card core with all batch modules and validates the effective curriculum. At step 9 it requires exactly 300 cards, checks IDs and Persian forms across batch boundaries, recalculates every score, and applies the strict position gate to every card.
+## Learner Romanization: learner-roman-v1
+
+`romanization-policy.json` defines a simple ASCII scheme intended to cue pronunciation rather than reproduce academic transliteration.
+
+- lowercase only
+- `aa`, `i`, `oo` for the long vowels
+- `kh`, `gh`, `sh`, `ch`, `zh` consistently
+- no diacritics
+- no apostrophes
+- no hyphens; spaces mark word boundaries
+
+`tools/lib/v5-romanization.mjs` applies the policy as a cross-cutting transform after curriculum assembly. `tools/audit-v5-romanization.mjs` validates all 300 effective cards, alternate-register Romanizations, primary overrides, punctuation rules, and stale/missing mappings.
 
 ## Miller source normalization
 
@@ -68,7 +81,11 @@ The original `data/miller-*.js` files are preserved as archival source data. The
 
 v5 code must load Miller data through `tools/lib/v5-miller.mjs`, which applies `miller-spelling-overrides.json` by source rank before the data is used for curriculum work. Do not read the raw Miller chunks directly when generating v5 cards.
 
-The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions where alef-lam is legitimate (for example `حالت`, `عدالت`, `ایالت`, `ولایت`, and `فولاد`). `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
+The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions where alef-lam is legitimate. `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
+
+## Current milestone
+
+Steps **1–13** are complete for the effective first 300 cards.
 
 ## Foundation mode
 
