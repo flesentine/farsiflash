@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { applyRomanizationToCards, loadRegisterPairPolicy, loadRomanizationPolicy, sanitizeRoman } from './lib/v5-romanization.mjs';
+import { applyRomanizationToCards, loadRegisterPairPolicy, loadRomanizationPolicy, normalizeFa, sanitizeRoman } from './lib/v5-romanization.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -92,7 +92,14 @@ for (const pair of requiredPairs) {
   }
   if (!alternateRomanById[pair.id]) fail(`missing alternate Romanization for ${pair.id}`);
   const card = cards[position - 1];
-  if (!card.spokenRoman || !card.formalRoman) fail(`#${position} ${pair.id} must expose both spokenRoman and formalRoman`);
+  const primary = normalizeFa(card.fa);
+  if (primary === normalizeFa(pair.spoken)) {
+    if (!card.formalFa || !card.formalRoman) fail(`#${position} ${pair.id} spoken-primary pair must expose formalFa + formalRoman`);
+  } else if (primary === normalizeFa(pair.formal)) {
+    if (!card.spokenFa || !card.spokenRoman) fail(`#${position} ${pair.id} formal-primary pair must expose spokenFa + spokenRoman`);
+  } else {
+    fail(`#${position} ${pair.id} primary form is outside its register pair`);
+  }
 }
 for (const id of Object.keys(alternateRomanById)) {
   if (!requiredPairs.some((pair) => pair.id === id)) fail(`stale alternate Romanization entry not in register policy: ${id}`);
