@@ -18,13 +18,9 @@ If one concept later needs to split into two meanings, keep the original ID for 
 
 ## Card model
 
-The learner-facing `fa` field is the form we want the learner to recognize first. `spokenFa` and `formalFa` let us model Iranian Persian diglossia explicitly instead of pretending there is only one form.
+The learner-facing `fa` field is the form we want the learner to recognize first. `spokenFa` and `formalFa` model Iranian Persian diglossia explicitly. `roman` always belongs to the primary `fa`; alternate forms use `spokenRoman` or `formalRoman` through the effective Romanization layer.
 
-Each card also carries register and category metadata so conversational usefulness can control sequencing instead of raw corpus frequency alone.
-
-`roman` belongs to the primary `fa` form. When a card has an alternate `spokenFa` or `formalFa`, Step 13 materializes the matching `spokenRoman` or `formalRoman` through `tools/lib/v5-romanization.mjs`.
-
-`millerRank` is supporting evidence, not curriculum order.
+Each card also carries register and category metadata so conversational usefulness controls sequencing instead of raw corpus frequency alone. `millerRank` is supporting evidence, not curriculum order.
 
 ## Curriculum scoring: everyday-iranian-v1
 
@@ -33,7 +29,7 @@ Each card also carries register and category metadata so conversational usefulne
 - 35% contemporary conversational frequency
 - 20% dispersion across speakers and situations
 - 15% practical everyday usefulness
-- 15% generative value (how much language the item unlocks)
+- 15% generative value
 - 10% modern relevance
 - 5% general written frequency
 
@@ -48,32 +44,50 @@ The ordering gates are intentionally strict:
 - cards 1–1000 exclude the reading/news category and require explicit `formal-bridge` justification for formal recognition items
 - reading/news vocabulary is held for the final 250-card bridge rather than dominating the early deck
 
-Every v5 card stores the six selection signals and its derived score. `tools/lib/v5-scoring.mjs` calculates scores and position eligibility. `tools/audit-v5-scoring.mjs` verifies that the scoring policy is internally coherent, and `tools/audit-v5-deck.mjs` verifies that stored card scores match the formula and that cards pass the gate for their position.
+Every v5 card stores the six selection signals and its derived score. `tools/lib/v5-scoring.mjs` calculates scores and position eligibility. The audit scripts verify that stored scores match the formula and that cards pass the gate for their position.
 
-Category targets sum to exactly 2,000 and act as planning targets rather than rigid quotas. This prevents one corpus domain from crowding out verbs, conversation, food, shopping, health, technology, and other practical areas.
+Category targets sum to exactly 2,000 and act as planning targets rather than rigid quotas.
 
-Editorial overrides must retain the numeric score and include a written reason. They are for documented judgment calls, not a way to hide weak evidence.
+## Effective cards 1–750
 
-## Core 1–300
+The first 100 cards remain in `deck.json`.
 
-The first 100 cards remain in `deck.json`. Cards 101–300 preserve multiple editorial layers in `data/v5/batches/`: candidate, human-reviewed, compound-first, and register-pair versions. The highest-precedence register layer is currently the effective source for 101–300.
+Cards 101–300 preserve multiple editorial layers for provenance:
 
-The curriculum emphasizes conversational survival, family and people, numbers/time, food/restaurants, home, shopping/money, directions/transport, productive compound verbs, social language, and modern phone/technology terms.
+`candidate → reviewed → compounds → registers`
 
-`tools/audit-v5-batches.mjs` combines the 100-card core with the effective batch layer and validates exactly 300 cards, IDs, Persian forms, scoring, ordering gates, compound-verb policy, and 55 spoken/formal register pairs.
+Cards 301–750 use the same pattern:
 
-## Learner Romanization: learner-roman-v1
+`candidate → reviewed overlap cleanup → registers`
 
-`romanization-policy.json` defines a simple ASCII scheme intended to cue pronunciation rather than reproduce academic transliteration.
+At the Step-14 milestone the effective deck contains exactly 750 cards. The 450 new cards are intentionally action-heavy:
 
-- lowercase only
-- `aa`, `i`, `oo` for the long vowels
-- `kh`, `gh`, `sh`, `ch`, `zh` consistently
-- no diacritics
-- no apostrophes
-- no hyphens; spaces mark word boundaries
+- 120 verbs / verb constructions
+- 45 conversational chunks
+- 40 social concepts
+- 35 people / roles
+- 45 home concepts
+- 50 food concepts
+- 40 shopping concepts/chunks
+- 45 travel/transport concepts/chunks
+- 15 health concepts
+- 15 technology concepts
 
-`tools/lib/v5-romanization.mjs` applies the policy as a cross-cutting transform after curriculum assembly. `tools/audit-v5-romanization.mjs` validates all 300 effective cards, alternate-register Romanizations, primary overrides, punctuation rules, and stale/missing mappings.
+The first 750 are validated together for stable IDs, Persian forms, score/order eligibility, compound-first policy, register pairs, learner Romanization, and Miller normalization.
+
+Step 14 also extends the spoken/formal policy from 55 to 81 codified pairs. See `reviews/step-14-cards-301-750.md` for the detailed rationale and overlap corrections.
+
+## Romanization
+
+`learner-roman-v1` uses simple lowercase ASCII for English-speaking learners:
+
+- `aa`, `i`, `oo` for long vowels
+- `kh`, `gh`, `sh`, `ch`, `zh`
+- no academic diacritics
+- no apostrophes or hyphens
+- spaces for word boundaries
+
+`tools/lib/v5-romanization.mjs` merges the base Romanization policy with milestone supplements such as `romanization-step14.json` and applies it to the assembled effective deck. `tools/audit-v5-romanization.mjs` currently validates all 750 effective cards.
 
 ## Miller source normalization
 
@@ -81,11 +95,7 @@ The original `data/miller-*.js` files are preserved as archival source data. The
 
 v5 code must load Miller data through `tools/lib/v5-miller.mjs`, which applies `miller-spelling-overrides.json` by source rank before the data is used for curriculum work. Do not read the raw Miller chunks directly when generating v5 cards.
 
-The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions where alef-lam is legitimate. `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry, that no known corruption remains after normalization, and that newly suspicious spellings fail CI instead of silently entering the curriculum.
-
-## Current milestone
-
-Steps **1–13** are complete for the effective first 300 cards.
+The correction file currently contains 39 confirmed spelling repairs. The scanner also has 9 explicitly reviewed heuristic exceptions. `tools/audit-miller-source.mjs` verifies that every correction still matches its exact raw source entry and that newly suspicious spellings fail CI.
 
 ## Foundation mode
 
