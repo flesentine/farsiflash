@@ -8,20 +8,30 @@ import { loadScoringRules, scoreCandidate, checkCandidateAtPosition } from './li
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const deck = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'deck.json'), 'utf8'));
+const compoundPolicy = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'compound-verb-policy.json'), 'utf8'));
 const batchesDir = path.join(root, 'data', 'v5', 'batches');
 const scoringRules = loadScoringRules();
 const allBatchFiles = fs.existsSync(batchesDir)
   ? fs.readdirSync(batchesDir).filter((name) => name.endsWith('.mjs')).sort()
   : [];
 
-// A *.reviewed.mjs companion supersedes its original candidate batch while
-// preserving the original file for provenance and review diffs.
-const superseded = new Set(
-  allBatchFiles
-    .filter((name) => name.endsWith('.reviewed.mjs'))
-    .map((name) => name.replace('.reviewed.mjs', '.mjs'))
-);
-const batchFiles = allBatchFiles.filter((name) => name.endsWith('.reviewed.mjs') || !superseded.has(name));
+// Preserve every editorial stage for provenance, but load only the highest-
+// precedence companion for each batch: compounds > reviewed > candidate.
+function batchKey(name) {
+  return name.replace(/(?:\.reviewed|\.compounds)?\.mjs$/, '');
+}
+function batchPrecedence(name) {
+  if (name.endsWith('.compounds.mjs')) return 2;
+  if (name.endsWith('.reviewed.mjs')) return 1;
+  return 0;
+}
+const chosen = new Map();
+for (const name of allBatchFiles) {
+  const key = batchKey(name);
+  const current = chosen.get(key);
+  if (!current || batchPrecedence(name) > batchPrecedence(current)) chosen.set(key, name);
+}
+const batchFiles = [...chosen.values()].sort();
 
 const batchCards = [];
 for (const file of batchFiles) {
@@ -58,7 +68,7 @@ function checkPersian(label, value, position) {
 }
 
 if (deck.cards.length !== 100) fail(`foundation core must remain exactly 100 cards; found ${deck.cards.length}`);
-if (batchCards.length !== 200) fail(`reviewed 101–300 batch must contain exactly 200 cards; found ${batchCards.length}`);
+if (batchCards.length !== 200) fail(`effective 101–300 batch must contain exactly 200 cards; found ${batchCards.length}`);
 if (cards.length !== 300) fail(`effective v5 curriculum must contain 300 cards; found ${cards.length}`);
 
 const ids = new Map();
@@ -109,10 +119,29 @@ cards.forEach((card, index) => {
   }
 });
 
+// Step 11 policy: high-value light-verb constructions must be present before
+// card 300, and their weak isolated noun components must not consume an early
+// action-learning slot before the constructions are established.
+for (const id of compoundPolicy.requiredBeforeOrAt300 || []) {
+  const position = ids.get(id);
+  if (!position) fail(`compound policy missing required early construction: ${id}`);
+  else if (position > 300) fail(`compound policy requires ${id} by 300; found at #${position}`);
+  const card = cards[position - 1];
+  if (!(card.tags || []).includes('productive-compound-verb')) {
+    fail(`compound policy card ${id} must carry productive-compound-verb tag`);
+  }
+}
+const deferredForms = new Set((compoundPolicy.deferIsolatedFormsBefore300 || []).map(normalizeFa));
+cards.slice(0, 300).forEach((card, index) => {
+  if (deferredForms.has(normalizeFa(card.fa))) {
+    fail(`#${index + 1} isolated light-verb component should be deferred until after the full construction: ${card.fa}`);
+  }
+});
+
 for (const message of warnings) console.warn(`WARN ${message}`);
 for (const message of errors) console.error(`ERROR ${message}`);
 if (errors.length) {
   console.error(`\nv5 batch audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`);
   process.exit(1);
 }
-console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}`);
+console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, compoundPolicy=${compoundPolicy.version}`);
