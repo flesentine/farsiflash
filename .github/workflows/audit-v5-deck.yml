@@ -41,7 +41,7 @@ jobs:
         run: node tools/audit-v5-scoring.mjs
       - name: Audit v5 core deck
         run: node tools/audit-v5-deck.mjs
-      - name: Audit v5 effective 750-card deck
+      - name: Audit v5 effective 1250-card deck
         run: node tools/audit-v5-batches.mjs
       - name: Audit v5 learner Romanization
         run: node tools/audit-v5-romanization.mjs
