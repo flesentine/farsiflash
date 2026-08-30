@@ -3,7 +3,7 @@
   "purpose": "Consistent ASCII learner-facing Romanization for modern Iranian Persian.",
   "principles": [
     "Romanize the Persian form actually shown on the card.",
-    "Store spokenRoman and formalRoman when spokenFa/formalFa are present.",
+    "Use spokenRoman or formalRoman only for an alternate spokenFa/formalFa form; roman always belongs to the primary fa form.",
     "Use simple ASCII spellings intended to cue pronunciation, not academic transliteration.",
     "Use aa for the long a sound, i for the long i sound, and oo for the long u sound.",
     "Use kh, gh, sh, ch, and zh consistently.",
@@ -74,6 +74,9 @@
     "culture.khaste-nabashe": "khaste nabaashid",
     "culture.dastet-dard-nakone": "dastetaan dard nakonad",
     "culture.here-you-go": "befarmaayid",
-    "conversation.i-can": "mitavaanam"
+    "conversation.i-can": "mitavaanam",
+    "grammar.something": "chizi",
+    "grammar.nothing": "hich chiz",
+    "question.what-does-it-mean": "yani che?"
   }
 }
