@@ -23,7 +23,7 @@ const P=new Map([
   ['home.outlet',{id:'home.surge-protector',fa:'محافظ برق',roman:'mohaafeze bargh',en:'surge protector'}],
   ['home.dishwasher',{id:'home.dish-rack',fa:'آبچکان',roman:'aabchakaan',en:'dish rack'}],
   ['home.washing-machine',{id:'home.laundry-pod',fa:'کپسول لباسشویی',roman:'kapsole lebaasshooyi',en:'laundry pod'}],
-  ['home.microwave',{id:'home.freezer',fa:'فریزر',roman:'ferizer',en:'freezer'}]
+  ['home.microwave',{id:'home.range-hood',fa:'هود',roman:'hood',en:'range hood / kitchen exhaust'}]
 ]);
 const cards=candidate.map(c=>P.has(c.id)?{...c,...P.get(c.id)}:c);
 if(cards.length!==45)throw new Error(`reviewed home batch must remain 45; found ${cards.length}`);
