@@ -6,7 +6,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
 
 export function loadRomanizationPolicy() {
-  return JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'romanization-policy.json'), 'utf8'));
+  const base = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'romanization-policy.json'), 'utf8'));
+  const supplementPath = path.join(root, 'data', 'v5', 'romanization-step14.json');
+  if (!fs.existsSync(supplementPath)) return base;
+  const supplement = JSON.parse(fs.readFileSync(supplementPath, 'utf8'));
+  return {
+    ...base,
+    alternateRomanById: {
+      ...(base.alternateRomanById || {}),
+      ...(supplement.alternateRomanById || {})
+    }
+  };
 }
 
 export function loadRegisterPairPolicy() {
