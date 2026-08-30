@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const deck = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'deck.json'), 'utf8'));
 const compoundPolicy = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'compound-verb-policy.json'), 'utf8'));
+const registerPolicy = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'register-pairs.json'), 'utf8'));
 const batchesDir = path.join(root, 'data', 'v5', 'batches');
 const scoringRules = loadScoringRules();
 const allBatchFiles = fs.existsSync(batchesDir)
@@ -16,11 +17,12 @@ const allBatchFiles = fs.existsSync(batchesDir)
   : [];
 
 // Preserve every editorial stage for provenance, but load only the highest-
-// precedence companion for each batch: compounds > reviewed > candidate.
+// precedence companion for each batch: registers > compounds > reviewed > candidate.
 function batchKey(name) {
-  return name.replace(/(?:\.reviewed|\.compounds)?\.mjs$/, '');
+  return name.replace(/(?:\.reviewed|\.compounds|\.registers)?\.mjs$/, '');
 }
 function batchPrecedence(name) {
+  if (name.endsWith('.registers.mjs')) return 3;
   if (name.endsWith('.compounds.mjs')) return 2;
   if (name.endsWith('.reviewed.mjs')) return 1;
   return 0;
@@ -138,10 +140,36 @@ cards.slice(0, 300).forEach((card, index) => {
   }
 });
 
+// Step 12 policy: where spoken and standard/formal Persian materially differ,
+// both forms must live on the same stable concept card. A card may lead with
+// either form; the counterpart belongs in spokenFa or formalFa accordingly.
+for (const pair of registerPolicy.requiredPairs || []) {
+  const position = ids.get(pair.id);
+  if (!position) {
+    fail(`register-pair policy missing required concept: ${pair.id}`);
+    continue;
+  }
+  const card = cards[position - 1];
+  const primary = normalizeFa(card.fa);
+  const spoken = normalizeFa(pair.spoken);
+  const formal = normalizeFa(pair.formal);
+  if (primary === spoken) {
+    if (normalizeFa(card.formalFa) !== formal) {
+      fail(`#${position} ${pair.id} must pair spoken ${pair.spoken} with formal ${pair.formal}`);
+    }
+  } else if (primary === formal) {
+    if (normalizeFa(card.spokenFa) !== spoken) {
+      fail(`#${position} ${pair.id} must pair formal ${pair.formal} with spoken ${pair.spoken}`);
+    }
+  } else {
+    fail(`#${position} ${pair.id} primary form ${card.fa} matches neither required spoken ${pair.spoken} nor formal ${pair.formal}`);
+  }
+}
+
 for (const message of warnings) console.warn(`WARN ${message}`);
 for (const message of errors) console.error(`ERROR ${message}`);
 if (errors.length) {
   console.error(`\nv5 batch audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`);
   process.exit(1);
 }
-console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, compoundPolicy=${compoundPolicy.version}`);
+console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, compoundPolicy=${compoundPolicy.version}, registerPolicy=${registerPolicy.version}, registerPairs=${(registerPolicy.requiredPairs || []).length}`);
