@@ -47,7 +47,7 @@ const fail = (msg) => errors.push(msg);
 const ids = new Map(cards.map((card, index) => [card.id, index + 1]));
 const ROMAN_RE = /^[a-z0-9 /.,!?()]+$/;
 
-if (cards.length !== 300) fail(`Romanization audit expects exactly 300 effective cards; found ${cards.length}`);
+if (cards.length !== 750) fail(`Romanization audit expects exactly 750 effective cards at Step 14; found ${cards.length}`);
 
 function checkRoman(label, value, card, position) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -110,9 +110,7 @@ for (const [id, expected] of Object.entries(romanPolicy.primaryOverrides || {}))
     fail(`stale primary Romanization override: ${id}`);
     continue;
   }
-  if (cards[position - 1].roman !== sanitizeRoman(expected)) {
-    fail(`#${position} ${id} did not apply primary Romanization override ${expected}`);
-  }
+  if (cards[position - 1].roman !== sanitizeRoman(expected)) fail(`#${position} ${id} did not apply primary Romanization override ${expected}`);
 }
 
 for (const message of errors) console.error(`ERROR ${message}`);
