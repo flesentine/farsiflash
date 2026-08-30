@@ -5,7 +5,7 @@ const P=new Map([
   ['home.detergent',{id:'home.fabric-softener',fa:'نرم کننده لباس',roman:'narm konandeye lebaas',en:'fabric softener'}],
   ['home.dish-soap',{id:'home.dish-brush',fa:'برس ظرفشویی',roman:'borose zarfshooyi',en:'dish brush'}],
   ['home.sponge',{id:'home.cleaning-cloth',fa:'دستمال نظافت',roman:'dastmaale nezaafat',en:'cleaning cloth'}],
-  ['home.trash',{id:'home.shopping-bag',fa:'کیسه خرید',roman:'kiseye kharid',en:'shopping bag'}],
+  ['home.trash',{id:'home.reusable-bag',fa:'کیسه پارچه‌ای',roman:'kiseye paarchei',en:'reusable cloth bag'}],
   ['home.broom',{id:'home.dustpan',fa:'خاک انداز',roman:'khaak andaaz',en:'dustpan'}],
   ['home.mop',{id:'home.duster',fa:'گردگیر',roman:'gardgir',en:'duster'}],
   ['home.vacuum',{id:'home.steam-cleaner',fa:'بخارشوی',roman:'bokhaarshooy',en:'steam cleaner'}],
@@ -23,7 +23,7 @@ const P=new Map([
   ['home.outlet',{id:'home.surge-protector',fa:'محافظ برق',roman:'mohaafeze bargh',en:'surge protector'}],
   ['home.dishwasher',{id:'home.dish-rack',fa:'آبچکان',roman:'aabchakaan',en:'dish rack'}],
   ['home.washing-machine',{id:'home.laundry-pod',fa:'کپسول لباسشویی',roman:'kapsole lebaasshooyi',en:'laundry pod'}],
-  ['home.microwave',{id:'home.oven',fa:'فر',roman:'for',en:'oven'}]
+  ['home.microwave',{id:'home.freezer',fa:'فریزر',roman:'ferizer',en:'freezer'}]
 ]);
 const cards=candidate.map(c=>P.has(c.id)?{...c,...P.get(c.id)}:c);
 if(cards.length!==45)throw new Error(`reviewed home batch must remain 45; found ${cards.length}`);
