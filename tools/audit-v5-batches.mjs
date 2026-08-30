@@ -10,9 +10,18 @@ const root = path.resolve(__dirname, '..');
 const deck = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'deck.json'), 'utf8'));
 const batchesDir = path.join(root, 'data', 'v5', 'batches');
 const scoringRules = loadScoringRules();
-const batchFiles = fs.existsSync(batchesDir)
+const allBatchFiles = fs.existsSync(batchesDir)
   ? fs.readdirSync(batchesDir).filter((name) => name.endsWith('.mjs')).sort()
   : [];
+
+// A *.reviewed.mjs companion supersedes its original candidate batch while
+// preserving the original file for provenance and review diffs.
+const superseded = new Set(
+  allBatchFiles
+    .filter((name) => name.endsWith('.reviewed.mjs'))
+    .map((name) => name.replace('.reviewed.mjs', '.mjs'))
+);
+const batchFiles = allBatchFiles.filter((name) => name.endsWith('.reviewed.mjs') || !superseded.has(name));
 
 const batchCards = [];
 for (const file of batchFiles) {
@@ -49,8 +58,8 @@ function checkPersian(label, value, position) {
 }
 
 if (deck.cards.length !== 100) fail(`foundation core must remain exactly 100 cards; found ${deck.cards.length}`);
-if (batchCards.length !== 200) fail(`step-9 batch must contain exactly 200 cards; found ${batchCards.length}`);
-if (cards.length !== 300) fail(`effective v5 curriculum must contain 300 cards after step 9; found ${cards.length}`);
+if (batchCards.length !== 200) fail(`reviewed 101–300 batch must contain exactly 200 cards; found ${batchCards.length}`);
+if (cards.length !== 300) fail(`effective v5 curriculum must contain 300 cards; found ${cards.length}`);
 
 const ids = new Map();
 const forms = new Map();
@@ -106,4 +115,4 @@ if (errors.length) {
   console.error(`\nv5 batch audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`);
   process.exit(1);
 }
-console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}`);
+console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}`);
