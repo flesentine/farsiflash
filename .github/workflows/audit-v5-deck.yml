@@ -10,6 +10,7 @@ on:
       - 'tools/audit-v5-deck.mjs'
       - 'tools/audit-v5-batches.mjs'
       - 'tools/audit-v5-scoring.mjs'
+      - 'tools/audit-v5-romanization.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -20,6 +21,7 @@ on:
       - 'tools/audit-v5-deck.mjs'
       - 'tools/audit-v5-batches.mjs'
       - 'tools/audit-v5-scoring.mjs'
+      - 'tools/audit-v5-romanization.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -41,5 +43,7 @@ jobs:
         run: node tools/audit-v5-deck.mjs
       - name: Audit v5 effective 300-card deck
         run: node tools/audit-v5-batches.mjs
+      - name: Audit v5 learner Romanization
+        run: node tools/audit-v5-romanization.mjs
       - name: Audit and normalize Miller source spellings
         run: node tools/audit-miller-source.mjs
