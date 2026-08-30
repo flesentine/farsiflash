@@ -27,9 +27,19 @@ The 101–300 layer adds explicit counterparts for:
 
 These are additions to the many pairs already introduced in earlier steps, including `اون/آن`, `اونا/آنها`, `کدوم/کدام`, `می‌خوام/می‌خواهم`, `می‌شه/می‌شود`, `نون/نان`, `خیابون/خیابان`, `گرون/گران`, `خوندن/خواندن`, and others.
 
+## Coverage refinement from Step 13
+
+The Romanization audit exposed three legitimate spoken/formal pairs that were already present on cards but had not yet been included in the machine-readable Step-12 policy:
+
+- `یه چیزی` ↔ `چیزی`
+- `هیچی` ↔ `هیچ چیز`
+- `یعنی چی؟` ↔ `یعنی چه؟`
+
+They are now included. This is intentional: later audits are allowed to strengthen an earlier editorial policy when they reveal a real coverage gap.
+
 ## Enforcement
 
-`data/v5/register-pairs.json` is the machine-readable policy. It currently requires 52 high-value pairs in the first 300.
+`data/v5/register-pairs.json` is the machine-readable policy. It now requires **55 high-value pairs** in the first 300.
 
 `tools/audit-v5-batches.mjs` verifies that each required concept exists and that either:
 
