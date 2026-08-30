@@ -4,12 +4,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadScoringRules, scoreCandidate, checkCandidateAtPosition } from './lib/v5-scoring.mjs';
+import { loadRegisterPairPolicy } from './lib/v5-romanization.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const deck = JSON.parse(fs.readFileSync(path.join(root,'data','v5','deck.json'),'utf8'));
 const compoundPolicy = JSON.parse(fs.readFileSync(path.join(root,'data','v5','compound-verb-policy.json'),'utf8'));
-const registerPolicy = JSON.parse(fs.readFileSync(path.join(root,'data','v5','register-pairs.json'),'utf8'));
+const registerPolicy = loadRegisterPairPolicy();
 const scoringRules = loadScoringRules();
 const batchesDir = path.join(root,'data','v5','batches');
 
