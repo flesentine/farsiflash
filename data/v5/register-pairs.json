@@ -52,6 +52,9 @@
     {"id":"culture.khaste-nabashe","spoken":"خسته نباشی","formal":"خسته نباشید"},
     {"id":"culture.dastet-dard-nakone","spoken":"دستت درد نکنه","formal":"دستتان درد نکند"},
     {"id":"culture.here-you-go","spoken":"بفرما","formal":"بفرمایید"},
-    {"id":"conversation.i-can","spoken":"می‌تونم","formal":"می‌توانم"}
+    {"id":"conversation.i-can","spoken":"می‌تونم","formal":"می‌توانم"},
+    {"id":"grammar.something","spoken":"یه چیزی","formal":"چیزی"},
+    {"id":"grammar.nothing","spoken":"هیچی","formal":"هیچ چیز"},
+    {"id":"question.what-does-it-mean","spoken":"یعنی چی؟","formal":"یعنی چه؟"}
   ]
 }
