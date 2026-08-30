@@ -52,11 +52,11 @@ export function applyRomanization(card, policy = loadRomanizationPolicy(), regis
   const formal = normalizeFa(pair.formal);
   const alternateRoman = sanitizeRoman(alternate);
 
+  // roman always belongs to the primary fa form. Only the alternate form gets
+  // an explicit spokenRoman/formalRoman field.
   if (primary === spoken) {
-    out.spokenRoman = roman;
     out.formalRoman = alternateRoman;
   } else if (primary === formal) {
-    out.formalRoman = roman;
     out.spokenRoman = alternateRoman;
   } else {
     throw new Error(`Romanization pair ${card.id} primary form ${card.fa} matches neither ${pair.spoken} nor ${pair.formal}`);
