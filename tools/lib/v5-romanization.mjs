@@ -4,23 +4,47 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
+const v5Dir = path.join(root, 'data', 'v5');
+
+function milestoneFiles(prefix) {
+  if (!fs.existsSync(v5Dir)) return [];
+  return fs.readdirSync(v5Dir)
+    .filter((name) => new RegExp(`^${prefix}-step\\d+\\.json$`).test(name))
+    .sort((a, b) => {
+      const na = Number(a.match(/step(\d+)/)?.[1] || 0);
+      const nb = Number(b.match(/step(\d+)/)?.[1] || 0);
+      return na - nb || a.localeCompare(b);
+    });
+}
 
 export function loadRomanizationPolicy() {
-  const base = JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'romanization-policy.json'), 'utf8'));
-  const supplementPath = path.join(root, 'data', 'v5', 'romanization-step14.json');
-  if (!fs.existsSync(supplementPath)) return base;
-  const supplement = JSON.parse(fs.readFileSync(supplementPath, 'utf8'));
-  return {
+  const base = JSON.parse(fs.readFileSync(path.join(v5Dir, 'romanization-policy.json'), 'utf8'));
+  const merged = {
     ...base,
-    alternateRomanById: {
-      ...(base.alternateRomanById || {}),
-      ...(supplement.alternateRomanById || {})
-    }
+    primaryOverrides: { ...(base.primaryOverrides || {}) },
+    alternateRomanById: { ...(base.alternateRomanById || {}) }
   };
+  for (const name of milestoneFiles('romanization')) {
+    const supplement = JSON.parse(fs.readFileSync(path.join(v5Dir, name), 'utf8'));
+    Object.assign(merged.primaryOverrides, supplement.primaryOverrides || {});
+    Object.assign(merged.alternateRomanById, supplement.alternateRomanById || {});
+  }
+  return merged;
 }
 
 export function loadRegisterPairPolicy() {
-  return JSON.parse(fs.readFileSync(path.join(root, 'data', 'v5', 'register-pairs.json'), 'utf8'));
+  const base = JSON.parse(fs.readFileSync(path.join(v5Dir, 'register-pairs.json'), 'utf8'));
+  const requiredPairs = [...(base.requiredPairs || [])];
+  const seen = new Set(requiredPairs.map((pair) => pair.id));
+  for (const name of milestoneFiles('register-pairs')) {
+    const supplement = JSON.parse(fs.readFileSync(path.join(v5Dir, name), 'utf8'));
+    for (const pair of supplement.requiredPairs || []) {
+      if (seen.has(pair.id)) throw new Error(`duplicate register-pair supplement ID: ${pair.id}`);
+      seen.add(pair.id);
+      requiredPairs.push(pair);
+    }
+  }
+  return { ...base, requiredPairs };
 }
 
 export function normalizeFa(value) {
@@ -62,8 +86,6 @@ export function applyRomanization(card, policy = loadRomanizationPolicy(), regis
   const formal = normalizeFa(pair.formal);
   const alternateRoman = sanitizeRoman(alternate);
 
-  // roman always belongs to the primary fa form. Only the alternate form gets
-  // an explicit spokenRoman/formalRoman field.
   if (primary === spoken) {
     out.formalRoman = alternateRoman;
   } else if (primary === formal) {
