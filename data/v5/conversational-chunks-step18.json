@@ -1,0 +1,62 @@
+{
+  "version": "conversational-chunks-v1-step18",
+  "step": 18,
+  "goal": "Promote reusable modern spoken Iranian Persian chunks into the fixed 2,000-card curriculum by replacing lower-value concepts at the same positions.",
+  "replacementCount": 38,
+  "profile": {
+    "register": "spoken",
+    "category": "conversation",
+    "signals": {
+      "conversationalFrequency": 82,
+      "speakerDispersion": 86,
+      "practicalUsefulness": 88,
+      "generativeValue": 84,
+      "modernRelevance": 88,
+      "writtenFrequency": 62
+    },
+    "tags": ["essential-chunk", "high-transfer-pattern", "spoken-form", "conversational-chunk", "reusable-chunk"]
+  },
+  "replacements": [
+    {"targetId":"work.minutes","id":"conversation.chunk.can-you-send-it","fa":"می‌تونی برام بفرستی؟","roman":"mitooni baraam befresti?","en":"can you send it to me?"},
+    {"targetId":"work.spreadsheet","id":"conversation.chunk.ill-check","fa":"چک می‌کنم","roman":"chek mikonam","en":"I'll check"},
+    {"targetId":"work.document","id":"conversation.chunk.let-me-check","fa":"بذار چک کنم","roman":"bezaar chek konam","en":"let me check"},
+    {"targetId":"work.signature","id":"conversation.chunk.no-idea","fa":"اصلاً نمی‌دونم","roman":"aslan nemidoonam","en":"I have no idea"},
+    {"targetId":"work.form","id":"conversation.chunk.what-do-you-think","fa":"نظرت چیه؟","roman":"nazaret chiye?","en":"what do you think?"},
+    {"targetId":"work.purchase-order","id":"conversation.chunk.seems-right","fa":"به نظرم درسته","roman":"be nazaram doroste","en":"that seems right to me"},
+    {"targetId":"work.expense","id":"conversation.chunk.i-think-so","fa":"فکر کنم آره","roman":"fekr konam aare","en":"I think so"},
+    {"targetId":"work.reimbursement","id":"conversation.chunk.i-dont-think-so","fa":"فکر نکنم","roman":"fekr nakonam","en":"I don't think so"},
+
+    {"targetId":"tech.wall-adapter","id":"conversation.chunk.did-you-see-it","fa":"دیدیش؟","roman":"didish?","en":"did you see it?"},
+    {"targetId":"tech.volume-level","id":"conversation.chunk.cant-hear-you","fa":"صدات نمیاد","roman":"sedaat nemiyaad","en":"I can't hear you"},
+    {"targetId":"tech.speakerphone","id":"conversation.chunk.youre-cutting-out","fa":"صدات قطع و وصل می‌شه","roman":"sedaat ghat o vasl mishe","en":"your voice keeps cutting out"},
+    {"targetId":"tech.screen-brightness","id":"conversation.chunk.wont-open","fa":"باز نمی‌شه","roman":"baaz nemishe","en":"it won't open"},
+    {"targetId":"tech.video-quality","id":"conversation.chunk.send-it-again","fa":"دوباره بفرست","roman":"dobaare befrest","en":"send it again"},
+    {"targetId":"tech.read-receipt","id":"conversation.chunk.i-sent-it","fa":"فرستادمش","roman":"ferestaadamesh","en":"I sent it"},
+    {"targetId":"tech.notification-sound","id":"conversation.chunk.sending-now","fa":"الان می‌فرستم","roman":"alaan miferestam","en":"I'm sending it now"},
+    {"targetId":"tech.wifi-strength","id":"conversation.chunk.no-signal","fa":"آنتن نمی‌ده","roman":"aanten nemide","en":"there's no signal / it gets no reception"},
+
+    {"targetId":"home.drying-rack","id":"conversation.chunk.one-second","fa":"یه لحظه","roman":"ye lahze","en":"one second / hold on"},
+    {"targetId":"home.fabric-softener","id":"conversation.chunk.be-right-back","fa":"الان برمی‌گردم","roman":"alaan barmigardam","en":"I'll be right back"},
+    {"targetId":"home.dish-brush","id":"conversation.chunk.have-time-now","fa":"الان وقت داری؟","roman":"alaan vaght daari?","en":"do you have time now?"},
+    {"targetId":"home.cleaning-cloth","id":"conversation.chunk.wait-let-me-see","fa":"صبر کن ببینم","roman":"sabr kon bebinam","en":"hang on, let me see"},
+    {"targetId":"home.dustpan","id":"conversation.chunk.what-should-we-do","fa":"چی کار کنیم؟","roman":"chi kaar konim?","en":"what should we do?"},
+    {"targetId":"home.duster","id":"conversation.chunk.now-what","fa":"حالا چی؟","roman":"haalaa chi?","en":"now what?"},
+    {"targetId":"home.steam-cleaner","id":"conversation.chunk.dont-worry","fa":"نگران نباش","roman":"negaraan nabaash","en":"don't worry"},
+    {"targetId":"home.cleaning-spray","id":"conversation.chunk.itll-work-out","fa":"درست می‌شه","roman":"dorost mishe","en":"it'll work out / it'll be okay"},
+
+    {"targetId":"late.building-dues","id":"conversation.chunk.why-not","fa":"چرا که نه؟","roman":"cheraa ke na?","en":"why not?"},
+    {"targetId":"late.shared-bill","id":"conversation.chunk.you-are-right","fa":"راست می‌گی","roman":"raast migi","en":"you're right"},
+    {"targetId":"late.written-contract","id":"conversation.chunk.cant-believe-it","fa":"باورم نمی‌شه","roman":"baavaram nemishe","en":"I can't believe it"},
+    {"targetId":"late.verbal-agreement","id":"conversation.chunk.are-you-kidding","fa":"شوخی می‌کنی؟","roman":"shookhi mikoni?","en":"are you kidding?"},
+    {"targetId":"late.waiting-list","id":"conversation.chunk.are-you-serious","fa":"جدی می‌گی؟","roman":"jedi migi?","en":"are you serious?"},
+    {"targetId":"late.extra-time","id":"conversation.chunk.slipped-my-mind","fa":"حواسم نبود","roman":"havaasam nabood","en":"it slipped my mind / I wasn't paying attention"},
+    {"targetId":"late.toolbox","id":"conversation.chunk.i-forgot","fa":"یادم رفت","roman":"yaadam raft","en":"I forgot"},
+    {"targetId":"late.spare-battery","id":"conversation.chunk.cant-remember","fa":"یادم نمیاد","roman":"yaadam nemiyaad","en":"I can't remember"},
+    {"targetId":"late.spare-key","id":"conversation.chunk.well-see","fa":"حالا می‌بینیم","roman":"haalaa mibinim","en":"we'll see"},
+    {"targetId":"late.postal-package","id":"conversation.chunk.see-what-happens","fa":"ببین چی می‌شه","roman":"bebin chi mishe","en":"let's see what happens"},
+    {"targetId":"late.returned-item","id":"conversation.chunk.say-hi-for-me","fa":"سلام برسون","roman":"salaam beresoon","en":"say hi for me"},
+    {"targetId":"late.digital-receipt","id":"conversation.chunk.very-kind","fa":"خیلی لطف کردی","roman":"kheyli lotf kardi","en":"that was very kind of you / thanks"},
+    {"targetId":"late.printed-copy","id":"conversation.chunk.khodaa-ghovat","fa":"خدا قوت","roman":"khodaa ghovat","en":"good work / may God give you strength"},
+    {"targetId":"late.customer-support","id":"conversation.chunk.thanks-for-coming","fa":"ممنون که اومدی","roman":"mamnoon ke oomadi","en":"thanks for coming"}
+  ]
+}
