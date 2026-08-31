@@ -39,6 +39,7 @@ if(chunkResult.applied!==38) fail(`Step 20 must run after all 38 Step 18 chunk p
 
 const ids=new Map(cards.map((card,index)=>[card.id,index+1]));
 const sourceById=new Map(sourceCards.map((card)=>[card.id,normalizeEnglishMeaning(card.en)]));
+const sourceSlashCount=sourceCards.filter((card)=>normalizeEnglishMeaning(card.en).includes('/')).length;
 const overrides=policy.overrides||{};
 for(const [id,override] of Object.entries(overrides)){
   const pos=ids.get(id);
@@ -47,6 +48,8 @@ for(const [id,override] of Object.entries(overrides)){
   if(typeof override.reason!=='string'||override.reason.trim().length<8) fail(`Step 20 override ${id} needs a reason`);
   if(normalizeEnglishMeaning(override.en)===sourceById.get(id)) fail(`Step 20 override ${id} does not change the source gloss`);
 }
+if(result.overridesApplied!==Object.keys(overrides).length) fail(`Step 20 applied ${result.overridesApplied} overrides but policy defines ${Object.keys(overrides).length}`);
+if(result.autoCollapsed+result.overridesApplied<sourceSlashCount) fail(`Step 20 cleanup accounting is incomplete: sourceSlash=${sourceSlashCount}, autoCollapsed=${result.autoCollapsed}, overrides=${result.overridesApplied}`);
 
 const duplicateMeanings=new Map();
 let slashCount=0, semicolonCount=0, orCount=0, longCount=0;
@@ -74,7 +77,7 @@ for(const [meaning,positions] of exactDuplicates.slice(0,20)) console.warn(`WARN
 
 for(const error of errors) console.error(`ERROR ${error}`);
 if(errors.length){
-  console.error(`\nStep 20 English meaning audit failed: ${errors.length} issue(s); overrides=${Object.keys(overrides).length}; slash=${slashCount}; semicolon=${semicolonCount}; or=${orCount}; long=${longCount}`);
+  console.error(`\nStep 20 English meaning audit failed: ${errors.length} issue(s); sourceSlash=${sourceSlashCount}; overrides=${result.overridesApplied}; autoCollapsed=${result.autoCollapsed}; slash=${slashCount}; semicolon=${semicolonCount}; or=${orCount}; long=${longCount}`);
   process.exit(1);
 }
-console.log(`Step 20 English meaning audit passed: cards=${cards.length}, overrides=${Object.keys(overrides).length}, exactDuplicateGroups=${exactDuplicates.length}, maxChars=${rules.maxChars}`);
+console.log(`Step 20 English meaning audit passed: cards=${cards.length}, sourceSlash=${sourceSlashCount}, overrides=${result.overridesApplied}, autoCollapsed=${result.autoCollapsed}, exactDuplicateGroups=${exactDuplicates.length}, maxChars=${rules.maxChars}`);
