@@ -50,10 +50,7 @@ const ids=new Map(cards.map((card,index)=>[card.id,index+1]));
 for(const id of Object.keys(policy.curated||{})) if(!ids.has(id)) fail(`stale Step 19 curated example ID: ${id}`);
 
 const examples=new Map();
-let standalone=0;
-let curated=0;
-let explicit=0;
-let framed=0;
+let curatedApplied=0;
 let totalFaChars=0;
 
 cards.forEach((card,index)=>{
@@ -88,19 +85,22 @@ cards.forEach((card,index)=>{
   if(first && normalizeFa(card.fa)!==normalizeFa(cards[first-1].fa)) warn(`#${pos} ${card.id} repeats example from #${first}: ${card.exampleFa}`);
   else if(!first) examples.set(normalized,pos);
 
-  if(card.exampleFa===card.fa || normalizeExampleFa(card.exampleFa)===normalizeExampleFa(card.fa)) standalone += 1;
-  if(policy.curated?.[card.id]) curated += 1;
-  else if(card.exampleFa && preChunk.find((original)=>original.id===card.id)?.exampleFa) explicit += 1;
-  else framed += 1;
+  if(policy.curated?.[card.id]) curatedApplied += 1;
 });
 
 if(examples.size<1950) fail(`Step 19 examples need broad lexical diversity; only ${examples.size} unique Persian examples across 2000 cards`);
-if(curated<Object.keys(policy.curated||{}).length) fail(`not all curated Step 19 examples were applied: ${curated}/${Object.keys(policy.curated||{}).length}`);
-if(standalone<100) warn(`only ${standalone} standalone utterance examples detected; expected substantial chunk coverage`);
+if(curatedApplied<Object.keys(policy.curated||{}).length) fail(`not all curated Step 19 examples were applied: ${curatedApplied}/${Object.keys(policy.curated||{}).length}`);
+
+const sourceCurated=exampleResult.sources.curated||0;
+const sourceStandalone=exampleResult.sources.standalone||0;
+const sourceExplicit=exampleResult.sources.card||0;
+const sourceFramed=Object.entries(exampleResult.sources).filter(([name])=>name.startsWith('frame:')).reduce((sum,[,count])=>sum+count,0);
+if(sourceCurated+sourceStandalone+sourceExplicit+sourceFramed!==cards.length) fail('Step 19 source accounting does not total 2000 cards');
+if(sourceStandalone<100) warn(`only ${sourceStandalone} standalone utterance examples detected; expected substantial chunk coverage`);
 
 const averageFa=Math.round((totalFaChars/cards.length)*10)/10;
 for(const warning of warnings) console.warn(`WARN ${warning}`);
 for(const error of errors) console.error(`ERROR ${error}`);
 if(errors.length){ console.error(`\nStep 19 example audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`); process.exit(1); }
-console.log(`Step 19 example audit passed: cards=${cards.length}, curated=${curated}, standalone=${standalone}, framed=${framed}, explicit=${explicit}, uniqueFa=${examples.size}, avgFaChars=${averageFa}, warnings=${warnings.length}`);
+console.log(`Step 19 example audit passed: cards=${cards.length}, curated=${sourceCurated}, standalone=${sourceStandalone}, framed=${sourceFramed}, explicit=${sourceExplicit}, uniqueFa=${examples.size}, avgFaChars=${averageFa}, warnings=${warnings.length}`);
 console.log(`example sources: ${JSON.stringify(exampleResult.sources)}`);
