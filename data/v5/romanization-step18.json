@@ -10,15 +10,15 @@
     "conversation.chunk.youre-cutting-out": "sedaat ghat o vasl mishavad",
     "conversation.chunk.wont-open": "baaz nemishavad",
     "conversation.chunk.no-signal": "aanten nemidahad",
-    "conversation.chunk.one-second": "yek lahze",
     "conversation.chunk.what-should-we-do": "che kaar konim?",
     "conversation.chunk.itll-work-out": "dorost mishavad",
     "conversation.chunk.you-are-right": "raast migooyi",
     "conversation.chunk.cant-believe-it": "baavaram nemishavad",
     "conversation.chunk.are-you-serious": "jedi migooyi?",
+    "conversation.chunk.remind-me": "yaadam biandaaz",
     "conversation.chunk.cant-remember": "yaadam nemiaayad",
     "conversation.chunk.see-what-happens": "bebin che mishavad",
-    "conversation.chunk.say-hi-for-me": "salaam beresaan",
+    "conversation.chunk.keep-it-in-mind": "havaaset baashad",
     "conversation.chunk.thanks-for-coming": "mamnoon ke aamadi"
   }
 }
