@@ -15,10 +15,11 @@ function buildChunkCard(entry, policy) {
   const profile = policy.profile || {};
   const signals = { ...(profile.signals || {}) };
   const tags = [...new Set(profile.tags || [])];
+  if (entry.formalFa || entry.spokenFa) tags.push('register-pair');
   const register = profile.register || 'spoken';
   const category = profile.category || 'conversation';
   const candidate = { register, category, millerRank: null, tags, signals };
-  return {
+  const card = {
     id: entry.id,
     fa: entry.fa,
     roman: entry.roman,
@@ -34,9 +35,12 @@ function buildChunkCard(entry, policy) {
         reason: `Step 18 promotes a reusable conversational chunk over lower-value concept ${entry.targetId}.`
       }
     },
-    tags,
+    tags: [...new Set(tags)],
     notes: `Step 18 replacement for ${entry.targetId}`
   };
+  if (entry.spokenFa) card.spokenFa = entry.spokenFa;
+  if (entry.formalFa) card.formalFa = entry.formalFa;
+  return card;
 }
 
 export function applyConversationalChunkReplacements(cards, policy = loadConversationalChunkPolicy()) {
