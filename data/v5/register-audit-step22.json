@@ -11,6 +11,21 @@
     "Confine reading-news recognition to the final bridge beginning at card 1751.",
     "Every unpaired spoken card must be explicitly reviewed and frozen in this policy so new unreviewed spoken forms fail CI."
   ],
+  "colloquialMarkerExceptions": ["travel.sidewalk"],
+  "reviewedColloquialPrimaryIds": [
+    "verb.take-trash-out","verb.make-bed","verb.move-meeting","verb.mute-mic","verb.unmute-mic","verb.share-screen",
+    "verb.miss-deadline","verb.submit-work","verb.review-work","verb.approve-work","verb.reject-work","verb.edit-document",
+    "verb.print-document","verb.scan-document","verb.sign-document","verb.file-document","verb.forward-email","verb.open-link",
+    "verb.copy-link","verb.paste-text","verb.save-file","verb.rename-file","verb.move-file","verb.restore-backup",
+    "verb.reset-password","verb.verify-account","verb.update-app","verb.restart-device","verb.turn-data-on","verb.turn-data-off",
+    "verb.charge-phone","verb.turn-location-on","verb.block-contact","verb.unblock-contact","verb.save-contact","verb.delete-contact",
+    "verb.miss-call","verb.check-voicemail","verb.like-post","verb.follow-account","verb.unfollow-account","verb.cancel-appointment",
+    "verb.reschedule-appointment","verb.take-temperature","verb.clean-wound","verb.miss-class","verb.check-grade","verb.look-up-word",
+    "verb.correct-mistake","social.believe-you","verb.bring-up-topic","verb.miss-exit","verb.top-up-card","verb.tow-car",
+    "verb.pick-up-order","verb.send-back-order","verb.exchange-item","verb.compare-prices","verb.split-bill","verb.clear-table",
+    "verb.lower-volume","verb.raise-volume","verb.pause-video","verb.turn-subtitles-on","verb.turn-subtitles-off","social.annoyed",
+    "culture.thank-god"
+  ],
   "reviewedUnpairedSpokenIds": [
     "chunk.i-dont-understand",
     "chunk.i-understand",
