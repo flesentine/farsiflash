@@ -1,0 +1,22 @@
+{
+  "version": "english-meanings-v1-step20",
+  "step": 20,
+  "goal": "Give every effective v5 concept one concise learner-relevant English meaning instead of a pile of dictionary senses.",
+  "rules": {
+    "maxChars": 58,
+    "forbidSlash": true,
+    "forbidSemicolon": true,
+    "forbidOrSeparator": true,
+    "forbidPlaceholders": ["TODO", "TBD", "unknown", "various", "etc."],
+    "allowParentheticalDisambiguation": true
+  },
+  "principles": [
+    "Teach one intended everyday sense per stable concept ID.",
+    "Do not use slash-separated synonym piles.",
+    "Use a short parenthetical only when it disambiguates the intended sense, such as bank (financial).",
+    "Conversation chunks may use a natural full English utterance rather than a dictionary label.",
+    "Formal and reading-news cards should still use one clear recognition meaning.",
+    "A later separate concept ID should carry a materially different sense of a Persian homograph."
+  ],
+  "overrides": {}
+}
