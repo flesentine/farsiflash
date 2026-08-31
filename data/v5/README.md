@@ -12,7 +12,7 @@ The learner-facing `fa` field is the form we want the learner to recognize first
 
 Each card carries register, category, selection evidence, and a derived score. `millerRank` is supporting evidence, not curriculum order.
 
-After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`. After Step 20, learner-facing `en` is resolved through the one-sense English meaning policy before generated examples are built. Step 21 modernizes the effective curriculum before those learner-facing layers are generated.
+After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`. Step 20 resolves learner-facing English meanings to one intended sense. Step 21 modernizes the curriculum, and Step 22 resolves spoken/standard register before learner Romanization and generated examples are finalized.
 
 ## Curriculum scoring: everyday-iranian-v1
 
@@ -63,74 +63,35 @@ The full 180-card reading/news allocation is deliberately confined to this final
 
 ## Step 18 conversational chunk overlay
 
-Step 18 keeps the curriculum at exactly 2,000 cards while promoting 38 reusable spoken chunks over lower-value concepts at the same positions:
-
-- 8 work-block replacements
-- 8 technology-block replacements
-- 8 home/errands replacements
-- 14 final lower-priority everyday replacements
-
-Twenty-four of the 38 promotions land by card 1,250. Representative additions include `می‌تونی برام بفرستی؟`, `بذار چک کنم`, `نظرت چیه؟`, `صدات نمیاد`, `رسیدی خبر بده`, `چی کار کنیم؟`, `این دفعه با من`, `باورم نمی‌شه`, `یادم بنداز`, `حواست باشه`, `خیلی لطف کردی`, `خدا قوت`, and `ممنون که اومدی`.
+Step 18 keeps the curriculum at exactly 2,000 cards while promoting 38 reusable spoken chunks over lower-value concepts at the same positions. Twenty-four of the 38 promotions land by card 1,250. Representative additions include `می‌تونی برام بفرستی؟`, `بذار چک کنم`, `نظرت چیه؟`, `صدات نمیاد`, `رسیدی خبر بده`, `چی کار کنیم؟`, `این دفعه با من`, `باورم نمی‌شه`, `یادم بنداز`, `حواست باشه`, `خیلی لطف کردی`, `خدا قوت`, and `ممنون که اومدی`.
 
 The first Step-18 run found five exact phrase collisions with earlier cards. Those were replaced rather than suppressed, leaving Step 18 with zero repeated-form warnings of its own. See `reviews/step-18-conversational-chunks.md`.
 
 ## Step 19 example sentence layer
 
-Step 19 established complete learner-example coverage for all 2,000 effective cards. With Steps 20 and 21 in place, the current canonical pipeline is:
+Every one of the 2,000 effective cards receives `exampleFa`, `exampleRoman`, and `exampleEn`.
 
-`effective curriculum → Step 18 chunks → Step 21 modern-life promotions → learner Romanization → Step 20 English meanings → Step 19 examples`
+Coverage is built from:
 
-Every one of the 2,000 effective cards receives:
+- 38 curated core examples
+- 252 standalone spoken utterances
+- 1,710 category-aware generated frames
 
-- `exampleFa`
-- `exampleRoman`
-- `exampleEn`
-
-Coverage is built from three sources:
-
-- 38 curated core examples for the highest-value early language
-- 252 standalone utterance examples where the card itself is already a useful spoken example
-- 1,710 category-aware generated frames for the remaining vocabulary
-
-The final Step-19 audit reports 1,999 unique Persian example strings and zero Step-19 warnings. The only reason the unique count is not 2,000 is the pre-existing duplicate `زن` curriculum form in the first 300.
-
-Generated frames are intentionally a coverage-first editorial layer, not a claim of final native-speaker phrasing. Step 23 can replace any example with an explicit card-level trio; explicit examples automatically take precedence while full coverage remains intact. See `reviews/step-19-example-sentences.md`.
+The final Step-19 audit reports 1,999 unique Persian example strings and zero Step-19 warnings. The only reason the unique count is not 2,000 is the pre-existing duplicate `زن` curriculum form in the first 300. Generated frames are a coverage-first editorial layer; Step 23 can replace them with native-reviewed explicit examples without losing coverage. See `reviews/step-19-example-sentences.md`.
 
 ## Step 20 English meaning layer
 
-Step 20 audits all 2,000 learner-facing English meanings under `english-meanings-v1-step20`. The policy treats a gloss as a teaching choice rather than a miniature dictionary entry: one stable concept should teach one intended learner-relevant sense.
+Step 20 audits all 2,000 learner-facing English meanings under `english-meanings-v1-step20`. The original strict pass found 289 slash-separated sense/synonym piles. It resolved them with 215 safe primary-sense collapses and 74 explicit editorial overrides where choosing the first item would be incomplete or misleading.
 
-The first strict audit found **291 issues**: 289 slash-separated sense/synonym piles and two legitimate expressions containing `or`. The original cleanup handled the 289 slash cases with:
+Representative corrections include `باید` → `have to`, `درست کردن` → `to fix`, `حوصله داشتن` → `to feel like doing something`, `بی‌حوصله` → `not in the mood`, shopping `موجودی` → `stock availability`, `حمام` → `bathroom (with shower)`, hotel `پذیرش` → `front desk`, and `رودربایستی` → `social obligation to be polite`.
 
-- **215 automatic primary-sense collapses** for straightforward synonym piles
-- **74 explicit editorial overrides** where taking the first item would be incomplete, misleading, less useful, or inconsistent with the concept ID
-
-Representative corrections include:
-
-- `باید` → `have to`
-- `درست کردن` → `to fix`
-- `حوصله داشتن` → `to feel like doing something`
-- `بی‌حوصله` → `not in the mood`
-- `کلافه‌ام` → `I'm frustrated`
-- `بدم میاد` → `I dislike it`
-- shopping `موجودی` → `stock availability`
-- `حمام` → `bathroom (with shower)`
-- `پشت بام` → `rooftop`
-- `صندوق` → `checkout counter`
-- hotel `پذیرش` → `front desk`
-- `خسته نباشی` / `خدا قوت` → `good work`
-- `رودربایستی` → `social obligation to be polite`
-- `عیدی` → `New Year gift money`
-
-Final CI guarantees all 2,000 meanings are non-empty, at most 58 characters, free of slash/semicolon sense piles and placeholder wording, and have sane punctuation. No exact English meaning occurs four or more times after the cleanup. Generated Step-19 English examples consume the cleaned Step-20 meaning automatically, while curated Step-19 example text remains authoritative. See `reviews/step-20-english-meanings.md`.
+CI guarantees all 2,000 meanings are non-empty, at most 58 characters, free of slash/semicolon sense piles and placeholder wording, and have sane punctuation. See `reviews/step-20-english-meanings.md`.
 
 ## Step 21 modern-life coverage layer
 
-Step 21 audits the effective 2,000-card curriculum across 10 contemporary-life domains and promotes missing high-value language without increasing deck size.
+Step 21 audits the fixed 2,000-card curriculum across 10 contemporary-life domains. It promotes 11 high-value concepts without increasing deck size or changing the first 1,250 cards.
 
-The existing deck was already strong on phones/internet, messaging, online payment, QR codes, delivery, remote work, healthcare, errands, privacy, and social communication. A current-market check on August 31, 2026 confirmed that app-based taxis and digital/card/mobile payment workflows remain central to everyday Iranian life. The audit identified two areas that needed stronger guaranteed coverage: **digital banking/payment language** and **app-based taxi/ride-hailing language**.
-
-Step 21 replaces exactly **11** lower-value concepts, all before card 1,751:
+New guaranteed coverage includes:
 
 - `کارت به کارت` — card-to-card transfer
 - `همراه بانک` — mobile banking
@@ -144,39 +105,74 @@ Step 21 replaces exactly **11** lower-value concepts, all before card 1,751:
 - `راننده رسید` — the driver arrived
 - `لغو سفر` — cancel a ride
 
-The coverage policy uses generic durable concepts rather than requiring brand names. Ten auditable domains cover mobile/internet, messaging/calls, payments/banking, e-commerce/delivery, ride-hailing/navigation, digital work, health services, housing/errands, privacy/social communication, and identity/utilities.
+The integrated audit reports 99 `modern-life`-tagged cards and all 10/10 domains meeting their anchor requirements. See `reviews/step-21-modern-life-coverage.md`.
 
-The first integrated audit reports **99 modern-life-tagged cards**, all **10/10 domains** meeting their anchor requirements, and no new repeated-form warning. See `reviews/step-21-modern-life-coverage.md`.
+## Step 22 full register audit
 
-**Steps 1–21 are complete. Step 22 is the next curriculum audit.**
+Step 22 runs after the Step-18 and Step-21 overlays so it reviews the actual modern learner deck rather than superseded source cards.
+
+The initial diagnostic confirmed that structural placement was already strong: there were **zero formal, written, literary, or reading/news primary cards before position 1751**. The main remaining problem was inconsistent spoken labeling and incomplete diglossia metadata.
+
+Step 22 adds **72 meaningful spoken↔standard pairs**, raising the enforced policy from **163 to 235 pairs**. New examples include:
+
+- `مرسی` / `متشکرم`
+- `آره` / `بله`
+- `باشه` / `بسیار خوب`
+- `بریم` / `برویم`
+- `کِی` / `چه زمانی`
+- `اپ` / `برنامه`
+- `می‌خوام پرو کنم` / `می‌خواهم پرو کنم`
+- `چی شده؟` / `چه شده؟`
+- `می‌شه دوباره بگی؟` / `می‌شود دوباره بگویی؟`
+- `منظورت چیه؟` / `منظورت چیست؟`
+- `بذار ببینم` / `بگذار ببینم`
+- `منو در جریان بذار` / `من را در جریان بگذار`
+- `مهمونی` / `مهمانی`
+- `مهمون‌داری` / `مهمان‌داری`
+
+The audit also found **67 productive spoken-primary constructions** whose colloquial syntax is real and useful but where manufacturing a mechanical formal twin would add noise. These are explicitly reviewed and normalized to `register: "spoken"` without a fake counterpart. Examples include `زباله رو بیرون بردن`, `صفحه رو به اشتراک گذاشتن`, `کار رو تحویل دادن`, `فایل رو ذخیره کردن`, `گوشی رو شارژ کردن`, `پست رو لایک کردن`, and `حساب رو تقسیم کردن`.
+
+A further **102 spoken concepts** are explicitly reviewed as intentionally unpaired because the ordinary standard form is effectively unchanged or a supposed formal alternative would be a different lexical concept. CI freezes both reviewed sets, so a newly introduced unpaired spoken form fails until it is either paired or deliberately reviewed.
+
+Final Step-22 result:
+
+- 2,000 effective cards
+- 235 required spoken↔standard pairs
+- 72 new Step-22 pairs
+- 102 reviewed unpaired spoken concepts
+- 67 reviewed colloquial spoken-primary concepts
+- 169 approved unpaired spoken concepts total
+- 66 paired primaries normalized to `spoken`
+- 67 reviewed colloquial primaries normalized to `spoken`
+- 0 colloquial-label errors
+- 0 pair-primary mismatches
+- 0 pair-label mismatches
+- 0 formal/written/literary cards before 1751
+- 0 reading/news cards before 1751
+
+See `reviews/step-22-register-audit.md`.
+
+## Canonical learner pipeline
+
+The effective learner-facing pipeline is now:
+
+`base curriculum → Step 18 conversational chunks → Step 21 modern-life promotions → Step 22 register normalization → learner Romanization → Step 20 English meanings → Step 19 examples`
 
 ## Spoken / formal register policy
 
-Register differences live on one stable concept ID. Milestone supplements add only meaningful high-value pairs rather than manufacturing formal variants for every word.
+Register differences live on one stable concept ID. Milestone supplements add only meaningful pairs rather than manufacturing a formal variant for every word.
 
 - through Step 14: 81 pairs
 - Step 15: +23 → 104
 - Step 16: +40 → 144
-- Step 18: +19 → **163 total pairs**
-
-Step-18 examples include:
-
-- `می‌تونی برام بفرستی؟` / `می‌توانی برایم بفرستی؟`
-- `بذار چک کنم` / `بگذار بررسی کنم`
-- `نظرت چیه؟` / `نظرت چیست؟`
-- `صدات نمیاد` / `صدایت نمی‌آید`
-- `باز نمی‌شه` / `باز نمی‌شود`
-- `چی کار کنیم؟` / `چه کار کنیم؟`
-- `باورم نمی‌شه` / `باورم نمی‌شود`
-- `یادم بنداز` / `یادم بینداز`
-- `حواست باشه` / `حواست باشد`
-- `ممنون که اومدی` / `ممنون که آمدی`
+- Step 18: +19 → 163
+- Step 22: +72 → **235 total pairs**
 
 ## Romanization
 
 `learner-roman-v1` uses simple lowercase ASCII for English-speaking learners: `aa`, `i`, `oo`, and consistent `kh`, `gh`, `sh`, `ch`, `zh`, without academic diacritics, apostrophes, or hyphens.
 
-`tools/lib/v5-romanization.mjs` automatically discovers and merges numbered `romanization-stepN.json` and `register-pairs-stepN.json` supplements. The Romanization audit validates all 2,000 effective cards, all 163 required register pairs, and all 2,000 Step-19 `exampleRoman` values.
+`tools/lib/v5-romanization.mjs` automatically discovers and merges numbered `romanization-stepN.json` and `register-pairs-stepN.json` supplements. The Romanization audit validates all 2,000 effective cards, all **235** required register pairs, and all 2,000 Step-19 `exampleRoman` values.
 
 ## Automated audits
 
@@ -187,17 +183,17 @@ The v5 workflow validates:
 - Step-18 conversational chunk policy
 - Step-19 example-sentence coverage and target-form integrity
 - Step-20 one-sense English meaning policy and cleanup accounting
-- Step-21 modern-life domain coverage, fixed-position promotions, and generic/no-brand policy
+- Step-21 modern-life coverage
+- Step-22 full register placement, pair coverage, reviewed unpaired forms, and colloquial labeling
 - exact 2,000-card effective count
 - stable-ID uniqueness
 - Persian Unicode and source spelling
 - score/order eligibility
 - compound-first policy
-- spoken/formal pair integrity
 - learner Romanization for cards and examples
 - Miller source normalization
 
-The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Steps 18–21 introduce no additional repeated-form warning in their dedicated audits.
+The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Steps 18–22 introduce no new repeated-form warning in their dedicated audits.
 
 ## Miller source normalization
 
@@ -205,8 +201,10 @@ The original `data/miller-*.js` files remain archival source data. v5 loads them
 
 ## Foundation mode
 
-`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards, full example coverage, the English meaning audit, and modern-life coverage does not make v5 live.
+`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing Steps 1–22 does not make v5 live.
 
 ## Safety rule
 
 Do not wire v5 into the live app until progress migration and the preview flag have been implemented and reviewed.
+
+**Steps 1–22 are complete. Next: native Iranian review (Step 23).**
