@@ -19,14 +19,14 @@
   "replacements": [
     {"targetId":"work.minutes","id":"conversation.chunk.can-you-send-it","fa":"می‌تونی برام بفرستی؟","formalFa":"می‌توانی برایم بفرستی؟","roman":"mitooni baraam befresti?","en":"can you send it to me?"},
     {"targetId":"work.spreadsheet","id":"conversation.chunk.ill-check","fa":"چک می‌کنم","roman":"chek mikonam","en":"I'll check"},
-    {"targetId":"work.document","id":"conversation.chunk.let-me-check","fa":"بذار چک کنم","formalFa":"بگذار چک کنم","roman":"bezaar chek konam","en":"let me check"},
+    {"targetId":"work.document","id":"conversation.chunk.let-me-check","fa":"بذار چک کنم","formalFa":"بگذار بررسی کنم","roman":"bezaar chek konam","en":"let me check"},
     {"targetId":"work.signature","id":"conversation.chunk.no-idea","fa":"اصلاً نمی‌دونم","formalFa":"اصلاً نمی‌دانم","roman":"aslan nemidoonam","en":"I have no idea"},
     {"targetId":"work.form","id":"conversation.chunk.what-do-you-think","fa":"نظرت چیه؟","formalFa":"نظرت چیست؟","roman":"nazaret chiye?","en":"what do you think?"},
     {"targetId":"work.purchase-order","id":"conversation.chunk.seems-right","fa":"به نظرم درسته","formalFa":"به نظرم درست است","roman":"be nazaram doroste","en":"that seems right to me"},
-    {"targetId":"work.expense","id":"conversation.chunk.i-think-so","fa":"فکر کنم آره","formalFa":"فکر کنم بله","roman":"fekr konam aare","en":"I think so"},
+    {"targetId":"work.expense","id":"conversation.chunk.i-think-so","fa":"فکر کنم آره","roman":"fekr konam aare","en":"I think so"},
     {"targetId":"work.reimbursement","id":"conversation.chunk.i-dont-think-so","fa":"فکر نکنم","roman":"fekr nakonam","en":"I don't think so"},
 
-    {"targetId":"tech.wall-adapter","id":"conversation.chunk.did-you-see-it","fa":"دیدیش؟","formalFa":"دیدیش؟","roman":"didish?","en":"did you see it?"},
+    {"targetId":"tech.wall-adapter","id":"conversation.chunk.did-you-see-it","fa":"دیدیش؟","roman":"didish?","en":"did you see it?"},
     {"targetId":"tech.volume-level","id":"conversation.chunk.cant-hear-you","fa":"صدات نمیاد","formalFa":"صدایت نمی‌آید","roman":"sedaat nemiyaad","en":"I can't hear you"},
     {"targetId":"tech.speakerphone","id":"conversation.chunk.youre-cutting-out","fa":"صدات قطع و وصل می‌شه","formalFa":"صدایت قطع و وصل می‌شود","roman":"sedaat ghat o vasl mishe","en":"your voice keeps cutting out"},
     {"targetId":"tech.screen-brightness","id":"conversation.chunk.wont-open","fa":"باز نمی‌شه","formalFa":"باز نمی‌شود","roman":"baaz nemishe","en":"it won't open"},
@@ -40,7 +40,7 @@
     {"targetId":"home.dish-brush","id":"conversation.chunk.have-time-now","fa":"الان وقت داری؟","roman":"alaan vaght daari?","en":"do you have time now?"},
     {"targetId":"home.cleaning-cloth","id":"conversation.chunk.wait-let-me-see","fa":"صبر کن ببینم","roman":"sabr kon bebinam","en":"hang on, let me see"},
     {"targetId":"home.dustpan","id":"conversation.chunk.what-should-we-do","fa":"چی کار کنیم؟","formalFa":"چه کار کنیم؟","roman":"chi kaar konim?","en":"what should we do?"},
-    {"targetId":"home.duster","id":"conversation.chunk.now-what","fa":"حالا چی؟","formalFa":"حالا چه؟","roman":"haalaa chi?","en":"now what?"},
+    {"targetId":"home.duster","id":"conversation.chunk.now-what","fa":"حالا چی؟","roman":"haalaa chi?","en":"now what?"},
     {"targetId":"home.steam-cleaner","id":"conversation.chunk.dont-worry","fa":"نگران نباش","roman":"negaraan nabaash","en":"don't worry"},
     {"targetId":"home.cleaning-spray","id":"conversation.chunk.itll-work-out","fa":"درست می‌شه","formalFa":"درست می‌شود","roman":"dorost mishe","en":"it'll work out / it'll be okay"},
 
