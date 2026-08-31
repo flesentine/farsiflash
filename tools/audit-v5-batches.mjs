@@ -37,8 +37,8 @@ function normalizeFa(v){ return String(v||'').normalize('NFC').replace(/[\u064B-
 function checkFa(label,v,pos){ if(v==null) return; if(typeof v!=='string'||!v.trim()) return fail(`#${pos} ${label} must be non-empty or null`); if(v!==v.trim()) fail(`#${pos} ${label} has outer whitespace`); if(!PERSIAN.test(v)) fail(`#${pos} ${label} lacks Persian text`); if(ASCII.test(v)) fail(`#${pos} ${label} contains ASCII letters: ${v}`); if(/ي/.test(v)) fail(`#${pos} ${label} uses Arabic ي: ${v}`); if(/ك/.test(v)) fail(`#${pos} ${label} uses Arabic ك: ${v}`); }
 
 if(deck.cards.length!==100) fail(`foundation core must remain 100; found ${deck.cards.length}`);
-if(batchCards.length!==1650) fail(`effective 101–1750 batches must contain 1650 cards; found ${batchCards.length}`);
-if(cards.length!==1750) fail(`effective v5 curriculum must contain 1750 cards at Step 16; found ${cards.length}`);
+if(batchCards.length!==1900) fail(`effective 101–2000 batches must contain 1900 cards; found ${batchCards.length}`);
+if(cards.length!==2000) fail(`effective v5 curriculum must contain 2000 cards at Step 17; found ${cards.length}`);
 
 const ids=new Map(); const forms=new Map();
 cards.forEach((card,index)=>{
