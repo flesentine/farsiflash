@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { applyConversationalChunkReplacements } from './lib/v5-chunks.mjs';
+import { applyModernLifeCoverage } from './lib/v5-modern-life.mjs';
 import { applyEnglishMeanings, loadMeaningPolicy, normalizeEnglishMeaning } from './lib/v5-meanings.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -25,7 +26,8 @@ for(const file of files){ const mod=await import(pathToFileURL(path.join(batches
 
 const preChunk=[...deck.cards,...batchCards];
 const chunkResult=applyConversationalChunkReplacements(preChunk);
-const sourceCards=chunkResult.cards;
+const modernResult=applyModernLifeCoverage(chunkResult.cards);
+const sourceCards=modernResult.cards;
 const result=applyEnglishMeanings(sourceCards,policy);
 const cards=result.cards;
 
@@ -36,6 +38,7 @@ if(policy.version!=='english-meanings-v1-step20') fail(`unexpected policy versio
 if(policy.step!==20) fail(`meaning policy step must be 20; found ${policy.step}`);
 if(cards.length!==2000) fail(`Step 20 expects exactly 2000 effective cards; found ${cards.length}`);
 if(chunkResult.applied!==38) fail(`Step 20 must run after all 38 Step 18 chunk promotions; found ${chunkResult.applied}`);
+if(modernResult.applied!==11) fail(`Step 20 effective pipeline expects 11 Step 21 modern-life promotions; found ${modernResult.applied}`);
 
 const ids=new Map(cards.map((card,index)=>[card.id,index+1]));
 const sourceById=new Map(sourceCards.map((card)=>[card.id,normalizeEnglishMeaning(card.en)]));
@@ -80,4 +83,4 @@ if(errors.length){
   console.error(`\nStep 20 English meaning audit failed: ${errors.length} issue(s); sourceSlash=${sourceSlashCount}; overrides=${result.overridesApplied}; autoCollapsed=${result.autoCollapsed}; slash=${slashCount}; semicolon=${semicolonCount}; or=${orCount}; long=${longCount}`);
   process.exit(1);
 }
-console.log(`Step 20 English meaning audit passed: cards=${cards.length}, sourceSlash=${sourceSlashCount}, overrides=${result.overridesApplied}, autoCollapsed=${result.autoCollapsed}, exactDuplicateGroups=${exactDuplicates.length}, maxChars=${rules.maxChars}`);
+console.log(`Step 20 English meaning audit passed: cards=${cards.length}, sourceSlash=${sourceSlashCount}, overrides=${result.overridesApplied}, autoCollapsed=${result.autoCollapsed}, step21=${modernResult.applied}, exactDuplicateGroups=${exactDuplicates.length}, maxChars=${rules.maxChars}`);
