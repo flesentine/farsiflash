@@ -1,0 +1,120 @@
+{
+  "version": "modern-life-v1-step21",
+  "step": 21,
+  "goal": "Guarantee that the fixed 2,000-card Everyday Iranian deck covers the practical language of contemporary daily life, with special attention to Iranian digital payments and app-based transportation.",
+  "replacementCount": 11,
+  "principles": [
+    "Prefer generic durable concepts over brand names so the curriculum survives app-market changes.",
+    "Give scarce slots to actions and nouns learners actually encounter in modern Iranian errands, payments, transport, communication, work, health, and services.",
+    "Do not increase the curriculum beyond 2,000 cards; replace lower-value late practical concepts at the same positions.",
+    "Keep modern-life promotions before the 1,751 reading/news bridge whenever possible.",
+    "Treat current Iranian payment conventions such as card-to-card transfers, dynamic card passwords, Sheba numbers, and mobile banking as core practical literacy.",
+    "Treat app-based taxis as ordinary transport vocabulary while keeping brand-specific names out of the required deck."
+  ],
+  "profiles": {
+    "payment": {
+      "register": "everyday",
+      "category": "shopping",
+      "signals": {
+        "conversationalFrequency": 84,
+        "speakerDispersion": 90,
+        "practicalUsefulness": 96,
+        "generativeValue": 74,
+        "modernRelevance": 100,
+        "writtenFrequency": 70
+      },
+      "tags": ["modern-life", "high-transfer-pattern", "iran-modern-life"]
+    },
+    "ride": {
+      "register": "everyday",
+      "category": "travel",
+      "signals": {
+        "conversationalFrequency": 86,
+        "speakerDispersion": 90,
+        "practicalUsefulness": 94,
+        "generativeValue": 78,
+        "modernRelevance": 100,
+        "writtenFrequency": 66
+      },
+      "tags": ["modern-life", "high-transfer-pattern", "iran-modern-life"]
+    },
+    "identity": {
+      "register": "neutral",
+      "category": "social",
+      "signals": {
+        "conversationalFrequency": 76,
+        "speakerDispersion": 92,
+        "practicalUsefulness": 96,
+        "generativeValue": 62,
+        "modernRelevance": 96,
+        "writtenFrequency": 82
+      },
+      "tags": ["modern-life", "iran-modern-life"]
+    }
+  },
+  "domains": [
+    {
+      "id": "mobile-internet",
+      "minimum": 8,
+      "anchors": ["tech.smartphone", "tech.mobile-data", "tech.internet-speed", "tech.hotspot", "tech.two-factor", "tech.account-recovery", "tech.qr-code", "tech.scam"]
+    },
+    {
+      "id": "messaging-calls",
+      "minimum": 5,
+      "anchors": ["conversation.chunk.can-you-send-it", "conversation.chunk.cant-hear-you", "conversation.chunk.i-sent-it", "conversation.chunk.sending-now", "conversation.chunk.did-you-see-it"]
+    },
+    {
+      "id": "payments-banking",
+      "minimum": 8,
+      "anchors": ["payment.card-to-card", "payment.mobile-banking", "payment.dynamic-pin", "payment.sheba-number", "payment.digital-wallet", "payment.bill-payment", "tech.online-payment", "tech.qr-code"]
+    },
+    {
+      "id": "ecommerce-delivery",
+      "minimum": 5,
+      "anchors": ["shopping.cash-on-delivery", "shopping.delivery-window", "shopping.tracking-number", "late.estimated-delivery-time", "late.in-person-delivery"]
+    },
+    {
+      "id": "ride-hailing-navigation",
+      "minimum": 6,
+      "anchors": ["travel.ride-hailing", "travel.request-ride", "travel.driver-arrived", "travel.cancel-ride", "travel.map", "travel.location"]
+    },
+    {
+      "id": "work-digital",
+      "minimum": 5,
+      "anchors": ["work.remote-work", "work.meeting", "work.deadline", "work.project", "work.feedback"]
+    },
+    {
+      "id": "health-services",
+      "minimum": 6,
+      "anchors": ["health.pharmacy", "health.follow-up-visit", "health.insurance", "health.prescription-refill", "health.test", "health.emergency-number"]
+    },
+    {
+      "id": "housing-errands",
+      "minimum": 5,
+      "anchors": ["home.errand", "home.grocery-run", "home.recycling", "home.air-conditioner", "home.surge-protector"]
+    },
+    {
+      "id": "privacy-social",
+      "minimum": 5,
+      "anchors": ["tech.privacy", "tech.blocked", "conversation.chunk.let-me-know-when-you-arrive", "conversation.chunk.what-do-you-think", "conversation.chunk.did-you-see-it"]
+    },
+    {
+      "id": "identity-utilities",
+      "minimum": 3,
+      "anchors": ["identity.national-id", "payment.bill-payment", "tech.verification-code"]
+    }
+  ],
+  "replacements": [
+    {"targetId":"shopping.extended-warranty","id":"payment.card-to-card","fa":"کارت به کارت","roman":"kaart be kaart","en":"card-to-card transfer","profile":"payment","reason":"Card-to-card transfer language is a routine Iranian payment task and outranks an extended-warranty term."},
+    {"targetId":"shopping.store-credit","id":"payment.mobile-banking","fa":"همراه بانک","roman":"hamraahe baank","en":"mobile banking","profile":"payment","reason":"Mobile banking is everyday financial infrastructure and more broadly useful than store credit."},
+    {"targetId":"shopping.gift-card","id":"payment.dynamic-pin","fa":"رمز پویا","roman":"ramze pooyaa","en":"one-time card password","profile":"payment","reason":"Dynamic card-password language is required for common Iranian online card payments."},
+    {"targetId":"shopping.price-match","id":"payment.sheba-number","fa":"شماره شبا","roman":"shomaare shebaa","en":"Sheba (IBAN) number","profile":"payment","reason":"Sheba numbers are practical bank-transfer vocabulary and price matching is comparatively low value."},
+    {"targetId":"shopping.final-sale","id":"payment.digital-wallet","fa":"کیف پول دیجیتال","roman":"kife poole dijitaal","en":"digital wallet","profile":"payment","reason":"Digital wallets are current payment vocabulary with broader everyday reach than final-sale terminology."},
+    {"targetId":"shopping.membership-discount","id":"payment.bill-payment","fa":"پرداخت قبض","roman":"pardaakhte ghabz","en":"bill payment","profile":"payment","reason":"Paying bills is a recurring household task and more universally practical than membership discounts."},
+    {"targetId":"shopping.original-package","id":"identity.national-id","fa":"کد ملی","roman":"kode melli","en":"national ID number","profile":"identity","reason":"National ID numbers appear throughout Iranian forms and services and deserve explicit practical coverage."},
+    {"targetId":"travel.parking-meter","id":"travel.ride-hailing","fa":"تاکسی اینترنتی","roman":"taaksiye interneti","en":"ride-hailing taxi","profile":"ride","reason":"App-based taxis are ordinary modern transport and outrank parking-meter vocabulary."},
+    {"targetId":"travel.valet","id":"travel.request-ride","fa":"درخواست سفر","roman":"darkhaaste safar","en":"ride request","profile":"ride","reason":"Requesting a ride is a reusable app-transport action and outranks valet vocabulary."},
+    {"targetId":"travel.road-shoulder","id":"travel.driver-arrived","fa":"راننده رسید","roman":"raanande resid","en":"the driver arrived","profile":"ride","reason":"This is a high-frequency ride-app status learners hear and read in everyday transportation."},
+    {"targetId":"travel.rest-stop","id":"travel.cancel-ride","fa":"لغو سفر","roman":"laghve safar","en":"cancel a ride","profile":"ride","reason":"Cancelling a ride is more useful in urban daily travel than the lower-frequency rest-stop term."}
+  ]
+}

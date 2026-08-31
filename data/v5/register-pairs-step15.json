@@ -1,0 +1,30 @@
+{
+  "version": "spoken-formal-v1-step15",
+  "requiredPairs": [
+    {"id":"verb.work-from-home","spoken":"از خونه کار کردن","formal":"از خانه کار کردن"},
+    {"id":"verb.wait-turn","spoken":"منتظر نوبت موندن","formal":"منتظر نوبت ماندن"},
+    {"id":"verb.rest-at-home","spoken":"خونه استراحت کردن","formal":"خانه استراحت کردن"},
+
+    {"id":"social.like-it","spoken":"خوشم میاد","formal":"خوشم می‌آید"},
+    {"id":"social.dont-like-it","spoken":"خوشم نمیاد","formal":"خوشم نمی‌آید"},
+    {"id":"social.hate-it","spoken":"بدم میاد","formal":"بدم می‌آید"},
+    {"id":"social.seriously","spoken":"جدی میگم","formal":"جدی می‌گویم"},
+    {"id":"social.congratulations","spoken":"تبریک میگم","formal":"تبریک می‌گویم"},
+    {"id":"social.say-hi","spoken":"سلام برسون","formal":"سلام برسان"},
+    {"id":"social.give-regards","spoken":"ارادت برسون","formal":"ارادت برسان"},
+    {"id":"social.between-us","spoken":"بین خودمون باشه","formal":"بین خودمان باشد"},
+
+    {"id":"conversation.at-work","spoken":"سر کارم","formal":"سر کار هستم"},
+    {"id":"conversation.in-meeting","spoken":"جلسه‌ام","formal":"در جلسه هستم"},
+    {"id":"conversation.send-me-email","spoken":"برام ایمیل کن","formal":"برایم ایمیل کن"},
+    {"id":"conversation.send-me-link","spoken":"لینکش رو بفرست","formal":"لینکش را بفرست"},
+    {"id":"conversation.can-you-explain","spoken":"می‌تونی توضیح بدی؟","formal":"می‌توانی توضیح بدهی؟"},
+    {"id":"conversation.say-again","spoken":"یه بار دیگه بگو","formal":"یک بار دیگر بگو"},
+    {"id":"conversation.where-hurts","spoken":"کجات درد می‌کنه؟","formal":"کجایت درد می‌کند؟"},
+    {"id":"conversation.it-hurts-here","spoken":"اینجا درد می‌کنه","formal":"اینجا درد می‌کند"},
+    {"id":"conversation.wifi-password","spoken":"رمز وای فای چیه؟","formal":"رمز وای فای چیست؟"},
+    {"id":"conversation.battery-low","spoken":"شارژم کمه","formal":"شارژم کم است"},
+    {"id":"conversation.im-free","spoken":"وقتم آزاده","formal":"وقتم آزاد است"},
+    {"id":"conversation.im-on-my-way","spoken":"توی راهم","formal":"در راهم"}
+  ]
+}

@@ -1,0 +1,69 @@
+name: Audit v5 curriculum
+
+on:
+  push:
+    branches:
+      - feature/v5-curriculum-foundation
+    paths:
+      - 'data/v5/**'
+      - 'data/miller-*.js'
+      - 'tools/audit-v5-deck.mjs'
+      - 'tools/audit-v5-batches.mjs'
+      - 'tools/audit-v5-scoring.mjs'
+      - 'tools/audit-v5-romanization.mjs'
+      - 'tools/audit-v5-chunks.mjs'
+      - 'tools/audit-v5-examples.mjs'
+      - 'tools/audit-v5-meanings.mjs'
+      - 'tools/audit-v5-modern-life.mjs'
+      - 'tools/audit-v5-register.mjs'
+      - 'tools/audit-miller-source.mjs'
+      - 'tools/lib/**'
+      - '.github/workflows/audit-v5-deck.yml'
+  pull_request:
+    paths:
+      - 'data/v5/**'
+      - 'data/miller-*.js'
+      - 'tools/audit-v5-deck.mjs'
+      - 'tools/audit-v5-batches.mjs'
+      - 'tools/audit-v5-scoring.mjs'
+      - 'tools/audit-v5-romanization.mjs'
+      - 'tools/audit-v5-chunks.mjs'
+      - 'tools/audit-v5-examples.mjs'
+      - 'tools/audit-v5-meanings.mjs'
+      - 'tools/audit-v5-modern-life.mjs'
+      - 'tools/audit-v5-register.mjs'
+      - 'tools/audit-miller-source.mjs'
+      - 'tools/lib/**'
+      - '.github/workflows/audit-v5-deck.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit v5 scoring policy
+        run: node tools/audit-v5-scoring.mjs
+      - name: Audit v5 core deck
+        run: node tools/audit-v5-deck.mjs
+      - name: Audit Step 18 conversational chunks
+        run: node tools/audit-v5-chunks.mjs
+      - name: Audit Step 19 example sentences
+        run: node tools/audit-v5-examples.mjs
+      - name: Audit Step 20 English meanings
+        run: node tools/audit-v5-meanings.mjs
+      - name: Audit Step 21 modern-life coverage
+        run: node tools/audit-v5-modern-life.mjs
+      - name: Audit Step 22 register
+        run: node tools/audit-v5-register.mjs
+      - name: Audit v5 effective 2000-card deck
+        run: node tools/audit-v5-batches.mjs
+      - name: Audit v5 learner Romanization
+        run: node tools/audit-v5-romanization.mjs
+      - name: Audit and normalize Miller source spellings
+        run: node tools/audit-miller-source.mjs

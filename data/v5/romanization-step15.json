@@ -1,0 +1,30 @@
+{
+  "version": "learner-roman-v1-step15",
+  "alternateRomanById": {
+    "verb.work-from-home": "az khaane kaar kardan",
+    "verb.wait-turn": "montazere nobat maandan",
+    "verb.rest-at-home": "khaane esteraahat kardan",
+
+    "social.like-it": "khosham miaayad",
+    "social.dont-like-it": "khosham nemiaayad",
+    "social.hate-it": "badam miaayad",
+    "social.seriously": "jedi migooyam",
+    "social.congratulations": "tabrik migooyam",
+    "social.say-hi": "salaam beresaan",
+    "social.give-regards": "eraadat beresaan",
+    "social.between-us": "beyne khodemaan baashad",
+
+    "conversation.at-work": "sare kaar hastam",
+    "conversation.in-meeting": "dar jalase hastam",
+    "conversation.send-me-email": "baraayam imeyl kon",
+    "conversation.send-me-link": "linkesh raa befrest",
+    "conversation.can-you-explain": "mitavaani tozih bedahi?",
+    "conversation.say-again": "yek baar digar begoo",
+    "conversation.where-hurts": "kojaayat dard mikonad?",
+    "conversation.it-hurts-here": "injaa dard mikonad",
+    "conversation.wifi-password": "ramze vaay faay chist?",
+    "conversation.battery-low": "shaarzham kam ast",
+    "conversation.im-free": "vaghtam aazaad ast",
+    "conversation.im-on-my-way": "dar raaham"
+  }
+}

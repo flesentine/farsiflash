@@ -1,0 +1,5 @@
+import { step16Card } from '../step16-card-factory.mjs';
+
+const ROWS = [["neighbor","همسایه","hamsaaye","neighbor"],["roommate","هم‌خانه","hamkhaane","roommate / housemate"],["landlord","صاحبخونه","saahebkhoone","landlord"],["tenant","مستأجر","mostajer","tenant"],["relative","فامیل","faamil","relative / extended family"],["cousin","پسرعمو / دخترعمو","pesaramoo / dokhtaramoo","cousin"],["in-law","فامیل همسر","faamile hamsar","in-law"],["fiance","نامزد","naamzad","fiancé / fiancée"],["ex","اکس","eks","ex-partner"],["stranger","غریبه","gharibe","stranger"],["passerby","رهگذر","rahgozar","passerby"],["acquaintance","آشنا","aashnaa","acquaintance"],["classmate-person","هم‌کلاسی جدید","hamkelaasiye jadid","new classmate"],["coworker-person","همکار سابق","hamkaare saabegh","former coworker"],["mutual-friend","دوست مشترک","dooste moshtarak","mutual friend"]];
+if (ROWS.length !== 15) throw new Error(`Step 16 people batch must contain 15 cards; found ${ROWS.length}`);
+export default ROWS.map((row) => step16Card('people', row));
