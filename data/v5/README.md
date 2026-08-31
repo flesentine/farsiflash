@@ -148,6 +148,8 @@ The coverage policy uses generic durable concepts rather than requiring brand na
 
 The first integrated audit reports **99 modern-life-tagged cards**, all **10/10 domains** meeting their anchor requirements, and no new repeated-form warning. See `reviews/step-21-modern-life-coverage.md`.
 
+**Steps 1–21 are complete. Step 22 is the next curriculum audit.**
+
 ## Spoken / formal register policy
 
 Register differences live on one stable concept ID. Milestone supplements add only meaningful high-value pairs rather than manufacturing formal variants for every word.
