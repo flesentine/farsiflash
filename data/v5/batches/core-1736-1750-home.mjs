@@ -1,0 +1,5 @@
+import { step16Card } from '../step16-card-factory.mjs';
+
+const ROWS = [["lease","قرارداد اجاره","gharaardaade ejaare","lease / rental agreement"],["deposit","ودیعه","vadie","security deposit"],["rent","اجاره","ejaare","rent"],["utilities","قبض‌ها","ghabzhaa","utility bills"],["electricity-bill","قبض برق","ghabze bargh","electricity bill"],["water-bill","قبض آب","ghabze aab","water bill"],["gas-bill","قبض گاز","ghabze gaaz","gas bill"],["internet-bill","قبض اینترنت","ghabze internet","internet bill"],["building-manager","مدیر ساختمان","modire saakhtemaan","building manager"],["elevator","آسانسور","aasaansor","elevator"],["stairs","پله","pele","stairs"],["hallway","راهرو","raahro","hallway"],["balcony","بالکن","baalkon","balcony"],["storage-room","انباری","anbaari","storage room"],["doorbell","آیفون","aayfon","intercom / doorbell"]];
+if (ROWS.length !== 15) throw new Error(`Step 16 home batch must contain 15 cards; found ${ROWS.length}`);
+export default ROWS.map((row) => step16Card('home', row));
