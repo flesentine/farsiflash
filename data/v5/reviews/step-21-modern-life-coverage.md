@@ -6,7 +6,7 @@ Step 21 audits the fixed 2,000-card Everyday Iranian curriculum for practical co
 
 ## Why this pass exists
 
-The curriculum already had strong general coverage of smartphones, internet access, QR codes, online payment, delivery, remote work, healthcare, errands, privacy, and social communication. The audit identified two areas that were not guaranteed strongly enough for contemporary Iranian daily life:
+The curriculum already had strong general coverage of smartphones, internet access, QR codes, online payment, delivery, remote work, healthcare, errands, privacy, and social communication. A current-market cross-check on August 31, 2026 confirmed that app-based taxi services remain ordinary Iranian urban transport and that digital/card/mobile payment workflows remain central to daily transactions. The audit identified two areas that were not guaranteed strongly enough for contemporary Iranian daily life:
 
 1. Iranian digital banking/payment language
 2. App-based taxi / ride-hailing language
