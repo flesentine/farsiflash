@@ -128,7 +128,7 @@ Final CI guarantees all 2,000 meanings are non-empty, at most 58 characters, fre
 
 Step 21 audits the effective 2,000-card curriculum across 10 contemporary-life domains and promotes missing high-value language without increasing deck size.
 
-The existing deck was already strong on phones/internet, messaging, online payment, QR codes, delivery, remote work, healthcare, errands, privacy, and social communication. The audit identified two areas that needed stronger guaranteed coverage for modern Iranian daily life: **digital banking/payment language** and **app-based taxi/ride-hailing language**.
+The existing deck was already strong on phones/internet, messaging, online payment, QR codes, delivery, remote work, healthcare, errands, privacy, and social communication. A current-market check on August 31, 2026 confirmed that app-based taxis and digital/card/mobile payment workflows remain central to everyday Iranian life. The audit identified two areas that needed stronger guaranteed coverage: **digital banking/payment language** and **app-based taxi/ride-hailing language**.
 
 Step 21 replaces exactly **11** lower-value concepts, all before card 1,751:
 
