@@ -15,6 +15,7 @@ on:
       - 'tools/audit-v5-examples.mjs'
       - 'tools/audit-v5-meanings.mjs'
       - 'tools/audit-v5-modern-life.mjs'
+      - 'tools/audit-v5-register.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -30,6 +31,7 @@ on:
       - 'tools/audit-v5-examples.mjs'
       - 'tools/audit-v5-meanings.mjs'
       - 'tools/audit-v5-modern-life.mjs'
+      - 'tools/audit-v5-register.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -57,6 +59,8 @@ jobs:
         run: node tools/audit-v5-meanings.mjs
       - name: Audit Step 21 modern-life coverage
         run: node tools/audit-v5-modern-life.mjs
+      - name: Audit Step 22 register
+        run: node tools/audit-v5-register.mjs
       - name: Audit v5 effective 2000-card deck
         run: node tools/audit-v5-batches.mjs
       - name: Audit v5 learner Romanization
