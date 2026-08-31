@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sanitizeRoman } from './v5-romanization.mjs';
+import { applyEnglishMeanings } from './v5-meanings.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
@@ -117,8 +118,12 @@ export function exampleForCard(card, policy = loadExamplePolicy()) {
 
 export function applyExampleSentences(cards, policy = loadExamplePolicy()) {
   if (!Array.isArray(cards)) throw new Error('cards must be an array');
+  // Step 20 is now part of the canonical effective-card pipeline. Generated
+  // English examples must be based on the audited one-sense gloss, not the
+  // older slash-heavy source gloss. Curated Step-19 example text still wins.
+  const meaningResult = applyEnglishMeanings(cards);
   const sources = new Map();
-  const out = cards.map((card) => {
+  const out = meaningResult.cards.map((card) => {
     const example = exampleForCard(card, policy);
     sources.set(example.source, (sources.get(example.source) || 0) + 1);
     return {
@@ -128,5 +133,13 @@ export function applyExampleSentences(cards, policy = loadExamplePolicy()) {
       exampleEn: example.exampleEn
     };
   });
-  return { cards: out, policy, sources: Object.fromEntries([...sources.entries()].sort()) };
+  return {
+    cards: out,
+    policy,
+    sources: Object.fromEntries([...sources.entries()].sort()),
+    meanings: {
+      overridesApplied: meaningResult.overridesApplied,
+      autoCollapsed: meaningResult.autoCollapsed
+    }
+  };
 }
