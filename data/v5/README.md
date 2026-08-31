@@ -12,7 +12,7 @@ The learner-facing `fa` field is the form we want the learner to recognize first
 
 Each card carries register, category, selection evidence, and a derived score. `millerRank` is supporting evidence, not curriculum order.
 
-After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`. After Step 20, learner-facing `en` is resolved through the one-sense English meaning policy before generated examples are built.
+After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`. After Step 20, learner-facing `en` is resolved through the one-sense English meaning policy before generated examples are built. Step 21 modernizes the effective curriculum before those learner-facing layers are generated.
 
 ## Curriculum scoring: everyday-iranian-v1
 
@@ -76,9 +76,9 @@ The first Step-18 run found five exact phrase collisions with earlier cards. Tho
 
 ## Step 19 example sentence layer
 
-Step 19 established complete learner-example coverage for all 2,000 effective cards. Step 20 now resolves English meanings before generated examples are created, so the current canonical pipeline is:
+Step 19 established complete learner-example coverage for all 2,000 effective cards. With Steps 20 and 21 in place, the current canonical pipeline is:
 
-`effective curriculum → Step 18 chunks → learner Romanization → Step 20 English meanings → Step 19 examples`
+`effective curriculum → Step 18 chunks → Step 21 modern-life promotions → learner Romanization → Step 20 English meanings → Step 19 examples`
 
 Every one of the 2,000 effective cards receives:
 
@@ -100,7 +100,7 @@ Generated frames are intentionally a coverage-first editorial layer, not a claim
 
 Step 20 audits all 2,000 learner-facing English meanings under `english-meanings-v1-step20`. The policy treats a gloss as a teaching choice rather than a miniature dictionary entry: one stable concept should teach one intended learner-relevant sense.
 
-The first strict audit found **291 issues**: 289 slash-separated sense/synonym piles and two legitimate expressions containing `or`. The final cleanup handles the 289 slash cases with:
+The first strict audit found **291 issues**: 289 slash-separated sense/synonym piles and two legitimate expressions containing `or`. The original cleanup handled the 289 slash cases with:
 
 - **215 automatic primary-sense collapses** for straightforward synonym piles
 - **74 explicit editorial overrides** where taking the first item would be incomplete, misleading, less useful, or inconsistent with the concept ID
@@ -123,6 +123,30 @@ Representative corrections include:
 - `عیدی` → `New Year gift money`
 
 Final CI guarantees all 2,000 meanings are non-empty, at most 58 characters, free of slash/semicolon sense piles and placeholder wording, and have sane punctuation. No exact English meaning occurs four or more times after the cleanup. Generated Step-19 English examples consume the cleaned Step-20 meaning automatically, while curated Step-19 example text remains authoritative. See `reviews/step-20-english-meanings.md`.
+
+## Step 21 modern-life coverage layer
+
+Step 21 audits the effective 2,000-card curriculum across 10 contemporary-life domains and promotes missing high-value language without increasing deck size.
+
+The existing deck was already strong on phones/internet, messaging, online payment, QR codes, delivery, remote work, healthcare, errands, privacy, and social communication. The audit identified two areas that needed stronger guaranteed coverage for modern Iranian daily life: **digital banking/payment language** and **app-based taxi/ride-hailing language**.
+
+Step 21 replaces exactly **11** lower-value concepts, all before card 1,751:
+
+- `کارت به کارت` — card-to-card transfer
+- `همراه بانک` — mobile banking
+- `رمز پویا` — one-time card password
+- `شماره شبا` — Sheba (IBAN) number
+- `کیف پول دیجیتال` — digital wallet
+- `پرداخت قبض` — bill payment
+- `کد ملی` — national ID number
+- `تاکسی اینترنتی` — ride-hailing taxi
+- `درخواست سفر` — ride request
+- `راننده رسید` — the driver arrived
+- `لغو سفر` — cancel a ride
+
+The coverage policy uses generic durable concepts rather than requiring brand names. Ten auditable domains cover mobile/internet, messaging/calls, payments/banking, e-commerce/delivery, ride-hailing/navigation, digital work, health services, housing/errands, privacy/social communication, and identity/utilities.
+
+The first integrated audit reports **99 modern-life-tagged cards**, all **10/10 domains** meeting their anchor requirements, and no new repeated-form warning. See `reviews/step-21-modern-life-coverage.md`.
 
 ## Spoken / formal register policy
 
@@ -161,6 +185,7 @@ The v5 workflow validates:
 - Step-18 conversational chunk policy
 - Step-19 example-sentence coverage and target-form integrity
 - Step-20 one-sense English meaning policy and cleanup accounting
+- Step-21 modern-life domain coverage, fixed-position promotions, and generic/no-brand policy
 - exact 2,000-card effective count
 - stable-ID uniqueness
 - Persian Unicode and source spelling
@@ -170,7 +195,7 @@ The v5 workflow validates:
 - learner Romanization for cards and examples
 - Miller source normalization
 
-The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Steps 18–20 have no remaining warnings in their dedicated audits.
+The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Steps 18–21 introduce no additional repeated-form warning in their dedicated audits.
 
 ## Miller source normalization
 
@@ -178,7 +203,7 @@ The original `data/miller-*.js` files remain archival source data. v5 loads them
 
 ## Foundation mode
 
-`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards, full example coverage, and the English meaning audit does not make v5 live.
+`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards, full example coverage, the English meaning audit, and modern-life coverage does not make v5 live.
 
 ## Safety rule
 
