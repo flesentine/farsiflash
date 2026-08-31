@@ -10,15 +10,15 @@
     {"id":"conversation.chunk.youre-cutting-out","spoken":"صدات قطع و وصل می‌شه","formal":"صدایت قطع و وصل می‌شود"},
     {"id":"conversation.chunk.wont-open","spoken":"باز نمی‌شه","formal":"باز نمی‌شود"},
     {"id":"conversation.chunk.no-signal","spoken":"آنتن نمی‌ده","formal":"آنتن نمی‌دهد"},
-    {"id":"conversation.chunk.one-second","spoken":"یه لحظه","formal":"یک لحظه"},
     {"id":"conversation.chunk.what-should-we-do","spoken":"چی کار کنیم؟","formal":"چه کار کنیم؟"},
     {"id":"conversation.chunk.itll-work-out","spoken":"درست می‌شه","formal":"درست می‌شود"},
     {"id":"conversation.chunk.you-are-right","spoken":"راست می‌گی","formal":"راست می‌گویی"},
     {"id":"conversation.chunk.cant-believe-it","spoken":"باورم نمی‌شه","formal":"باورم نمی‌شود"},
     {"id":"conversation.chunk.are-you-serious","spoken":"جدی می‌گی؟","formal":"جدی می‌گویی؟"},
+    {"id":"conversation.chunk.remind-me","spoken":"یادم بنداز","formal":"یادم بینداز"},
     {"id":"conversation.chunk.cant-remember","spoken":"یادم نمیاد","formal":"یادم نمی‌آید"},
     {"id":"conversation.chunk.see-what-happens","spoken":"ببین چی می‌شه","formal":"ببین چه می‌شود"},
-    {"id":"conversation.chunk.say-hi-for-me","spoken":"سلام برسون","formal":"سلام برسان"},
+    {"id":"conversation.chunk.keep-it-in-mind","spoken":"حواست باشه","formal":"حواست باشد"},
     {"id":"conversation.chunk.thanks-for-coming","spoken":"ممنون که اومدی","formal":"ممنون که آمدی"}
   ]
 }
