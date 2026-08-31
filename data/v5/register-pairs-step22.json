@@ -10,6 +10,12 @@
     {"id":"question.when","spoken":"کِی","formal":"چه زمانی"},
     {"id":"tech.app","spoken":"اپ","formal":"برنامه"},
 
+    {"id":"verb.go-to-bed","spoken":"رفتن توی تخت","formal":"به تخت خواب رفتن"},
+    {"id":"shopping.want-try-on","spoken":"می‌خوام پرو کنم","formal":"می‌خواهم پرو کنم"},
+    {"id":"shopping.want-return","spoken":"می‌خوام پسش بدم","formal":"می‌خواهم آن را پس بدهم"},
+    {"id":"shopping.want-exchange","spoken":"می‌خوام عوضش کنم","formal":"می‌خواهم آن را عوض کنم"},
+    {"id":"verb.treat-someone","spoken":"مهمون کردن","formal":"مهمان کردن"},
+
     {"id":"conversation.wait-a-second","spoken":"یه لحظه صبر کن","formal":"یک لحظه صبر کن"},
     {"id":"conversation.can-i-help","spoken":"می‌تونم کمک کنم؟","formal":"می‌توانم کمک کنم؟"},
     {"id":"conversation.need-help","spoken":"کمک می‌خوای؟","formal":"کمک می‌خواهی؟"},
