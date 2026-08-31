@@ -16,7 +16,7 @@ const P = new Map([
   ['social.my-fault',{id:'social.take-responsibility',fa:'مسئولیتش با منه',roman:'masooliyatesh baa mane',en:"I'll take responsibility"}],
   ['social.forgive-me',{id:'social.i-apologize',fa:'عذر می‌خوام',roman:'ozr mikhaam',en:'I apologize'}],
   ['social.argument',{id:'social.disagreement',fa:'اختلاف نظر داشتیم',roman:'ekhtelaafe nazar daashtim',en:'we had a disagreement'}],
-  ['social.bored',{id:'social.restless',fa:'کلافه‌ام',roman:'kalaafeam',en:"I'm restless / fed up"}],
+  ['social.bored',{id:'social.restless',fa:'آروم و قرار ندارم',roman:'aaroom o gharaar nadaaram',en:"I'm restless"}],
   ['social.excited',{id:'social.thrilled',fa:'ذوق دارم',roman:'zogh daaram',en:"I'm excited / thrilled"}],
   ['social.patient',{id:'social.understanding',fa:'درک می‌کنه',roman:'dark mikone',en:'understanding / considerate'}],
   ['social.impatient',{id:'social.short-tempered',fa:'کم‌طاقت',roman:'kamtaaghat',en:'impatient / short-tempered'}],
