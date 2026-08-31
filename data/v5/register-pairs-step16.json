@@ -1,0 +1,49 @@
+{
+  "version": "spoken-formal-v1-step16",
+  "requiredPairs": [
+    {"id":"verb.change-mind","spoken":"نظرت رو عوض کردن","formal":"نظرت را عوض کردن"},
+    {"id":"verb.show-up","spoken":"پیداش شدن","formal":"پیدا شدن"},
+    {"id":"verb.not-show-up","spoken":"نیومدن","formal":"نیامدن"},
+    {"id":"verb.stay-over","spoken":"شب موندن","formal":"شب ماندن"},
+    {"id":"verb.host-guests","spoken":"مهمونی دادن","formal":"مهمانی دادن"},
+    {"id":"verb.get-stuck-traffic","spoken":"توی ترافیک گیر کردن","formal":"در ترافیک گیر کردن"},
+    {"id":"verb.pack-leftovers","spoken":"بقیه غذا رو بسته‌بندی کردن","formal":"بقیه غذا را بسته‌بندی کردن"},
+    {"id":"verb.skip-part","spoken":"یه قسمت رو رد کردن","formal":"یک قسمت را رد کردن"},
+
+    {"id":"conversation.can-you-repeat-that","spoken":"می‌شه تکرار کنی؟","formal":"می‌شود تکرار کنی؟"},
+    {"id":"conversation.i-dont-get-it","spoken":"متوجه نمی‌شم","formal":"متوجه نمی‌شوم"},
+    {"id":"conversation.could-be","spoken":"ممکنه","formal":"ممکن است"},
+    {"id":"conversation.thats-it","spoken":"همینه","formal":"همین است"},
+    {"id":"conversation.thats-different","spoken":"اون فرق داره","formal":"آن فرق دارد"},
+    {"id":"conversation.same-thing","spoken":"همونه","formal":"همان است"},
+    {"id":"conversation.it-depends","spoken":"بستگی داره","formal":"بستگی دارد"},
+    {"id":"conversation.leave-it","spoken":"ولش کن","formal":"رهایش کن"},
+    {"id":"conversation.whenever-you-can","spoken":"هر وقت تونستی","formal":"هر وقت توانستی"},
+    {"id":"conversation.bad-time","spoken":"الان وقت بدیه؟","formal":"الان وقت بدی است؟"},
+    {"id":"conversation.im-coming-too","spoken":"منم میام","formal":"من هم می‌آیم"},
+    {"id":"conversation.i-cant-make-it","spoken":"نمی‌تونم بیام","formal":"نمی‌توانم بیایم"},
+    {"id":"conversation.either-is-fine","spoken":"فرقی نداره","formal":"فرقی ندارد"},
+    {"id":"conversation.up-to-you","spoken":"دست خودته","formal":"دست خودت است"},
+    {"id":"conversation.let-me-explain","spoken":"بذار توضیح بدم","formal":"بگذار توضیح بدهم"},
+
+    {"id":"grammar.if-not","spoken":"اگه نه","formal":"اگر نه"},
+    {"id":"grammar.even-if","spoken":"حتی اگه","formal":"حتی اگر"},
+    {"id":"grammar.whatever","spoken":"هرچی","formal":"هرچه"},
+    {"id":"grammar.whoever","spoken":"هرکی","formal":"هرکس"},
+    {"id":"grammar.each-one","spoken":"هر کدوم","formal":"هر کدام"},
+    {"id":"grammar.either-one","spoken":"هر کدومش","formal":"هر کدامش"},
+    {"id":"grammar.neither-one","spoken":"هیچ کدوم","formal":"هیچ کدام"},
+    {"id":"grammar.a-little","spoken":"یه کم","formal":"کمی"},
+    {"id":"grammar.all-of-us","spoken":"همه‌مون","formal":"همه ما"},
+
+    {"id":"social.satisfied","spoken":"راضیم","formal":"راضی‌ام"},
+    {"id":"social.at-ease","spoken":"خیالم راحته","formal":"خیالم راحت است"},
+    {"id":"social.count-on-you","spoken":"روت حساب می‌کنم","formal":"روی تو حساب می‌کنم"},
+    {"id":"social.i-apologize","spoken":"عذر می‌خوام","formal":"عذر می‌خواهم"},
+
+    {"id":"culture.welcome-plural","spoken":"خوش اومدین","formal":"خوش آمدید"},
+    {"id":"culture.spring-cleaning","spoken":"خونه‌تکونی","formal":"خانه‌تکانی"},
+    {"id":"travel.breakfast-included","spoken":"صبحانه شامل میشه","formal":"صبحانه شامل می‌شود"},
+    {"id":"home.deposit","spoken":"پول پیش","formal":"ودیعه"}
+  ]
+}
