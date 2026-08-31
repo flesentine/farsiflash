@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { applyConversationalChunkReplacements } from './lib/v5-chunks.mjs';
 import { applyModernLifeCoverage } from './lib/v5-modern-life.mjs';
+import { applyRegisterAudit } from './lib/v5-register.mjs';
 import { loadRegisterPairPolicy, normalizeFa } from './lib/v5-romanization.mjs';
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
@@ -25,7 +26,8 @@ const batchCards=[];
 for(const f of files){const mod=await import(pathToFileURL(path.join(batchesDir,f)).href);batchCards.push(...mod.default);}
 const chunkResult=applyConversationalChunkReplacements([...deck.cards,...batchCards]);
 const modernResult=applyModernLifeCoverage(chunkResult.cards);
-const cards=modernResult.cards;
+const registerResult=applyRegisterAudit(modernResult.cards,registerPolicy);
+const cards=registerResult.cards;
 const pairs=new Map((registerPolicy.requiredPairs||[]).map(p=>[p.id,p]));
 
 const counts={};
@@ -41,6 +43,7 @@ const writtenEarly=[];
 const literaryEarly=[];
 const colloquialNeutral=[];
 const pairIssues=[];
+const pairLabelIssues=[];
 const colloquialPatterns=[
   /می‌(خوام|خواد|تونی|تونه|شه|شم|شی|شیم|شین|گم|گی|گه|گیم|گین|اد|ای|ایم|این)/,
   /نمی‌(خوام|خواد|تونی|تونه|شه|شم|شی|شیم|شین|دون|گم|گی|گه|گیم|گین|اد|ای|ایم|این)/,
@@ -58,24 +61,22 @@ for(const [index,card] of cards.entries()){
   if(pair){
     const primary=normalizeFa(card.fa),spoken=normalizeFa(pair.spoken),formal=normalizeFa(pair.formal);
     if(primary!==spoken&&primary!==formal) pairIssues.push({pos,id:card.id,fa:card.fa,spoken:pair.spoken,formal:pair.formal});
+    if(primary===spoken&&spoken!==formal&&card.register!=='spoken') pairLabelIssues.push({pos,id:card.id,fa:card.fa,register:card.register});
   }
 }
 
-console.log(`Step 22 register diagnostic: cards=${cards.length}, pairs=${pairs.size}, chunkPromotions=${chunkResult.applied}, modernLifePromotions=${modernResult.applied}`);
+console.log(`Step 22 register diagnostic: cards=${cards.length}, pairs=${pairs.size}, normalizedToSpoken=${registerResult.normalizedToSpoken}, chunkPromotions=${chunkResult.applied}, modernLifePromotions=${modernResult.applied}`);
 for(const [name,value] of Object.entries(counts)) console.log(`stage ${name}: ${JSON.stringify(value)}`);
 console.log(`spoken-unpaired=${spokenUnpaired.length}`);
 for(const row of spokenUnpaired.slice(0,160)) console.log(`UNPAIRED ${row.pos}\t${row.id}\t${row.fa}\t${row.category}`);
 console.log(`formal-before-1751=${formalEarly.length}`);
-for(const row of formalEarly.slice(0,80)) console.log(`FORMAL_EARLY ${row.pos}\t${row.id}\t${row.fa}\t${row.category}`);
 console.log(`written-before-1751=${writtenEarly.length}`);
-for(const row of writtenEarly.slice(0,80)) console.log(`WRITTEN_EARLY ${row.pos}\t${row.id}\t${row.fa}\t${row.category}`);
 console.log(`literary-before-1751=${literaryEarly.length}`);
-for(const row of literaryEarly.slice(0,80)) console.log(`LITERARY_EARLY ${row.pos}\t${row.id}\t${row.fa}\t${row.category}`);
 console.log(`colloquial-neutral-or-everyday=${colloquialNeutral.length}`);
 for(const row of colloquialNeutral.slice(0,160)) console.log(`COLLOQUIAL_LABEL ${row.pos}\t${row.id}\t${row.fa}\t${row.register}`);
 console.log(`pair-primary-mismatch=${pairIssues.length}`);
-for(const row of pairIssues) console.log(`PAIR_MISMATCH ${row.pos}\t${row.id}\t${row.fa}\t${row.spoken}\t${row.formal}`);
-if(cards.length!==2000||pairIssues.length||formalEarly.length||writtenEarly.length||literaryEarly.length){
+console.log(`pair-spoken-label-mismatch=${pairLabelIssues.length}`);
+if(cards.length!==2000||pairs.size!==230||pairIssues.length||pairLabelIssues.length||formalEarly.length||writtenEarly.length||literaryEarly.length){
   console.error('Step 22 register diagnostic found structural register issues.');
   process.exit(1);
 }
