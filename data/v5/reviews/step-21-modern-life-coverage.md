@@ -92,4 +92,4 @@ The effective curriculum now resolves in this order:
 
 `base curriculum → Step 18 conversational chunks → Step 21 modern-life promotions → learner Romanization → Step 20 English meanings → Step 19 examples`
 
-Step 22 can now audit register across this modernized effective deck rather than reviewing forms that may later be replaced.
+**Steps 1–21 are complete. Step 22 is next.**
