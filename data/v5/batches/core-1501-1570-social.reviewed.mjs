@@ -4,6 +4,7 @@ const P = new Map([
   ['social.proud',{id:'social.satisfied',fa:'راضیم',roman:'raaziam',en:"I'm satisfied"}],
   ['social.embarrassed',{id:'social.self-conscious',fa:'معذبم',roman:'moazabam',en:"I'm uncomfortable / self-conscious"}],
   ['social.jealous',{id:'social.suspicious',fa:'شک دارم',roman:'shak daaram',en:"I'm suspicious / I have doubts"}],
+  ['social.envious',{id:'social.wistful-envy',fa:'حسرت می‌خورم',roman:'hasrat mikhoram',en:'I envy it / wish I had it'}],
   ['social.relieved',{id:'social.reassured',fa:'خیالم جمع شد',roman:'khiaalam jam shod',en:"I'm reassured"}],
   ['social.disappointed',{id:'social.let-down',fa:'تو ذوقم خورد',roman:'to zogham khord',en:'I felt let down'}],
   ['social.surprised',{id:'social.caught-off-guard',fa:'غافلگیر شدم',roman:'ghaafelgir shodam',en:'I was caught off guard'}],
@@ -15,6 +16,7 @@ const P = new Map([
   ['social.trust-you',{id:'social.count-on-you',fa:'روت حساب می‌کنم',roman:'root hesaab mikonam',en:'I count on you'}],
   ['social.my-fault',{id:'social.take-responsibility',fa:'مسئولیتش با منه',roman:'masooliyatesh baa mane',en:"I'll take responsibility"}],
   ['social.forgive-me',{id:'social.i-apologize',fa:'عذر می‌خوام',roman:'ozr mikhaam',en:'I apologize'}],
+  ['social.engaged',{en:'I got engaged'}],
   ['social.argument',{id:'social.disagreement',fa:'اختلاف نظر داشتیم',roman:'ekhtelaafe nazar daashtim',en:'we had a disagreement'}],
   ['social.bored',{id:'social.restless',fa:'آروم و قرار ندارم',roman:'aaroom o gharaar nadaaram',en:"I'm restless"}],
   ['social.excited',{id:'social.thrilled',fa:'ذوق دارم',roman:'zogh daaram',en:"I'm excited / thrilled"}],
@@ -25,5 +27,5 @@ const P = new Map([
 ]);
 const cards=candidate.map(c=>P.has(c.id)?{...c,...P.get(c.id)}:c);
 if(cards.length!==70)throw new Error(`reviewed Step 16 social batch must remain 70; found ${cards.length}`);
-export const overlapReplacementCount=P.size;
+export const reviewPatchCount=P.size;
 export default cards;
