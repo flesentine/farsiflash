@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadScoringRules, scoreCandidate, checkCandidateAtPosition } from './lib/v5-scoring.mjs';
 import { loadRegisterPairPolicy } from './lib/v5-romanization.mjs';
+import { applyConversationalChunkReplacements } from './lib/v5-chunks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -24,7 +25,9 @@ for(const name of all){ const key=batchKey(name); const cur=chosen.get(key); if(
 const batchFiles=[...chosen.values()].sort((a,b)=>batchStart(a)-batchStart(b) || a.localeCompare(b));
 const batchCards=[];
 for(const file of batchFiles){ const mod=await import(pathToFileURL(path.join(batchesDir,file)).href); if(!Array.isArray(mod.default)) throw new Error(`${file} must default-export an array`); batchCards.push(...mod.default); }
-const cards=[...deck.cards,...batchCards];
+const preChunkCards=[...deck.cards,...batchCards];
+const chunkResult=applyConversationalChunkReplacements(preChunkCards);
+const cards=chunkResult.cards;
 
 const errors=[]; const warnings=[]; const fail=m=>errors.push(m); const warn=m=>warnings.push(m);
 const ID_RE=/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
@@ -38,7 +41,10 @@ function checkFa(label,v,pos){ if(v==null) return; if(typeof v!=='string'||!v.tr
 
 if(deck.cards.length!==100) fail(`foundation core must remain 100; found ${deck.cards.length}`);
 if(batchCards.length!==1900) fail(`effective 101–2000 batches must contain 1900 cards; found ${batchCards.length}`);
-if(cards.length!==2000) fail(`effective v5 curriculum must contain 2000 cards at Step 17; found ${cards.length}`);
+if(cards.length!==2000) fail(`effective v5 curriculum must contain 2000 cards at Step 18; found ${cards.length}`);
+if(chunkResult.applied!==38) fail(`Step 18 must promote exactly 38 conversational chunks; found ${chunkResult.applied}`);
+const promotedBy1250=chunkResult.positions.filter((entry)=>entry.position<=1250).length;
+if(promotedBy1250!==24) fail(`Step 18 must promote 24 chunks by position 1250; found ${promotedBy1250}`);
 
 const ids=new Map(); const forms=new Map();
 cards.forEach((card,index)=>{
@@ -62,6 +68,17 @@ cards.forEach((card,index)=>{
   }catch(e){ fail(`#${pos} scoring failed: ${e.message}`); }
 });
 
+for(const replacement of chunkResult.policy.replacements){
+  const pos=ids.get(replacement.id);
+  if(!pos){ fail(`Step 18 promoted chunk missing: ${replacement.id}`); continue; }
+  const card=cards[pos-1];
+  if(ids.has(replacement.targetId)) fail(`Step 18 replaced target still present: ${replacement.targetId}`);
+  if(card.category!=='conversation') fail(`#${pos} Step 18 chunk ${card.id} must be conversation category`);
+  if(!['spoken','everyday'].includes(card.register)) fail(`#${pos} Step 18 chunk ${card.id} must be spoken/everyday`);
+  for(const tag of ['essential-chunk','high-transfer-pattern','conversational-chunk','reusable-chunk']) if(!(card.tags||[]).includes(tag)) fail(`#${pos} Step 18 chunk ${card.id} missing tag ${tag}`);
+  if(card.selection?.editorialOverride?.direction!=='promote') fail(`#${pos} Step 18 chunk ${card.id} must record promotion rationale`);
+}
+
 for(const id of compoundPolicy.requiredBeforeOrAt300||[]){ const pos=ids.get(id); if(!pos) fail(`compound policy missing ${id}`); else if(pos>300) fail(`compound policy requires ${id} by 300; found #${pos}`); else if(!(cards[pos-1].tags||[]).includes('productive-compound-verb')) fail(`${id} must carry productive-compound-verb`); }
 const deferred=new Set((compoundPolicy.deferIsolatedFormsBefore300||[]).map(normalizeFa));
 cards.slice(0,300).forEach((c,i)=>{ if(deferred.has(normalizeFa(c.fa))) fail(`#${i+1} isolated light-verb component should be deferred: ${c.fa}`); });
@@ -76,4 +93,4 @@ for(const pair of registerPolicy.requiredPairs||[]){
 
 for(const m of warnings) console.warn(`WARN ${m}`); for(const m of errors) console.error(`ERROR ${m}`);
 if(errors.length){ console.error(`\nv5 batch audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`); process.exit(1); }
-console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, registerPairs=${(registerPolicy.requiredPairs||[]).length}`);
+console.log(`v5 batch audit passed: core=${deck.cards.length}, batches=${batchCards.length}, effective=${cards.length}, warnings=${warnings.length}, files=${batchFiles.join(',')}, registerPairs=${(registerPolicy.requiredPairs||[]).length}, chunkPromotions=${chunkResult.applied}, chunkPromotionsBy1250=${promotedBy1250}`);
