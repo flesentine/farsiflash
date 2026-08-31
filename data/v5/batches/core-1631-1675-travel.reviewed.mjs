@@ -2,7 +2,7 @@ import candidate from './core-1631-1675-travel.mjs';
 
 const P = new Map([
   ['travel.gas-station',{id:'travel.car-wash',fa:'کارواش',roman:'kaarvaash',en:'car wash'}],
-  ['travel.intersection',{id:'travel.u-turn',fa:'دوربرگردان',roman:'doorbargardaan',en:'U-turn / turnaround'}],
+  ['travel.intersection',{id:'travel.road-shoulder',fa:'شانه خاکی',roman:'shaaneye khaaki',en:'road shoulder'}],
   ['travel.roundabout',{id:'travel.exit-ramp',fa:'رمپ خروجی',roman:'rampe khorooji',en:'exit ramp'}],
   ['travel.boarding-pass',{id:'travel.flight-number',fa:'شماره پرواز',roman:'shomaareye parvaaz',en:'flight number'}]
 ]);
