@@ -12,6 +12,8 @@ The learner-facing `fa` field is the form we want the learner to recognize first
 
 Each card carries register, category, selection evidence, and a derived score. `millerRank` is supporting evidence, not curriculum order.
 
+After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`.
+
 ## Curriculum scoring: everyday-iranian-v1
 
 The v5 score uses:
@@ -72,6 +74,28 @@ Twenty-four of the 38 promotions land by card 1,250. Representative additions in
 
 The first Step-18 run found five exact phrase collisions with earlier cards. Those were replaced rather than suppressed, leaving Step 18 with zero repeated-form warnings of its own. See `reviews/step-18-conversational-chunks.md`.
 
+## Step 19 example sentence layer
+
+Step 19 adds complete learner examples after the effective deck, chunk overlay, and Romanization have been resolved:
+
+`effective curriculum → Step 18 chunks → learner Romanization → Step 19 examples`
+
+Every one of the 2,000 effective cards now receives:
+
+- `exampleFa`
+- `exampleRoman`
+- `exampleEn`
+
+Coverage is built from three sources:
+
+- 38 curated core examples for the highest-value early language
+- 252 standalone utterance examples where the card itself is already a useful spoken example
+- 1,710 category-aware generated frames for the remaining vocabulary
+
+The final Step-19 audit reports 1,999 unique Persian example strings and zero Step-19 warnings. The only reason the unique count is not 2,000 is the pre-existing duplicate `زن` curriculum form in the first 300.
+
+Generated frames are intentionally a coverage-first editorial layer, not a claim of final native-speaker phrasing. Step 23 can replace any example with an explicit card-level trio; explicit examples automatically take precedence while full coverage remains intact. See `reviews/step-19-example-sentences.md`.
+
 ## Spoken / formal register policy
 
 Register differences live on one stable concept ID. Milestone supplements add only meaningful high-value pairs rather than manufacturing formal variants for every word.
@@ -98,7 +122,7 @@ Step-18 examples include:
 
 `learner-roman-v1` uses simple lowercase ASCII for English-speaking learners: `aa`, `i`, `oo`, and consistent `kh`, `gh`, `sh`, `ch`, `zh`, without academic diacritics, apostrophes, or hyphens.
 
-`tools/lib/v5-romanization.mjs` automatically discovers and merges numbered `romanization-stepN.json` and `register-pairs-stepN.json` supplements. The Romanization audit validates all 2,000 effective cards and all 163 required register pairs after the Step-18 chunk overlay is applied.
+`tools/lib/v5-romanization.mjs` automatically discovers and merges numbered `romanization-stepN.json` and `register-pairs-stepN.json` supplements. The Romanization audit validates all 2,000 effective cards, all 163 required register pairs, and all 2,000 Step-19 `exampleRoman` values.
 
 ## Automated audits
 
@@ -107,16 +131,17 @@ The v5 workflow validates:
 - scoring policy coherence
 - core card schema and scores
 - Step-18 conversational chunk policy
+- Step-19 example-sentence coverage and target-form integrity
 - exact 2,000-card effective count
 - stable-ID uniqueness
 - Persian Unicode and source spelling
 - score/order eligibility
 - compound-first policy
 - spoken/formal pair integrity
-- learner Romanization
+- learner Romanization for cards and examples
 - Miller source normalization
 
-The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning.
+The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Step 19 itself has zero warnings after its duplicate-example cleanup pass.
 
 ## Miller source normalization
 
@@ -124,7 +149,7 @@ The original `data/miller-*.js` files remain archival source data. v5 loads them
 
 ## Foundation mode
 
-`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards does not make v5 live.
+`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards and full example coverage does not make v5 live.
 
 ## Safety rule
 
