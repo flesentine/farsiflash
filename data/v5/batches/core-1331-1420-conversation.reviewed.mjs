@@ -4,7 +4,7 @@ const P = new Map([
   ['conversation.what-happened',{id:'conversation.how-did-it-go',fa:'چطور پیش رفت؟',roman:'chetor pish raft?',en:'how did it go?'}],
   ['conversation.say-it-again',{id:'conversation.can-you-repeat-that',fa:'می‌شه تکرار کنی؟',roman:'mishe tekraar koni?',en:'can you repeat that?'}],
   ['conversation.are-you-sure',{id:'conversation.do-you-think-so',fa:'فکر می‌کنی؟',roman:'fekr mikoni?',en:'do you think so?'}],
-  ['conversation.seriously',{id:'conversation.im-not-joking',fa:'شوخی ندارم',roman:'shookhi nadaaram',en:"I'm not joking"}],
+  ['conversation.seriously',{id:'conversation.im-being-serious',fa:'دارم جدی حرف می‌زنم',roman:'daaram jedi harf mizanam',en:"I'm being serious"}],
   ['conversation.just-kidding',{id:'conversation.no-offense-meant',fa:'منظوری نداشتم',roman:'manzoori nadaashtam',en:'I meant no offense'}],
   ['conversation.take-your-time',{id:'conversation.whenever-you-can',fa:'هر وقت تونستی',roman:'har vaght toonesti',en:'whenever you can'}],
   ['conversation.im-on-my-way',{id:'conversation.just-left',fa:'تازه راه افتادم',roman:'taaze raah oftaadam',en:'I just left / set off'}],
