@@ -13,6 +13,7 @@ on:
       - 'tools/audit-v5-romanization.mjs'
       - 'tools/audit-v5-chunks.mjs'
       - 'tools/audit-v5-examples.mjs'
+      - 'tools/audit-v5-meanings.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -26,6 +27,7 @@ on:
       - 'tools/audit-v5-romanization.mjs'
       - 'tools/audit-v5-chunks.mjs'
       - 'tools/audit-v5-examples.mjs'
+      - 'tools/audit-v5-meanings.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -49,6 +51,8 @@ jobs:
         run: node tools/audit-v5-chunks.mjs
       - name: Audit Step 19 example sentences
         run: node tools/audit-v5-examples.mjs
+      - name: Audit Step 20 English meanings
+        run: node tools/audit-v5-meanings.mjs
       - name: Audit v5 effective 2000-card deck
         run: node tools/audit-v5-batches.mjs
       - name: Audit v5 learner Romanization
