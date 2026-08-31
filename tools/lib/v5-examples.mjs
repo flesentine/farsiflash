@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sanitizeRoman } from './v5-romanization.mjs';
 import { applyEnglishMeanings } from './v5-meanings.mjs';
+import { applyRegisterAudit } from './v5-register.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
@@ -118,10 +119,12 @@ export function exampleForCard(card, policy = loadExamplePolicy()) {
 
 export function applyExampleSentences(cards, policy = loadExamplePolicy()) {
   if (!Array.isArray(cards)) throw new Error('cards must be an array');
-  // Step 20 is now part of the canonical effective-card pipeline. Generated
-  // English examples must be based on the audited one-sense gloss, not the
-  // older slash-heavy source gloss. Curated Step-19 example text still wins.
-  const meaningResult = applyEnglishMeanings(cards);
+  // Step 22 resolves register metadata before learner-facing English and
+  // examples are built. This keeps spoken/formal variants on the same
+  // stable concept and normalizes genuinely colloquial primary forms to
+  // register=spoken without changing curriculum position or score.
+  const registerResult = applyRegisterAudit(cards);
+  const meaningResult = applyEnglishMeanings(registerResult.cards);
   const sources = new Map();
   const out = meaningResult.cards.map((card) => {
     const example = exampleForCard(card, policy);
@@ -137,6 +140,10 @@ export function applyExampleSentences(cards, policy = loadExamplePolicy()) {
     cards: out,
     policy,
     sources: Object.fromEntries([...sources.entries()].sort()),
+    register: {
+      pairs: registerResult.pairs,
+      normalizedToSpoken: registerResult.normalizedToSpoken
+    },
     meanings: {
       overridesApplied: meaningResult.overridesApplied,
       autoCollapsed: meaningResult.autoCollapsed
