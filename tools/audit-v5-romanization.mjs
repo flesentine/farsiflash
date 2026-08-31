@@ -20,7 +20,7 @@ const batchCards=[]; for(const f of files){const m=await import(pathToFileURL(pa
 const cards=applyRomanizationToCards([...deck.cards,...batchCards],romanPolicy,registerPolicy);
 const errors=[]; const fail=m=>errors.push(m); const ids=new Map(cards.map((c,i)=>[c.id,i+1]));
 const ROMAN_RE=/^[a-z0-9 /.,!?()]+$/;
-if(cards.length!==1750) fail(`Romanization audit expects 1750 effective cards at Step 16; found ${cards.length}`);
+if(cards.length!==2000) fail(`Romanization audit expects 2000 effective cards at Step 17; found ${cards.length}`);
 function check(label,v,c,pos){if(typeof v!=='string'||!v.trim())return fail(`#${pos} ${c.id} missing ${label}`);if(v!==v.toLowerCase())fail(`#${pos} ${c.id} ${label} must be lowercase: ${v}`);if(!ROMAN_RE.test(v))fail(`#${pos} ${c.id} ${label} outside learner-roman-v1: ${v}`);if(/[’‘`'-]/.test(v))fail(`#${pos} ${c.id} ${label} contains apostrophe/hyphen: ${v}`);if(/\s{2,}/.test(v))fail(`#${pos} ${c.id} ${label} repeated spaces`);if(/(aaa|ooo|iii)/.test(v))fail(`#${pos} ${c.id} ${label} suspicious triple vowel: ${v}`);if(sanitizeRoman(v)!==v)fail(`#${pos} ${c.id} ${label} is not sanitized: ${v}`);}
 cards.forEach((c,i)=>{const pos=i+1;check('roman',c.roman,c,pos);if(c.spokenFa){if(!c.spokenRoman)fail(`#${pos} ${c.id} spokenFa without spokenRoman`);else check('spokenRoman',c.spokenRoman,c,pos);}else if(c.spokenRoman)fail(`#${pos} ${c.id} spokenRoman without spokenFa`);if(c.formalFa){if(!c.formalRoman)fail(`#${pos} ${c.id} formalFa without formalRoman`);else check('formalRoman',c.formalRoman,c,pos);}else if(c.formalRoman)fail(`#${pos} ${c.id} formalRoman without formalFa`);});
 const pairs=registerPolicy.requiredPairs||[], alternates=romanPolicy.alternateRomanById||{};
