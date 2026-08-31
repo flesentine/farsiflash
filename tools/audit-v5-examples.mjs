@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { applyConversationalChunkReplacements } from './lib/v5-chunks.mjs';
+import { applyModernLifeCoverage } from './lib/v5-modern-life.mjs';
 import { applyRomanizationToCards, normalizeFa, sanitizeRoman } from './lib/v5-romanization.mjs';
 import { applyExampleSentences, loadExamplePolicy, normalizeExampleFa, normalizeExampleRoman } from './lib/v5-examples.mjs';
 
@@ -26,7 +27,8 @@ for(const file of files){ const mod=await import(pathToFileURL(path.join(batches
 
 const preChunk=[...deck.cards,...batchCards];
 const chunkResult=applyConversationalChunkReplacements(preChunk);
-const romanized=applyRomanizationToCards(chunkResult.cards);
+const modernResult=applyModernLifeCoverage(chunkResult.cards);
+const romanized=applyRomanizationToCards(modernResult.cards);
 const exampleResult=applyExampleSentences(romanized, policy);
 const cards=exampleResult.cards;
 
@@ -42,6 +44,7 @@ if(policy.version!=='example-sentences-v1-step19') fail(`unexpected example poli
 if(policy.step!==19) fail(`example policy step must be 19; found ${policy.step}`);
 if(cards.length!==2000) fail(`Step 19 example audit expects exactly 2000 effective cards; found ${cards.length}`);
 if(chunkResult.applied!==38) fail(`Step 19 must run after all 38 Step 18 chunk promotions; found ${chunkResult.applied}`);
+if(modernResult.applied!==11) fail(`Step 19 effective pipeline expects 11 Step 21 modern-life promotions; found ${modernResult.applied}`);
 
 const expectedCategories=['conversation','grammar','verbs','people','home','food','shopping','travel','social','work','school','health','technology','culture','reading-news'];
 for(const category of expectedCategories) if(!policy.frames?.[category]) fail(`Step 19 missing frame for ${category}`);
@@ -102,5 +105,5 @@ const averageFa=Math.round((totalFaChars/cards.length)*10)/10;
 for(const warning of warnings) console.warn(`WARN ${warning}`);
 for(const error of errors) console.error(`ERROR ${error}`);
 if(errors.length){ console.error(`\nStep 19 example audit failed: ${errors.length} error(s), ${warnings.length} warning(s)`); process.exit(1); }
-console.log(`Step 19 example audit passed: cards=${cards.length}, curated=${sourceCurated}, standalone=${sourceStandalone}, framed=${sourceFramed}, explicit=${sourceExplicit}, uniqueFa=${examples.size}, avgFaChars=${averageFa}, warnings=${warnings.length}`);
+console.log(`Step 19 example audit passed: cards=${cards.length}, curated=${sourceCurated}, standalone=${sourceStandalone}, framed=${sourceFramed}, explicit=${sourceExplicit}, step21=${modernResult.applied}, uniqueFa=${examples.size}, avgFaChars=${averageFa}, warnings=${warnings.length}`);
 console.log(`example sources: ${JSON.stringify(exampleResult.sources)}`);
