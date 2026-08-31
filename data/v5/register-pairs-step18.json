@@ -1,0 +1,24 @@
+{
+  "version": "spoken-formal-v1-step18",
+  "requiredPairs": [
+    {"id":"conversation.chunk.can-you-send-it","spoken":"می‌تونی برام بفرستی؟","formal":"می‌توانی برایم بفرستی؟"},
+    {"id":"conversation.chunk.let-me-check","spoken":"بذار چک کنم","formal":"بگذار بررسی کنم"},
+    {"id":"conversation.chunk.no-idea","spoken":"اصلاً نمی‌دونم","formal":"اصلاً نمی‌دانم"},
+    {"id":"conversation.chunk.what-do-you-think","spoken":"نظرت چیه؟","formal":"نظرت چیست؟"},
+    {"id":"conversation.chunk.seems-right","spoken":"به نظرم درسته","formal":"به نظرم درست است"},
+    {"id":"conversation.chunk.cant-hear-you","spoken":"صدات نمیاد","formal":"صدایت نمی‌آید"},
+    {"id":"conversation.chunk.youre-cutting-out","spoken":"صدات قطع و وصل می‌شه","formal":"صدایت قطع و وصل می‌شود"},
+    {"id":"conversation.chunk.wont-open","spoken":"باز نمی‌شه","formal":"باز نمی‌شود"},
+    {"id":"conversation.chunk.no-signal","spoken":"آنتن نمی‌ده","formal":"آنتن نمی‌دهد"},
+    {"id":"conversation.chunk.one-second","spoken":"یه لحظه","formal":"یک لحظه"},
+    {"id":"conversation.chunk.what-should-we-do","spoken":"چی کار کنیم؟","formal":"چه کار کنیم؟"},
+    {"id":"conversation.chunk.itll-work-out","spoken":"درست می‌شه","formal":"درست می‌شود"},
+    {"id":"conversation.chunk.you-are-right","spoken":"راست می‌گی","formal":"راست می‌گویی"},
+    {"id":"conversation.chunk.cant-believe-it","spoken":"باورم نمی‌شه","formal":"باورم نمی‌شود"},
+    {"id":"conversation.chunk.are-you-serious","spoken":"جدی می‌گی؟","formal":"جدی می‌گویی؟"},
+    {"id":"conversation.chunk.cant-remember","spoken":"یادم نمیاد","formal":"یادم نمی‌آید"},
+    {"id":"conversation.chunk.see-what-happens","spoken":"ببین چی می‌شه","formal":"ببین چه می‌شود"},
+    {"id":"conversation.chunk.say-hi-for-me","spoken":"سلام برسون","formal":"سلام برسان"},
+    {"id":"conversation.chunk.thanks-for-coming","spoken":"ممنون که اومدی","formal":"ممنون که آمدی"}
+  ]
+}
