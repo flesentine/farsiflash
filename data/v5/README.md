@@ -12,7 +12,7 @@ The learner-facing `fa` field is the form we want the learner to recognize first
 
 Each card carries register, category, selection evidence, and a derived score. `millerRank` is supporting evidence, not curriculum order.
 
-After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`.
+After Step 19 every effective card also carries a complete example trio: `exampleFa`, `exampleRoman`, and `exampleEn`. After Step 20, learner-facing `en` is resolved through the one-sense English meaning policy before generated examples are built.
 
 ## Curriculum scoring: everyday-iranian-v1
 
@@ -76,11 +76,11 @@ The first Step-18 run found five exact phrase collisions with earlier cards. Tho
 
 ## Step 19 example sentence layer
 
-Step 19 adds complete learner examples after the effective deck, chunk overlay, and Romanization have been resolved:
+Step 19 established complete learner-example coverage for all 2,000 effective cards. Step 20 now resolves English meanings before generated examples are created, so the current canonical pipeline is:
 
-`effective curriculum → Step 18 chunks → learner Romanization → Step 19 examples`
+`effective curriculum → Step 18 chunks → learner Romanization → Step 20 English meanings → Step 19 examples`
 
-Every one of the 2,000 effective cards now receives:
+Every one of the 2,000 effective cards receives:
 
 - `exampleFa`
 - `exampleRoman`
@@ -95,6 +95,34 @@ Coverage is built from three sources:
 The final Step-19 audit reports 1,999 unique Persian example strings and zero Step-19 warnings. The only reason the unique count is not 2,000 is the pre-existing duplicate `زن` curriculum form in the first 300.
 
 Generated frames are intentionally a coverage-first editorial layer, not a claim of final native-speaker phrasing. Step 23 can replace any example with an explicit card-level trio; explicit examples automatically take precedence while full coverage remains intact. See `reviews/step-19-example-sentences.md`.
+
+## Step 20 English meaning layer
+
+Step 20 audits all 2,000 learner-facing English meanings under `english-meanings-v1-step20`. The policy treats a gloss as a teaching choice rather than a miniature dictionary entry: one stable concept should teach one intended learner-relevant sense.
+
+The first strict audit found **291 issues**: 289 slash-separated sense/synonym piles and two legitimate expressions containing `or`. The final cleanup handles the 289 slash cases with:
+
+- **215 automatic primary-sense collapses** for straightforward synonym piles
+- **74 explicit editorial overrides** where taking the first item would be incomplete, misleading, less useful, or inconsistent with the concept ID
+
+Representative corrections include:
+
+- `باید` → `have to`
+- `درست کردن` → `to fix`
+- `حوصله داشتن` → `to feel like doing something`
+- `بی‌حوصله` → `not in the mood`
+- `کلافه‌ام` → `I'm frustrated`
+- `بدم میاد` → `I dislike it`
+- shopping `موجودی` → `stock availability`
+- `حمام` → `bathroom (with shower)`
+- `پشت بام` → `rooftop`
+- `صندوق` → `checkout counter`
+- hotel `پذیرش` → `front desk`
+- `خسته نباشی` / `خدا قوت` → `good work`
+- `رودربایستی` → `social obligation to be polite`
+- `عیدی` → `New Year gift money`
+
+Final CI guarantees all 2,000 meanings are non-empty, at most 58 characters, free of slash/semicolon sense piles and placeholder wording, and have sane punctuation. No exact English meaning occurs four or more times after the cleanup. Generated Step-19 English examples consume the cleaned Step-20 meaning automatically, while curated Step-19 example text remains authoritative. See `reviews/step-20-english-meanings.md`.
 
 ## Spoken / formal register policy
 
@@ -132,6 +160,7 @@ The v5 workflow validates:
 - core card schema and scores
 - Step-18 conversational chunk policy
 - Step-19 example-sentence coverage and target-form integrity
+- Step-20 one-sense English meaning policy and cleanup accounting
 - exact 2,000-card effective count
 - stable-ID uniqueness
 - Persian Unicode and source spelling
@@ -141,7 +170,7 @@ The v5 workflow validates:
 - learner Romanization for cards and examples
 - Miller source normalization
 
-The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Step 19 itself has zero warnings after its duplicate-example cleanup pass.
+The only remaining effective-deck repeated-form warning is the pre-existing first-300 `زن` warning. Steps 18–20 have no remaining warnings in their dedicated audits.
 
 ## Miller source normalization
 
@@ -149,7 +178,7 @@ The original `data/miller-*.js` files remain archival source data. v5 loads them
 
 ## Foundation mode
 
-`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards and full example coverage does not make v5 live.
+`deck.json` remains `status: "foundation"` while the curriculum and product layers are reviewed. Completing 2,000 cards, full example coverage, and the English meaning audit does not make v5 live.
 
 ## Safety rule
 
