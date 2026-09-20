@@ -6,7 +6,7 @@ const P = new Map([
   ['culture.good-luck',{id:'culture.may-you-succeed',fa:'ان‌شاءالله موفق می‌شی',roman:'enshaallah movafagh mishi',en:'hopefully you will succeed'}],
   ['culture.happy-birthday',{id:'culture.many-happy-returns',fa:'صد سال زنده باشی',roman:'sad saal zende baashi',en:'many happy returns'}],
   ['culture.you-made-my-day',{id:'culture.wish-you-were-there',fa:'جای شما خالی',roman:'jaaye shomaa khaali',en:'wish you were there'}],
-  ['culture.honored-visit',{id:'culture.have-fun',fa:'خوش بگذره',roman:'khosh begzare',en:'have fun'}]
+  ['culture.honored-visit',{id:'culture.nice-to-see-you',fa:'خوشحال شدم دیدمت',roman:'khoshhaal shodam didamet',en:'nice to see you'}]
 ]);
 const cards=candidate.map(c=>P.has(c.id)?{...c,...P.get(c.id)}:c);
 if(cards.length!==60)throw new Error(`reviewed Step 16 culture batch must remain 60; found ${cards.length}`);
