@@ -74,7 +74,6 @@
     "social.short-tempered": {"en":"short-tempered","reason":"Avoids duplicating the separate impatient concept."},
     "culture.you-went-to-trouble": {"en":"you went to so much trouble","reason":"Natural English response to Iranian hospitality effort."},
     "culture.admiration": {"en":"how wonderful","reason":"Natural reaction meaning is clearer than a literal blessing label."},
-    "culture.you-made-my-day": {"en":"you made my day","reason":"Natural English function of the conversational phrase."},
     "culture.decline-politely": {"en":"social obligation to be polite","reason":"Explains رودربایستی more accurately than social pressure alone."},
     "culture.visit-family": {"en":"family visiting","reason":"The source contains a no-space slash that would otherwise collapse to social."},
     "culture.vow-offering": {"en":"charitable food offering","reason":"Explains the cultural practice more clearly than votive food."},
