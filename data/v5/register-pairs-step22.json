@@ -77,7 +77,6 @@
     {"id":"culture.hospitality","spoken":"مهمون‌داری","formal":"مهمان‌داری"},
     {"id":"culture.may-you-succeed","spoken":"ان‌شاءالله موفق می‌شی","formal":"ان‌شاءالله موفق می‌شوی"},
     {"id":"culture.best-wishes","spoken":"بهترین‌ها رو برات می‌خوام","formal":"بهترین‌ها را برایت می‌خواهم"},
-    {"id":"culture.congrats-new-home","spoken":"خونه نو مبارک","formal":"خانه نو مبارک"},
-    {"id":"culture.have-fun","spoken":"خوش بگذره","formal":"خوش بگذرد"}
+    {"id":"culture.congrats-new-home","spoken":"خونه نو مبارک","formal":"خانه نو مبارک"}
   ]
 }
