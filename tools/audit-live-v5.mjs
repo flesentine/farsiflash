@@ -64,7 +64,8 @@ for(const card of deck){
   }
 }
 
-const sandbox={window:{}};
+const sandbox={};
+sandbox.window=sandbox;
 vm.createContext(sandbox);
 for(const name of ['00','01','02','03','04','05','06','07']){
   vm.runInContext(fs.readFileSync(path.join(root,'data',`${name}.js`),'utf8'),sandbox,{filename:`${name}.js`});
