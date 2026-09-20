@@ -1,0 +1,24 @@
+{
+  "version": "learner-roman-v1-step18",
+  "alternateRomanById": {
+    "conversation.chunk.can-you-send-it": "mitavaani baraayam beferesti?",
+    "conversation.chunk.let-me-check": "begozar barrasi konam",
+    "conversation.chunk.no-idea": "aslan nemidaanam",
+    "conversation.chunk.what-do-you-think": "nazaret chist?",
+    "conversation.chunk.seems-right": "be nazaram dorost ast",
+    "conversation.chunk.cant-hear-you": "sedaat nemiaayad",
+    "conversation.chunk.youre-cutting-out": "sedaat ghat o vasl mishavad",
+    "conversation.chunk.wont-open": "baaz nemishavad",
+    "conversation.chunk.no-signal": "aanten nemidahad",
+    "conversation.chunk.what-should-we-do": "che kaar konim?",
+    "conversation.chunk.itll-work-out": "dorost mishavad",
+    "conversation.chunk.you-are-right": "raast migooyi",
+    "conversation.chunk.cant-believe-it": "baavaram nemishavad",
+    "conversation.chunk.are-you-serious": "jedi migooyi?",
+    "conversation.chunk.remind-me": "yaadam biandaaz",
+    "conversation.chunk.cant-remember": "yaadam nemiaayad",
+    "conversation.chunk.see-what-happens": "bebin che mishavad",
+    "conversation.chunk.keep-it-in-mind": "havaaset baashad",
+    "conversation.chunk.thanks-for-coming": "mamnoon ke aamadi"
+  }
+}

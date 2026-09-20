@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flesentine.github.io/farsiflash/data/v5/card.schema.json",
+  "title": "FarsiFlash v5 card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "fa", "roman", "en", "register", "category", "selection"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)+$",
+      "description": "Permanent semantic concept ID. Dot-separated segments may contain internal hyphens. Never derive this from mutable Persian text."
+    },
+    "fa": {"type": "string", "minLength": 1, "description": "Preferred learner-facing Persian form."},
+    "spokenFa": {"type": ["string", "null"], "minLength": 1},
+    "formalFa": {"type": ["string", "null"], "minLength": 1},
+    "roman": {"type": "string", "minLength": 1, "description": "Learner-facing ASCII Romanization of fa using learner-roman-v1."},
+    "spokenRoman": {"type": ["string", "null"], "minLength": 1, "description": "Romanization of spokenFa when that alternate form is present."},
+    "formalRoman": {"type": ["string", "null"], "minLength": 1, "description": "Romanization of formalFa when that alternate form is present."},
+    "en": {"type": "string", "minLength": 1},
+    "register": {"type": "string", "enum": ["spoken", "everyday", "neutral", "formal", "written", "slang", "literary"]},
+    "category": {"type": "string", "enum": ["conversation", "grammar", "verbs", "people", "home", "food", "shopping", "travel", "social", "work", "school", "health", "technology", "culture", "reading-news"]},
+    "partOfSpeech": {"type": ["string", "null"]},
+    "exampleFa": {"type": ["string", "null"]},
+    "exampleRoman": {"type": ["string", "null"]},
+    "exampleEn": {"type": ["string", "null"]},
+    "millerRank": {"type": ["integer", "null"], "minimum": 1},
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "signals"],
+      "properties": {
+        "score": {"type": "number", "minimum": 0, "maximum": 100, "description": "Derived v5 curriculum score after bonuses and penalties."},
+        "signals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["conversationalFrequency", "speakerDispersion", "practicalUsefulness", "generativeValue", "modernRelevance", "writtenFrequency"],
+          "properties": {
+            "conversationalFrequency": {"type": "number", "minimum": 0, "maximum": 100},
+            "speakerDispersion": {"type": "number", "minimum": 0, "maximum": 100},
+            "practicalUsefulness": {"type": "number", "minimum": 0, "maximum": 100},
+            "generativeValue": {"type": "number", "minimum": 0, "maximum": 100},
+            "modernRelevance": {"type": "number", "minimum": 0, "maximum": 100},
+            "writtenFrequency": {"type": "number", "minimum": 0, "maximum": 100}
+          }
+        },
+        "editorialOverride": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["direction", "reason"],
+          "properties": {
+            "direction": {"type": "string", "enum": ["promote", "demote"]},
+            "reason": {"type": "string", "minLength": 12}
+          }
+        }
+      }
+    },
+    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "default": []},
+    "notes": {"type": ["string", "null"]}
+  }
+}

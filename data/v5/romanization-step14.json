@@ -1,0 +1,31 @@
+{
+  "version": "learner-roman-v1-step14",
+  "alternateRomanById": {
+    "verb.drop-off": "resaandan",
+    "verb.wait-for": "montazer maandan",
+    "verb.oversleep": "khaab maandan",
+    "conversation.you-are-right": "hagh baa to ast",
+    "conversation.obviously": "maloom ast",
+    "conversation.i-didnt-know": "nemidaanestam",
+    "conversation.i-remembered": "yaadam aamad",
+    "conversation.remember": "yaadet baashad",
+    "conversation.coming-now": "alaan miaayam",
+    "conversation.doesnt-matter": "farghi nemikonad",
+    "conversation.thats-right": "dorost ast",
+    "conversation.where-going": "kojaa miravi?",
+    "conversation.when-coming": "key miaayi?",
+    "conversation.how-long": "cheghadr tool mikeshad?",
+    "conversation.when-finished": "key tamaam mishavad?",
+    "conversation.not-anymore": "digar na",
+    "conversation.this-is-fine": "hamin khoob ast",
+    "conversation.this-is-enough": "hamin kaafi ast",
+    "conversation.this-is-better": "in behtar ast",
+    "conversation.the-other-one": "aan yeki",
+    "shopping.other-color": "range digari daarid?",
+    "shopping.is-discounted": "takhfif daarad?",
+    "shopping.too-expensive": "kheyli garaan ast",
+    "shopping.cheaper-option": "arzaan tar daarid?",
+    "travel.how-far": "cheghadr raah ast?",
+    "travel.which-way": "az kodaam taraf?"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "curriculum": "FarsiFlash Everyday Iranian Persian 2000",
+  "goal": "Prioritize modern spoken Iranian Persian that gives learners the most real-world comprehension and speaking power.",
+  "scoreRange": [0, 100],
+  "baseWeights": {
+    "conversationalFrequency": 35,
+    "speakerDispersion": 20,
+    "practicalUsefulness": 15,
+    "generativeValue": 15,
+    "modernRelevance": 10,
+    "writtenFrequency": 5
+  },
+  "signalDefinitions": {
+    "conversationalFrequency": "How often the item occurs in contemporary informal Iranian Persian conversation. Prefer conversational corpora and native-speaker evidence over general written corpora.",
+    "speakerDispersion": "How broadly the item is used across different speakers, situations, and conversations rather than being frequent in a narrow topic or by a few speakers.",
+    "practicalUsefulness": "How likely a learner is to need the item in ordinary life: family, friends, food, shopping, transport, work, school, health, phone use, social interaction, and common errands.",
+    "generativeValue": "How much language the item unlocks. Productive verbs, compound verbs, grammar patterns, question forms, connectors, and reusable chunks score highly.",
+    "modernRelevance": "How useful the item is in contemporary Iranian life, including current technology, messaging, payments, transport, and present-day social language.",
+    "writtenFrequency": "General written-frequency evidence. Miller rank is supporting evidence only and must never dominate conversational usefulness."
+  },
+  "millerRank": {
+    "weightSignal": "writtenFrequency",
+    "rankCeiling": 2200,
+    "conversion": "linear-percentile",
+    "notes": "Rank 1 maps to about 100; rank 2200 maps to 0. Values above the ceiling map to 0."
+  },
+  "bonuses": {
+    "essential-chunk": 8,
+    "productive-compound-verb": 6,
+    "spoken-form": 4,
+    "high-transfer-pattern": 4,
+    "modern-life": 3,
+    "taarof-cultural-essential": 3
+  },
+  "penalties": {
+    "formal-only": -18,
+    "written-only": -18,
+    "literary": -28,
+    "news-domain": -16,
+    "proper-name": -35,
+    "archaic": -40,
+    "obsolete": -45,
+    "specialized": -20,
+    "redundant-word-family": -12,
+    "ambiguous-gloss": -8
+  },
+  "adjustmentCaps": {
+    "maxBonus": 14,
+    "maxPenaltyMagnitude": 60
+  },
+  "hardRejectTags": [
+    "obsolete",
+    "corrupt-source",
+    "unresolved-spelling",
+    "unresolved-meaning"
+  ],
+  "orderingGates": {
+    "first100": {
+      "minimumScore": 82,
+      "minimumPracticalUsefulness": 80,
+      "allowedRegisters": ["spoken", "everyday", "neutral"],
+      "forbiddenCategories": ["reading-news"],
+      "forbiddenTags": ["proper-name", "formal-only", "written-only", "literary", "news-domain", "specialized", "archaic"]
+    },
+    "first300": {
+      "minimumScore": 76,
+      "minimumPracticalUsefulness": 72,
+      "allowedRegisters": ["spoken", "everyday", "neutral"],
+      "forbiddenCategories": ["reading-news"],
+      "forbiddenTags": ["proper-name", "formal-only", "written-only", "literary", "news-domain", "specialized", "archaic"]
+    },
+    "first1000": {
+      "minimumScore": 62,
+      "forbiddenCategories": ["reading-news"],
+      "forbiddenTags": ["proper-name", "literary", "archaic"],
+      "formalBridgeExceptionTag": "formal-bridge"
+    },
+    "first1750": {
+      "forbiddenTags": ["proper-name", "archaic"],
+      "readingNewsTargetMaximum": 0
+    },
+    "final250": {
+      "positions": [1751, 2000],
+      "purpose": "Formal recognition bridge and wider reading/news comprehension. Everyday items may still appear here, but formal/news material belongs here rather than earlier."
+    }
+  },
+  "stageRanges": [
+    {"id": "core-100", "start": 1, "end": 100, "purpose": "Immediate conversational survival and highest-transfer spoken forms."},
+    {"id": "core-300", "start": 101, "end": 300, "purpose": "Essential everyday conversation, questions, common verbs, people, time, food, and reusable chunks."},
+    {"id": "daily-750", "start": 301, "end": 750, "purpose": "High-value compound verbs, home, shopping, restaurants, transport, and social interaction."},
+    {"id": "practical-1250", "start": 751, "end": 1250, "purpose": "Work, school, health, technology, feelings, errands, and broader daily-life comprehension."},
+    {"id": "wide-1750", "start": 1251, "end": 1750, "purpose": "Wider conversational comprehension, TV/dialogue language, and lower-frequency but useful vocabulary."},
+    {"id": "bridge-2000", "start": 1751, "end": 2000, "purpose": "Formal recognition bridge, wider reading/news vocabulary, and useful lower-priority concepts."}
+  ],
+  "categoryTargets": {
+    "conversation": 200,
+    "grammar": 150,
+    "verbs": 350,
+    "people": 120,
+    "home": 100,
+    "food": 110,
+    "shopping": 100,
+    "travel": 140,
+    "social": 150,
+    "work": 80,
+    "school": 60,
+    "health": 90,
+    "technology": 90,
+    "culture": 80,
+    "reading-news": 180
+  },
+  "editorialRules": [
+    "Score concepts, not spellings: spoken and formal variants belong to one stable concept when they express the same core meaning.",
+    "Teach the form an Iranian is most likely to say or hear in ordinary conversation first; show formal/written forms secondarily.",
+    "Prefer complete productive constructions such as جواب دادن, زنگ زدن, and پیدا کردن over isolated components when the construction is the useful learning unit.",
+    "Prefer one learner-relevant English sense per card. Split genuinely different meanings into separate concepts instead of dictionary-style gloss piles.",
+    "Raw corpus frequency never overrides obvious practical relevance. A lower-frequency everyday word may outrank a high-frequency government, news, literary, or specialist word.",
+    "Modern-life vocabulary may be curated in even when older corpora underrepresent it.",
+    "A card may be manually promoted or demoted only with an editorial note explaining why; the numeric score remains visible for review.",
+    "Native Iranian review is required before a batch becomes production curriculum, especially for spoken naturalness and register."
+  ]
+}

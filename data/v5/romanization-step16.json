@@ -1,0 +1,49 @@
+{
+  "version": "learner-roman-v1-step16",
+  "alternateRomanById": {
+    "verb.change-mind": "nazaret raa avaz kardan",
+    "verb.show-up": "peydaa shodan",
+    "verb.not-show-up": "nayaamadan",
+    "verb.stay-over": "shab maandan",
+    "verb.host-guests": "mehmaani daadan",
+    "verb.get-stuck-traffic": "dar teraafik gir kardan",
+    "verb.pack-leftovers": "baghie ghazaa raa bastebandi kardan",
+    "verb.skip-part": "yek ghesmat raa rad kardan",
+
+    "conversation.can-you-repeat-that": "mishavad tekraar koni?",
+    "conversation.i-dont-get-it": "motavajeh nemishavam",
+    "conversation.could-be": "momken ast",
+    "conversation.thats-it": "hamin ast",
+    "conversation.thats-different": "aan fargh daarad",
+    "conversation.same-thing": "hamaan ast",
+    "conversation.it-depends": "bastegi daarad",
+    "conversation.leave-it": "rahaayesh kon",
+    "conversation.whenever-you-can": "har vaght tavaanesti",
+    "conversation.bad-time": "alaan vaghte badi ast?",
+    "conversation.im-coming-too": "man ham miaayam",
+    "conversation.i-cant-make-it": "nemitavaanam biyaayam",
+    "conversation.either-is-fine": "farghi nadaarad",
+    "conversation.up-to-you": "daste khodet ast",
+    "conversation.let-me-explain": "begozar tozih bedaham",
+
+    "grammar.if-not": "agar na",
+    "grammar.even-if": "hattaa agar",
+    "grammar.whatever": "harche",
+    "grammar.whoever": "harkas",
+    "grammar.each-one": "har kodaam",
+    "grammar.either-one": "har kodaamesh",
+    "grammar.neither-one": "hich kodaam",
+    "grammar.a-little": "kami",
+    "grammar.all-of-us": "hame maa",
+
+    "social.satisfied": "raazi am",
+    "social.at-ease": "khiaalam raahat ast",
+    "social.count-on-you": "rooye to hesaab mikonam",
+    "social.i-apologize": "ozr mikhaaham",
+
+    "culture.welcome-plural": "khosh aamadid",
+    "culture.spring-cleaning": "khaanetekaani",
+    "travel.breakfast-included": "sobhane shaamel mishavad",
+    "home.deposit": "vadie"
+  }
+}
