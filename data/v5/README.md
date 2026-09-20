@@ -81,7 +81,7 @@ The final Step-19 audit reports 1,999 unique Persian example strings and zero St
 
 ## Step 20 English meaning layer
 
-Step 20 audits all 2,000 learner-facing English meanings under `english-meanings-v1-step20`. The original strict pass found 289 slash-separated sense/synonym piles. It resolved them with 215 safe primary-sense collapses and 74 explicit editorial overrides where choosing the first item would be incomplete or misleading.
+Step 20 audits all 2,000 learner-facing English meanings under `english-meanings-v1-step20`. The original strict pass found 289 slash-separated sense/synonym piles. It originally resolved them with 215 safe primary-sense collapses and 74 explicit editorial overrides where choosing the first item would be incomplete or misleading. The pre-Step-23 modernity pass later removed one superseded culture-card override, leaving 73 active explicit overrides.
 
 Representative corrections include `باید` → `have to`, `درست کردن` → `to fix`, `حوصله داشتن` → `to feel like doing something`, `بی‌حوصله` → `not in the mood`, shopping `موجودی` → `stock availability`, `حمام` → `bathroom (with shower)`, hotel `پذیرش` → `front desk`, and `رودربایستی` → `social obligation to be polite`.
 
@@ -152,6 +152,32 @@ Final Step-22 result:
 
 See `reviews/step-22-register-audit.md`.
 
+## Pre-Step-23 modernity / antiquation audit
+
+An additional modernity pass reviews the effective 2,000-card deck before native-speaker review. It distinguishes **current formal Persian** from genuinely antiquated, literary, or obsolete material: modern news and professional language remains valid in the 1751–2000 recognition bridge, while dated conversational or ceremonial language is removed from learner-facing slots.
+
+Two culture cards were replaced:
+
+- `صفا آوردی` → `جای شما خالی` — “wish you were there”
+- `قدم روی چشم` → `خوشحال شدم دیدمت` — “nice to see you”
+
+An initial replacement with `خوش بگذره` was rejected because that phrase already existed at card 1157; the final replacement is therefore a genuinely new concept.
+
+The permanent `modernity-v1-pre23` audit checks primary, spoken, and formal learner-facing forms. It rejects `archaic`, `obsolete`, and `literary` tags/registers, blocks a reviewed antiquated/obsolete-form denylist, requires a minimum modern-relevance signal of 40, and freezes the two modern replacements.
+
+Current result:
+
+- 2,000 effective cards
+- 0 banned antiquation tags
+- 0 banned archaic/obsolete forms
+- 0 cards below the modern-relevance floor
+- 2 modernity replacements
+- 5 traditional-looking but still current cultural expressions explicitly reviewed and retained
+- 235 spoken↔standard pairs remain intact
+- only the pre-existing first-300 `زن` repeated-form warning remains
+
+This is a pre-Step-23 machine/editorial audit, not a substitute for native Iranian review. Borderline generational, regional, and stylistic judgments remain part of Step 23. See `reviews/pre-23-modernity-antiquation-audit.md`.
+
 ## Canonical learner pipeline
 
 The effective learner-facing pipeline is now:
@@ -185,6 +211,7 @@ The v5 workflow validates:
 - Step-20 one-sense English meaning policy and cleanup accounting
 - Step-21 modern-life coverage
 - Step-22 full register placement, pair coverage, reviewed unpaired forms, and colloquial labeling
+- pre-Step-23 modernity / antiquation policy across primary and alternate Persian forms
 - exact 2,000-card effective count
 - stable-ID uniqueness
 - Persian Unicode and source spelling
