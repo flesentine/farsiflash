@@ -43,9 +43,9 @@
     },
     {
       "removedId": "culture.honored-visit",
-      "replacementId": "culture.have-fun",
-      "fa": "خوش بگذره",
-      "reason": "More current everyday Persian than the ceremonial قدم روی چشم."
+      "replacementId": "culture.nice-to-see-you",
+      "fa": "خوشحال شدم دیدمت",
+      "reason": "More current everyday social Persian than the ceremonial قدم روی چشم, without duplicating an existing خوش بگذره card."
     }
   ],
   "reviewedCurrentTraditionalExamples": [
