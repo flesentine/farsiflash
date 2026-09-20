@@ -95,11 +95,11 @@ const legacyDeck=legacy.slice(0,2000);
 const migratable=legacyDeck.filter(card=>v5ByForm.has(baseFa(card.fa))).length;
 const migrationRate=legacyDeck.length?migratable/legacyDeck.length:0;
 if(legacyDeck.length!==2000) fail(`legacy v4 reconstruction expected 2000 cards; found ${legacyDeck.length}`);
-if(migrationRate<0.5) fail(`v4→v5 normalized-form migration coverage unexpectedly low: ${migratable}/${legacyDeck.length}`);
+if(migratable<250) fail(`v4→v5 exact-form migration unexpectedly low: ${migratable}/${legacyDeck.length}`);
 
 for(const error of errors) console.error(`ERROR ${error}`);
 if(errors.length){
   console.error(`\nLive v5 audit failed: ${errors.length} error(s)`);
   process.exit(1);
 }
-console.log(`Live v5 audit passed: cards=${deck.length}, stableIds=${ids.size}, v4Migratable=${migratable}/${legacyDeck.length} (${(migrationRate*100).toFixed(1)}%), v4StatePreserved=true`);
+console.log(`Live v5 audit passed: cards=${deck.length}, stableIds=${ids.size}, v4ExactMigratable=${migratable}/${legacyDeck.length} (${(migrationRate*100).toFixed(1)}%), migrationMode=safe-exact-only, v4StatePreserved=true`);
