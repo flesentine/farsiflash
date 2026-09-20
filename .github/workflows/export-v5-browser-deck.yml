@@ -27,12 +27,12 @@ jobs:
         run: node tools/export-v5-browser-deck.mjs
       - name: Commit generated browser deck
         run: |
-          if git diff --quiet -- data/v5-deck.js data/v5-deck-meta.json; then
+          git add data/v5-deck.js data/v5-deck-meta.json
+          if git diff --cached --quiet; then
             echo "Browser deck already current."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/v5-deck.js data/v5-deck-meta.json
           git commit -m "Generate browser-ready v5 deck"
           git push origin HEAD:feature/v5-curriculum-foundation
