@@ -1,0 +1,58 @@
+{
+  "version": "modernity-v1-pre23",
+  "reviewDate": "2026-09-19",
+  "scope": "All 2,000 effective learner-facing cards, including spoken/formal alternates.",
+  "principles": [
+    "Everyday cards should reflect contemporary Iranian Persian rather than dictionary, literary, or historically preserved vocabulary.",
+    "Formal/news cards may be formal, but must still be normal in current educated writing, journalism, public administration, or professional contexts.",
+    "Traditional cultural expressions may remain only when they are still recognizably used by contemporary Iranians; old-fashioned ceremonial phrasing should not occupy a core slot.",
+    "Do not keep obsolete technology merely because it appears in older corpora.",
+    "Native Iranian review in Step 23 remains the final authority for borderline generational or regional judgments."
+  ],
+  "forbiddenTags": ["archaic", "obsolete", "literary"],
+  "forbiddenExactForms": [
+    "یار",
+    "دلدار",
+    "همدم",
+    "گیتی",
+    "گهگاه",
+    "فرخنده",
+    "لیکن",
+    "خویش",
+    "خویشتن",
+    "اندر",
+    "کنون",
+    "فی‌المثل",
+    "علی‌هذا",
+    "صفا آوردی",
+    "قدم روی چشم",
+    "قدم سر چشم",
+    "پیجر",
+    "فلاپی",
+    "دیسکت",
+    "تلگراف",
+    "نوار کاست"
+  ],
+  "minimumModernRelevanceSignal": 40,
+  "requiredModernReplacements": [
+    {
+      "removedId": "culture.you-made-my-day",
+      "replacementId": "culture.wish-you-were-there",
+      "fa": "جای شما خالی",
+      "reason": "More current and broadly useful social Persian than the older-sounding صفا آوردی."
+    },
+    {
+      "removedId": "culture.honored-visit",
+      "replacementId": "culture.have-fun",
+      "fa": "خوش بگذره",
+      "reason": "More current everyday Persian than the ceremonial قدم روی چشم."
+    }
+  ],
+  "reviewedCurrentTraditionalExamples": [
+    {"id": "culture.not-worthy", "fa": "قابلی نداره", "note": "Still current taarof; contemporary usage evidence retained."},
+    {"id": "culture.anything-for-you", "fa": "فدات", "note": "Still current affectionate spoken Persian."},
+    {"id": "culture.guest-honor", "fa": "مهمون حبیب خداست", "note": "Traditional proverb, but still recognizable and used in contemporary Iranian discussion."},
+    {"id": "culture.tip", "fa": "انعام", "note": "Current service/restaurant vocabulary."},
+    {"id": "culture.may-it-be-blessed", "fa": "به شادی استفاده کنی", "note": "Still current congratulatory/social phrasing."}
+  ]
+}
