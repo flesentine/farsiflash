@@ -304,25 +304,9 @@ ts-fsrs/dist/index.mjs:
     return memState.reverseProgress[c.fa];
   }
 
-  function latestRatings(dir=dirNow()){
-    const out=new Map();
-    for(let n=memState.logs.length-1;n>=0;n--){
-      const row=memState.logs[n];
-      if(!Array.isArray(row)||row[2]!==dir)continue;
-      const fa=row[1];
-      if(!out.has(fa))out.set(fa,row[3]);
-    }
-    return out;
-  }
-
   function knownIds(State,dir=dirNow()){
-    const latest=latestRatings(dir);
     const out=new Set();
     for(const c of D){
-      if(latest.has(c.fa)){
-        if(latest.get(c.fa)==="good")out.add(c.id);
-        continue;
-      }
       const m=cardState(c,dir);
       if(m?.state===State.Review)out.add(c.id);
     }
