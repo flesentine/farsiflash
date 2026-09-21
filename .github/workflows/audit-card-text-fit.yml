@@ -1,0 +1,33 @@
+name: Audit card text fitting
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'data/responsive-ui.js'
+      - 'tools/audit-card-text-fit.mjs'
+      - '.github/workflows/audit-card-text-fit.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - 'data/responsive-ui.js'
+      - 'tools/audit-card-text-fit.mjs'
+      - '.github/workflows/audit-card-text-fit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check responsive UI syntax
+        run: node --check data/responsive-ui.js
+      - name: Audit card text fitting
+        run: node tools/audit-card-text-fit.mjs

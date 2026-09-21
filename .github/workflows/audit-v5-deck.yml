@@ -20,6 +20,8 @@ on:
       - 'tools/audit-live-v5.mjs'
       - 'data/v5-deck.js'
       - 'index.html'
+      - 'data/responsive-ui.js'
+      - 'tools/audit-card-text-fit.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -36,6 +38,12 @@ on:
       - 'tools/audit-v5-meanings.mjs'
       - 'tools/audit-v5-modern-life.mjs'
       - 'tools/audit-v5-register.mjs'
+      - 'tools/audit-v5-modernity.mjs'
+      - 'tools/audit-live-v5.mjs'
+      - 'data/v5-deck.js'
+      - 'index.html'
+      - 'data/responsive-ui.js'
+      - 'tools/audit-card-text-fit.mjs'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -71,6 +79,10 @@ jobs:
         run: node tools/audit-v5-batches.mjs
       - name: Audit live v5 wiring and migration
         run: node tools/audit-live-v5.mjs
+      - name: Check responsive UI syntax
+        run: node --check data/responsive-ui.js
+      - name: Audit card text fitting
+        run: node tools/audit-card-text-fit.mjs
       - name: Audit v5 learner Romanization
         run: node tools/audit-v5-romanization.mjs
       - name: Audit and normalize Miller source spellings
