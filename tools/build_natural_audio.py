@@ -129,10 +129,12 @@ def write_manifest(manifest, all_words):
     for fa, src in manifest.items():
         if fa not in ordered:
             ordered[fa] = src
-    MANIFEST.write_text(
-        "window.FARSI_AUDIO=" + json.dumps(ordered, ensure_ascii=False, separators=(",", ":")) + ";\n",
-        encoding="utf-8",
-    )
+    first = "window.FARSI_AUDIO=" + json.dumps(
+        ordered, ensure_ascii=False, separators=(",", ":")
+    ) + ";\n"
+    old_lines = MANIFEST.read_text(encoding="utf-8").splitlines() if MANIFEST.exists() else []
+    tail = "\n".join(old_lines[1:]).rstrip()
+    MANIFEST.write_text(first + (tail + "\n" if tail else ""), encoding="utf-8")
 
 
 def voice_score(v):
@@ -346,7 +348,7 @@ def main():
         raise SystemExit(f"START_INDEX must be between 0 and {len(all_words) - 1}")
     if COUNT <= 0:
         raise SystemExit("COUNT must be greater than 0")
-    end = min(START_INDEX + COUNT, TOTAL)
+    end = min(START_INDEX + COUNT, len(all_words))
     batch = all_words[START_INDEX:end]
     print(f"Natural Persian audio batch: {START_INDEX}..{end - 1} ({len(batch)} words)")
 
