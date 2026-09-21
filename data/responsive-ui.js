@@ -9,6 +9,17 @@
       .progress{min-width:0}
       .header-actions{flex:0 0 auto}
 
+      /* Large learner text may wrap only at natural spaces. Never split a
+         Romanized/English word in the middle just to satisfy the card width. */
+      .roman,.english,.farsi{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+        overflow-wrap:normal!important;
+        word-break:normal!important;
+        hyphens:none!important;
+      }
+
       /* Keep the desktop focus outline on the same stationary glass layer as
          the dark card tint, so flipping only rotates the card content. */
       @media(min-width:701px){
@@ -124,6 +135,129 @@
     `;
     document.head.appendChild(style);
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install,{once:true});
-  else install();
+  const FIT_SELECTORS=[
+    {selector:".roman",preferredMin:24,hardMin:12,maxHeightRatio:.42},
+    {selector:".english",preferredMin:24,hardMin:12,maxHeightRatio:.56},
+    {selector:".farsi",preferredMin:22,hardMin:14,maxHeightRatio:.34}
+  ];
+  let fitFrame=0;
+  let resizeTimer=0;
+
+  function fitsBox(el,maxHeight){
+    return el.scrollWidth<=el.clientWidth+1&&el.scrollHeight<=maxHeight+1;
+  }
+
+  function fitTextElement(el,config){
+    if(!el||!el.isConnected||!el.textContent.trim())return;
+    const face=el.closest(".face");
+    if(!face||face.clientWidth<1||face.clientHeight<1)return;
+
+    /* Clear a previous fit first so media queries/fullscreen can establish
+       the new natural maximum size for this viewport. */
+    el.style.fontSize="";
+    const naturalSize=parseFloat(getComputedStyle(el).fontSize)||48;
+    const faceStyle=getComputedStyle(face);
+    const paddingY=(parseFloat(faceStyle.paddingTop)||0)+(parseFloat(faceStyle.paddingBottom)||0);
+    const usableHeight=Math.max(72,face.clientHeight-paddingY);
+    const maxHeight=Math.max(54,usableHeight*config.maxHeightRatio);
+
+    if(fitsBox(el,maxHeight)){
+      el.dataset.fitFontSize=String(Math.round(naturalSize));
+      return;
+    }
+
+    const natural=Math.max(config.hardMin,Math.floor(naturalSize));
+    const preferred=Math.min(natural,config.preferredMin);
+    let low=preferred,high=natural,best=preferred;
+
+    /* First preserve a comfortable minimum where possible. */
+    while(low<=high){
+      const mid=Math.floor((low+high)/2);
+      el.style.fontSize=mid+"px";
+      if(fitsBox(el,maxHeight)){best=mid;low=mid+1}
+      else high=mid-1;
+    }
+    el.style.fontSize=best+"px";
+
+    /* Exceptionally long unbroken words still must fit. Continue below the
+       preferred floor rather than clipping or splitting the word. */
+    if(!fitsBox(el,maxHeight)){
+      low=config.hardMin;
+      high=Math.max(config.hardMin,best-1);
+      let hardBest=config.hardMin;
+      while(low<=high){
+        const mid=Math.floor((low+high)/2);
+        el.style.fontSize=mid+"px";
+        if(fitsBox(el,maxHeight)){hardBest=mid;low=mid+1}
+        else high=mid-1;
+      }
+      el.style.fontSize=hardBest+"px";
+    }
+
+    /* Last-resort floor for pathological single tokens. This should almost
+       never run, but guarantees no horizontal clipping. */
+    let size=parseFloat(el.style.fontSize)||config.hardMin;
+    while(!fitsBox(el,maxHeight)&&size>9){
+      size-=1;
+      el.style.fontSize=size+"px";
+    }
+    el.dataset.fitFontSize=String(size);
+  }
+
+  function fitFrontPair(){
+    const roman=document.querySelector(".face:not(.back) .roman");
+    const farsi=document.querySelector(".face:not(.back) .farsi");
+    if(!roman||!farsi)return;
+    const face=roman.closest(".face");
+    if(!face)return;
+    const style=getComputedStyle(face);
+    const paddingY=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
+    const reserve=Math.min(88,face.clientHeight*.18);
+    const available=Math.max(120,face.clientHeight-paddingY-reserve);
+    const marginTop=parseFloat(getComputedStyle(farsi).marginTop)||0;
+    let total=roman.scrollHeight+farsi.scrollHeight+marginTop;
+    let guard=0;
+    while(total>available&&guard++<30){
+      const target=roman.scrollHeight>=farsi.scrollHeight?roman:farsi;
+      const current=parseFloat(getComputedStyle(target).fontSize)||20;
+      if(current<=10)break;
+      target.style.fontSize=(current-1)+"px";
+      total=roman.scrollHeight+farsi.scrollHeight+marginTop;
+    }
+  }
+
+  function fitCardText(){
+    fitFrame=0;
+    for(const config of FIT_SELECTORS){
+      document.querySelectorAll(config.selector).forEach(el=>fitTextElement(el,config));
+    }
+    fitFrontPair();
+  }
+
+  function scheduleFit(){
+    if(fitFrame)return;
+    fitFrame=requestAnimationFrame(()=>requestAnimationFrame(fitCardText));
+  }
+
+  function initTextFit(){
+    install();
+    scheduleFit();
+    const main=document.getElementById("main");
+    if(main){
+      new MutationObserver(scheduleFit).observe(main,{subtree:true,childList:true,characterData:true});
+    }
+    window.addEventListener("resize",()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(scheduleFit,80);
+    });
+    window.addEventListener("orientationchange",()=>setTimeout(scheduleFit,120));
+    document.addEventListener("fullscreenchange",()=>setTimeout(scheduleFit,80));
+    if(document.fonts?.ready)document.fonts.ready.then(scheduleFit).catch(()=>{});
+    window.addEventListener("load",scheduleFit,{once:true});
+  }
+
+  window.fitCardText=fitCardText;
+
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initTextFit,{once:true});
+  else initTextFit();
 })();
