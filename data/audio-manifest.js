@@ -304,14 +304,33 @@ ts-fsrs/dist/index.mjs:
     return memState.reverseProgress[c.fa];
   }
 
-  function isKnown(c,State,dir=dirNow()){
-    const m=cardState(c,dir);
-    return !!m&&m.state===State.Review;
+  function latestRatings(dir=dirNow()){
+    const out=new Map();
+    for(let n=memState.logs.length-1;n>=0;n--){
+      const row=memState.logs[n];
+      if(!Array.isArray(row)||row[2]!==dir)continue;
+      const fa=row[1];
+      if(!out.has(fa))out.set(fa,row[3]);
+    }
+    return out;
+  }
+
+  function knownIds(State,dir=dirNow()){
+    const latest=latestRatings(dir);
+    const out=new Set();
+    for(const c of D){
+      if(latest.has(c.fa)){
+        if(latest.get(c.fa)==="good")out.add(c.id);
+        continue;
+      }
+      const m=cardState(c,dir);
+      if(m?.state===State.Review)out.add(c.id);
+    }
+    return out;
   }
 
   function syncLegacyKnown(State){
-    const d=dirNow();
-    K=new Set(D.filter(c=>isKnown(c,State,d)).map(c=>c.fa));
+    K=knownIds(State,dirNow());
   }
 
   function shuffleCopy(a){
@@ -368,11 +387,10 @@ ts-fsrs/dist/index.mjs:
 
   function counts(State){
     const d=dirNow();
-    let known=0,seen=0;
-    for(const c of D){
-      const m=cardState(c,d);
-      if(m){seen++;if(m.state===State.Review)known++}
-    }
+    const knownSet=knownIds(State,d);
+    let seen=0;
+    for(const c of D)if(cardState(c,d))seen++;
+    const known=knownSet.size;
     return {known,seen,left:TOTAL-known};
   }
 
