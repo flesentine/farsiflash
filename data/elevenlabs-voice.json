@@ -12,5 +12,6 @@
     "gender": "female"
   },
   "rate": "-2%",
-  "deck_words": 2000
+  "deck_cards": 2000,
+  "audio_forms": 1998
 }
