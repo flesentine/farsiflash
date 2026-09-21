@@ -14,12 +14,13 @@ MANIFEST = ROOT / "data" / "audio-manifest.js"
 VOICE_META = ROOT / "data" / "elevenlabs-voice.json"
 PATH_FILE = ROOT / "data" / "path.js"
 MILLER_GLOB = "miller-*.js"
+V5_DECK_FILE = ROOT / "data" / "v5-deck.js"
 API = "https://api.elevenlabs.io/v1"
 API_V2 = "https://api.elevenlabs.io/v2"
 API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 START_INDEX = int(os.environ.get("START_INDEX", "0"))
 COUNT = int(os.environ.get("COUNT", "250"))
-TOTAL = 2000
+TOTAL = 2000  # v5 card count; unique audio forms may be one fewer because surface forms can repeat
 
 
 def headers():
@@ -66,32 +67,44 @@ def load_miller_rows():
     return rows
 
 
+def load_v5_cards():
+    if not V5_DECK_FILE.exists():
+        raise RuntimeError("data/v5-deck.js is missing")
+    text = V5_DECK_FILE.read_text(encoding="utf-8")
+    prefix = "window.FARSI_V5_DECK="
+    start = text.find(prefix)
+    if start < 0:
+        raise RuntimeError("Could not find FARSI_V5_DECK assignment")
+    start += len(prefix)
+    end = text.find(";\n", start)
+    if end < 0:
+        end = text.rfind(";")
+    if end < 0:
+        raise RuntimeError("Could not find end of FARSI_V5_DECK assignment")
+    cards = json.loads(text[start:end])
+    if not isinstance(cards, list):
+        raise RuntimeError("FARSI_V5_DECK must be an array")
+    if len(cards) != TOTAL:
+        raise RuntimeError(f"v5 deck has {len(cards)} cards; expected {TOTAL}")
+    return cards
+
+
 def build_final_words():
-    used_exact = set()
-    covered_base = set()
+    # Audio is keyed by learner-facing Persian surface form. v5 currently has
+    # 2,000 stable concept cards but one intentional duplicate surface form
+    # (زن), so the audio corpus contains 1,999 unique primary forms.
     words = []
-
-    for fa, _roman, _english in load_curriculum_words():
-        if fa in used_exact:
+    seen = set()
+    for card in load_v5_cards():
+        fa = str(card.get("fa") or "").strip()
+        if not fa:
+            raise RuntimeError(f"v5 card {card.get('id') or '?'} has no Persian form")
+        if fa in seen:
             continue
+        seen.add(fa)
         words.append(fa)
-        used_exact.add(fa)
-        covered_base.add(base_fa(fa))
-
-    for row in load_miller_rows():
-        if len(row) < 2:
-            continue
-        fa = row[1]
-        if fa in used_exact or base_fa(fa) in covered_base:
-            continue
-        words.append(fa)
-        used_exact.add(fa)
-        covered_base.add(base_fa(fa))
-        if len(words) == TOTAL:
-            break
-
-    if len(words) != TOTAL:
-        raise RuntimeError(f"Reconstructed {len(words)} final deck words; expected {TOTAL}")
+    if not words:
+        raise RuntimeError("v5 deck produced no audio forms")
     return words
 
 
@@ -328,12 +341,11 @@ def synthesize(voice_id, word, dest):
 def main():
     if not API_KEY:
         raise SystemExit("ELEVENLABS_API_KEY is missing")
-    if START_INDEX < 0 or START_INDEX >= TOTAL:
-        raise SystemExit(f"START_INDEX must be between 0 and {TOTAL - 1}")
+    all_words = build_final_words()
+    if START_INDEX < 0 or START_INDEX >= len(all_words):
+        raise SystemExit(f"START_INDEX must be between 0 and {len(all_words) - 1}")
     if COUNT <= 0:
         raise SystemExit("COUNT must be greater than 0")
-
-    all_words = build_final_words()
     end = min(START_INDEX + COUNT, TOTAL)
     batch = all_words[START_INDEX:end]
     print(f"Natural Persian audio batch: {START_INDEX}..{end - 1} ({len(batch)} words)")
