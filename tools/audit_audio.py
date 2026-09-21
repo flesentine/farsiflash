@@ -35,6 +35,7 @@ def voice_is_native_persian(meta):
 
 
 def main():
+    cards = base.load_v5_cards()
     words = base.build_final_words()
     manifest = base.load_manifest()
 
@@ -88,7 +89,7 @@ def main():
     voice_accent = labels.get("accent") or voice_meta.get("accent") or "unknown"
 
     problems = (
-        len(words) != base.TOTAL
+        len(cards) != base.TOTAL
         or missing_manifest
         or missing_files
         or small_files
@@ -98,8 +99,9 @@ def main():
     )
 
     lines = [
-        f"Deck words: {len(words)}",
-        f"Manifest entries for deck: {sum(1 for w in words if w in manifest)}",
+        f"Deck cards: {len(cards)}",
+        f"Unique primary audio forms: {len(words)}",
+        f"Manifest entries for v5 forms: {sum(1 for w in words if w in manifest)}",
         f"Natural MP3 files on disk: {len(actual_mp3s)}",
         f"Missing manifest entries: {len(missing_manifest)}",
         f"Missing files: {len(missing_files)}",
@@ -116,8 +118,8 @@ def main():
 
     if problems:
         lines.append("Audio integrity/quality audit FAILED")
-        if len(words) != base.TOTAL:
-            lines.append(f"Deck size mismatch: {len(words)} != {base.TOTAL}")
+        if len(cards) != base.TOTAL:
+            lines.append(f"Deck size mismatch: {len(cards)} != {base.TOTAL}")
         if missing_manifest:
             lines.append("Missing manifest words: " + ", ".join(missing_manifest[:20]))
         if missing_files:
@@ -135,7 +137,7 @@ def main():
             )
     else:
         lines.append(
-            "Audio integrity/quality audit PASSED: all 2000 deck words have distinct, valid MP3 files generated with a verified native Persian voice."
+            f"Audio integrity/quality audit PASSED: all {len(words)} unique v5 primary forms have valid MP3 files generated with a verified native Persian voice."
         )
         if extra_manifest:
             lines.append(f"Note: {len(extra_manifest)} extra manifest entries are not in the current 2000-word deck.")
