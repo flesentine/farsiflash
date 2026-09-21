@@ -13,7 +13,7 @@ manifest = base.load_manifest()
 
 assert len(cards) == 2000, f"expected 2000 v5 cards, found {len(cards)}"
 assert len(words) == len(set(words)), "audio forms must be unique"
-assert len(words) == 1999, f"expected 1999 unique v5 primary forms (one repeated زن), found {len(words)}"
+assert len(words) == len({str(card.get("fa") or "").strip() for card in cards}), "unique audio forms must match unique v5 primary Persian forms"
 assert "خوشوقتم" in words, "nice-to-meet-you v5 form must be included in audio source"
 assert "سلام" in words, "core v5 form سلام missing from audio source"
 
