@@ -8,11 +8,7 @@ on:
     paths:
       - "audio/natural/**"
       - "data/audio-manifest.js"
-      - "data/v5-deck.js"
       - "data/elevenlabs-voice.json"
-      - "tools/build_natural_audio.py"
-      - "tools/audit_audio.py"
-      - ".github/workflows/audit-audio.yml"
 
 permissions:
   contents: write
