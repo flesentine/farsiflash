@@ -36,12 +36,26 @@ jobs:
         run: python tools/build_dilara_audio.py
       - name: Audit full v5 Persian audio set
         run: python tools/audit_audio.py
+      - name: Bust browser audio-manifest cache
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os, re
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          version = "audio-v5-" + os.environ.get("GITHUB_SHA", "local")[:10]
+          s, n = re.subn(r'data/audio-manifest\.js\?v=[^"<]+', f'data/audio-manifest.js?v={version}', s, count=1)
+          if n != 1:
+              raise SystemExit("audio manifest cache key not found")
+          p.write_text(s, encoding="utf-8")
+          PY
       - name: Commit verified Dilara audio
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json data/audio-quality-lock.js data/audio-audit.txt
+          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json data/audio-quality-lock.js data/audio-audit.txt index.html
           if git diff --cached --quiet; then
             echo "Dilara audio already current."
             exit 0
