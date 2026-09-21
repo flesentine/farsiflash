@@ -3,15 +3,12 @@ name: Audit Persian audio integrity
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - "audio/natural/**"
       - "data/audio-manifest.js"
-      - "data/path.js"
-      - "data/miller-*.js"
       - "data/elevenlabs-voice.json"
-      - "tools/build_natural_audio.py"
-      - "tools/audit_audio.py"
-      - ".github/workflows/audit-audio.yml"
 
 permissions:
   contents: write
@@ -27,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Audit all 2000 natural pronunciations
+      - name: Audit all v5 natural pronunciations
         id: audit
         run: python tools/audit_audio.py
       - name: Record audit outcome

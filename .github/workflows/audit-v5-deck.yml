@@ -22,6 +22,10 @@ on:
       - 'index.html'
       - 'data/responsive-ui.js'
       - 'tools/audit-card-text-fit.mjs'
+      - 'tools/audit_v5_audio_source.py'
+      - 'tools/build_natural_audio.py'
+      - 'tools/build_dilara_audio.py'
+      - 'tools/audit_audio.py'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -44,6 +48,10 @@ on:
       - 'index.html'
       - 'data/responsive-ui.js'
       - 'tools/audit-card-text-fit.mjs'
+      - 'tools/audit_v5_audio_source.py'
+      - 'tools/build_natural_audio.py'
+      - 'tools/build_dilara_audio.py'
+      - 'tools/audit_audio.py'
       - 'tools/audit-miller-source.mjs'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
@@ -83,6 +91,10 @@ jobs:
         run: node --check data/responsive-ui.js
       - name: Audit card text fitting
         run: node tools/audit-card-text-fit.mjs
+      - name: Check v5 audio Python syntax
+        run: python -m py_compile tools/build_natural_audio.py tools/build_dilara_audio.py tools/audit_audio.py tools/audit_v5_audio_source.py
+      - name: Audit v5 audio source
+        run: python tools/audit_v5_audio_source.py
       - name: Audit v5 learner Romanization
         run: node tools/audit-v5-romanization.mjs
       - name: Audit and normalize Miller source spellings

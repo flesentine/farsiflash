@@ -42,7 +42,7 @@ def write_manifest(words):
     base.MANIFEST.write_text(first + (tail + "\n" if tail else ""), encoding="utf-8")
 
 
-def write_verified_metadata():
+def write_verified_metadata(card_count, audio_form_count):
     meta = {
         "voice_id": VOICE,
         "name": "Microsoft Dilara Neural",
@@ -57,7 +57,8 @@ def write_verified_metadata():
             "gender": "female",
         },
         "rate": RATE,
-        "deck_words": base.TOTAL,
+        "deck_cards": card_count,
+        "audio_forms": audio_form_count,
     }
     base.VOICE_META.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -78,6 +79,9 @@ def unlock_audio():
 async def synth_one(sem, index, total, word):
     dest = base.AUDIO_DIR / base.filename_for(word)
     tmp = dest.with_suffix(".tmp.mp3")
+    if dest.exists() and dest.stat().st_size >= 1000:
+        print(f"[{index:04d}/{total}] reuse {word}")
+        return
     async with sem:
         last = None
         for attempt in range(1, MAX_ATTEMPTS + 1):
@@ -107,9 +111,10 @@ async def synth_one(sem, index, total, word):
 
 
 async def main_async():
+    cards = base.load_v5_cards()
     words = base.build_final_words()
-    if len(words) != base.TOTAL:
-        raise RuntimeError(f"Expected {base.TOTAL} words, got {len(words)}")
+    if len(cards) != base.TOTAL:
+        raise RuntimeError(f"Expected {base.TOTAL} v5 cards, got {len(cards)}")
 
     base.AUDIO_DIR.mkdir(parents=True, exist_ok=True)
     sem = asyncio.Semaphore(CONCURRENCY)
@@ -121,10 +126,11 @@ async def main_async():
         raise RuntimeError(f"{len(failures)} Dilara pronunciations failed; audio remains quarantined. {examples}")
 
     write_manifest(words)
-    write_verified_metadata()
+    write_verified_metadata(len(cards), len(words))
     unlock_audio()
-    rebuild_bundle()
-    print(f"Dilara rebuild complete: {len(words)}/{base.TOTAL} Persian pronunciations")
+    # write_manifest preserves the existing UI bundle after the first manifest
+    # line. Do not rebuild a reduced bundle here.
+    print(f"Dilara v5 rebuild complete: {len(words)} unique Persian pronunciations for {len(cards)} cards")
 
 
 def main():
