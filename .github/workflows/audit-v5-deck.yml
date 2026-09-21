@@ -23,6 +23,8 @@ on:
       - 'data/responsive-ui.js'
       - 'tools/audit-card-text-fit.mjs'
       - 'tools/audit_v5_audio_source.py'
+      - 'data/memory-engine.js'
+      - 'tools/audit-known-count.mjs'
       - 'tools/build_natural_audio.py'
       - 'tools/build_dilara_audio.py'
       - 'tools/audit_audio.py'
@@ -49,6 +51,8 @@ on:
       - 'data/responsive-ui.js'
       - 'tools/audit-card-text-fit.mjs'
       - 'tools/audit_v5_audio_source.py'
+      - 'data/memory-engine.js'
+      - 'tools/audit-known-count.mjs'
       - 'tools/build_natural_audio.py'
       - 'tools/build_dilara_audio.py'
       - 'tools/audit_audio.py'
@@ -95,6 +99,10 @@ jobs:
         run: python -m py_compile tools/build_natural_audio.py tools/build_dilara_audio.py tools/audit_audio.py tools/audit_v5_audio_source.py
       - name: Audit v5 audio source
         run: python tools/audit_v5_audio_source.py
+      - name: Check memory engine syntax
+        run: node --check data/memory-engine.js
+      - name: Audit v5 known count
+        run: node tools/audit-known-count.mjs
       - name: Audit v5 learner Romanization
         run: node tools/audit-v5-romanization.mjs
       - name: Audit and normalize Miller source spellings
