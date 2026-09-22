@@ -53,6 +53,18 @@ need(memory,'if(m.state===State.Review)known++;','Review state known threshold')
 need(memory,'else learning++;','learning/relearning counter');
 need(memory,'left:TOTAL-known-learning','partitioned remaining count');
 
+// New-card pacing is a real daily cap, not a replenishing 24-card window.
+need(memory,'const DAILY_NEW_LIMIT=24;','24-card daily introduction limit');
+need(memory,'function introducedTodayIds(now=Date.now())','daily introduction accounting');
+need(memory,'row[5]!==null','first-review-only introduction detection');
+need(memory,'function dailyNewSlots(now=Date.now())','remaining daily introduction slots');
+need(memory,'const newSlots=dailyNewSlots(now);','deck uses daily introduction slots');
+need(memory,'unseen.length&&newSlots>0','new cards stop when daily slots are exhausted');
+need(memory,'.slice(0,Math.min(DAILY_NEW_LIMIT,newSlots))','new-card batch respects remaining daily slots');
+need(memory,'newToday:introducedTodayIds().size','daily introduction debug count');
+need(memory,'newRemainingToday:dailyNewSlots()','daily remaining debug count');
+forbid(memory,'const REVIEW_CHUNK=24;','replenishing 24-card window');
+
 // Examples are present, answer-side only, and bundled.
 need(examples,'window.__farsiExamplesUiV1=true','example UI guard');
 need(examples,'body.english-first .example-front','EN→FA examples only on revealed front');
@@ -91,4 +103,4 @@ if(errors.length){
   console.error(`\nV5 learning UX audit failed: ${errors.length} issue(s)`);
   process.exit(1);
 }
-console.log('V5 learning UX audit passed: stable-ID FSRS+sync, separate learning count, and answer-side examples are all wired.');
+console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily new-card pacing, separate learning count, and answer-side examples are all wired.');
