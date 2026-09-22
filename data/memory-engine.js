@@ -60,7 +60,13 @@
     return state;
   }
 
-  function idsForForm(value){
+  function idsForPrimaryForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    return D.filter(card=>normalizeFa(card.fa)===target).map(card=>card.id);
+  }
+
+  function idsForAnyForm(value){
     const target=normalizeFa(value);
     if(!target)return [];
     const out=[];
@@ -78,7 +84,7 @@
   function idsForLegacyToken(value){
     const token=String(value||"");
     if(D.some(card=>card.id===token))return [token];
-    return idsForForm(token);
+    return idsForAnyForm(token);
   }
 
   function splitLegacyKey(key){
@@ -118,7 +124,7 @@
 
     for(const [legacyKey,stored] of Object.entries(old.cards)){
       const {entity,dir}=splitLegacyKey(legacyKey);
-      for(const id of idsForForm(entity)){
+      for(const id of idsForPrimaryForm(entity)){
         const nextKey=keyFor(id,dir);
         const prior=next.cards[nextKey];
         if(!prior){
@@ -133,7 +139,7 @@
 
     for(const row of old.logs){
       if(!Array.isArray(row)||!row[1])continue;
-      const ids=idsForForm(row[1]);
+      const ids=idsForPrimaryForm(row[1]);
       for(const id of ids){
         const copy=clone(row);
         copy[1]=id;
@@ -144,7 +150,7 @@
     if(next.logs.length>MAX_LOGS)next.logs=next.logs.slice(-MAX_LOGS);
 
     for(const [form,value] of Object.entries(old.reverseProgress)){
-      for(const id of idsForForm(form)){
+      for(const id of idsForPrimaryForm(form)){
         next.reverseProgress[id]=Math.max(Number(next.reverseProgress[id])||0,Number(value)||0);
       }
     }
