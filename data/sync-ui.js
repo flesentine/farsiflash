@@ -45,19 +45,10 @@
     .trim();
   const memoryKey=(id,dir="fa")=>`${id}${KEY_SEP}${dir}`;
 
-  function idsForForm(value){
+  function idsForPrimaryForm(value){
     const target=normalizeFa(value);
     if(!target)return [];
-    const out=[];
-    const seen=new Set();
-    for(const card of D){
-      for(const form of [card.fa,card.spokenFa,card.formalFa]){
-        if(normalizeFa(form)!==target)continue;
-        if(!seen.has(card.id)){seen.add(card.id);out.push(card.id)}
-        break;
-      }
-    }
-    return out;
+    return D.filter(card=>normalizeFa(card.fa)===target).map(card=>card.id);
   }
 
   function splitLegacyMemoryKey(key){
@@ -85,7 +76,7 @@
 
     for(const [legacyKey,stored] of Object.entries(memory.cards||{})){
       const {entity,dir}=splitLegacyMemoryKey(legacyKey);
-      for(const id of idsForForm(entity)){
+      for(const id of idsForPrimaryForm(entity)){
         const key=memoryKey(id,dir);
         const prior=out.cards[key];
         if(!prior){out.cards[key]=clone(stored);continue}
@@ -96,7 +87,7 @@
 
     for(const row of memory.logs||[]){
       if(!Array.isArray(row)||!row[1])continue;
-      for(const id of idsForForm(row[1])){
+      for(const id of idsForPrimaryForm(row[1])){
         const copy=clone(row);
         copy[1]=id;
         out.logs.push(copy);
@@ -106,7 +97,7 @@
     out.logs=out.logs.slice(-30000);
 
     for(const [form,value] of Object.entries(memory.reverseProgress||{})){
-      for(const id of idsForForm(form)){
+      for(const id of idsForPrimaryForm(form)){
         out.reverseProgress[id]=Math.max(Number(out.reverseProgress[id])||0,Number(value)||0);
       }
     }
