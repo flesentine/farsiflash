@@ -56,7 +56,7 @@ const OLD_D=(window.FARSI_CHUNKS||[]).flat();
 const STATIC_D=(window.FARSI_MILLER_CHUNKS||[]).flat();
 window.FARSI_CHUNKS=[];window.FARSI_MILLER_CHUNKS=[];
 const V5=window.FARSI_V5_DECK||[];
-const TOTAL=2000,STATE_KEY="farsi2000-v5",V4_STATE_KEY="farsi2000-v4",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
+const TOTAL=2000,FSRS_STATE_KEY="farsi2000-v5",FALLBACK_STATE_KEY="farsi2000-v5-fallback",V4_STATE_KEY="farsi2000-v4",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
 const $=id=>document.getElementById(id);
 const E={main:$("main"),stageName:$("stageName"),known:$("known"),learning:$("learning"),leftCount:$("leftCount"),reset:$("reset"),fullscreen:$("fullscreen"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
 const CURRICULUM=window.FARSI_PATH||[],AUDIO=window.FARSI_AUDIO||{};
@@ -76,8 +76,18 @@ function legacyFa(raw){if(typeof raw==="string"&&!/^\d+$/.test(raw))return raw;c
 function idForLegacy(raw){const fa=legacyFa(raw);return fa?V5_BY_FORM.get(baseFa(fa))||null:null}
 function mapLegacyObject(source){const out={};for(const [raw,value] of Object.entries(source||{})){const id=idForLegacy(raw);if(id)out[id]=value}return out}
 function migrateState(){
-  const v5=parseJSON(localStorage.getItem(STATE_KEY),null);
-  if(v5&&Array.isArray(v5.known)){K=new Set(v5.known);miss=v5.miss||{};review=v5.review||{};due=v5.due||{};steps=Number(v5.steps)||0;return}
+  const fallback=parseJSON(localStorage.getItem(FALLBACK_STATE_KEY),null);
+  if(fallback&&Array.isArray(fallback.known)){K=new Set(fallback.known);miss=fallback.miss||{};review=fallback.review||{};due=fallback.due||{};steps=Number(fallback.steps)||0;return}
+
+  // A pre-FSRS v5 state may still use the old {known,review,...} shape.
+  // Read it for fallback display, but never overwrite the FSRS-owned key.
+  const legacyV5=parseJSON(localStorage.getItem(FSRS_STATE_KEY),null);
+  if(legacyV5&&Array.isArray(legacyV5.known)){
+    K=new Set(legacyV5.known);miss=legacyV5.miss||{};review=legacyV5.review||{};due=legacyV5.due||{};steps=Number(legacyV5.steps)||0;
+    save();
+    return;
+  }
+
   let old=parseJSON(localStorage.getItem(V4_STATE_KEY),null);
   if(!old){for(const key of OLD_KEYS){const x=parseJSON(localStorage.getItem(key),null);if(x){old=x;break}}}
   const knownIds=[];
@@ -85,7 +95,7 @@ function migrateState(){
   else if(old&&Array.isArray(old.known)){for(const raw of old.known){const id=idForLegacy(raw);if(id)knownIds.push(id)}miss=mapLegacyObject(old.miss);review=mapLegacyObject(old.review);due=mapLegacyObject(old.due);steps=Number(old.steps)||0}
   K=new Set(knownIds);save()
 }
-function save(){localStorage.setItem(STATE_KEY,JSON.stringify({known:[...K],miss,review,due,steps}))}
+function save(){localStorage.setItem(FALLBACK_STATE_KEY,JSON.stringify({known:[...K],miss,review,due,steps}))}
 function gapFor(level){const bands=[[18,28],[40,60],[75,110],[120,170],[180,260]];const [a,b]=bands[Math.max(0,Math.min(4,(level||1)-1))];return a+Math.floor(Math.random()*(b-a+1))}
 function shuffle(a){for(let n=a.length-1;n>0;n--){const j=Math.floor(Math.random()*(n+1));[a[n],a[j]]=[a[j],a[n]]}return a}
 function makeDeck(){const unseen=D.filter(c=>!K.has(c.id));Q=[];for(let p=0;p<unseen.length;){const stage=unseen[p].stage,group=[];while(p<unseen.length&&unseen[p].stage===stage)group.push(unseen[p++]);for(let n=0;n<group.length;n+=24)Q.push(...shuffle(group.slice(n,n+24)))}for(const c of [...Q]){const copies=Math.min(miss[c.id]||0,2);for(let r=0;r<copies;r++){const first=Q.findIndex(x=>x.fa===c.fa),gap=8+Math.floor(Math.random()*25);Q.splice(Math.min(first+gap+r*7,Q.length),0,c)}}const knownCards=D.filter(c=>K.has(c.id)).sort((a,b)=>(due[a.id]||0)-(due[b.id]||0));for(const c of knownCards){const level=review[c.id]||1;if(!due[c.id])due[c.id]=steps+gapFor(level);const offset=Math.max(1,(due[c.id]||steps+1)-steps);Q.splice(Math.min(offset,Q.length),0,c)}i=0;save()}
@@ -108,7 +118,7 @@ function syncFullscreenButton(){if(!E.fullscreen)return;const active=!!document.
 choosePersianVoice();if("speechSynthesis"in window&&"onvoiceschanged"in speechSynthesis)speechSynthesis.onvoiceschanged=choosePersianVoice;
 E.again.onclick=()=>grade(false);E.knowBtn.onclick=()=>grade(true);E.undo.onclick=undo;E.fullscreen.onclick=toggleFullscreen;document.addEventListener("fullscreenchange",syncFullscreenButton);window.addEventListener("resize",syncFullscreenButton);syncFullscreenButton();
 document.onkeydown=e=>{if(e.code==="Space"||e.key==="Enter"||e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();turn()}else if(e.key==="ArrowLeft"){e.preventDefault();grade(false)}else if(e.key==="ArrowRight"){e.preventDefault();grade(true)}else if(e.key.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();speakFarsi()}else if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}};
-E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};review={};due={};steps=0;localStorage.removeItem(STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
+E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};review={};due={};steps=0;localStorage.removeItem(FALLBACK_STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
 migrateState();
 if(D.length!==TOTAL){console.error(`v5 deck has ${D.length} cards; expected ${TOTAL}`);E.main.innerHTML=`<div class="loading error"><strong>Couldn’t load the v5 word list</strong><span>Please reload. Your progress is safe.</span></div>`}else{const ids=new Set(D.map(c=>c.id));K=new Set([...K].filter(id=>ids.has(id)));const cleanMiss={};for(const [id,n] of Object.entries(miss))if(ids.has(id))cleanMiss[id]=n;miss=cleanMiss;review=Object.fromEntries(Object.entries(review).filter(([id])=>ids.has(id)));due=Object.fromEntries(Object.entries(due).filter(([id])=>ids.has(id)));save();makeDeck();render()}
 </script>
