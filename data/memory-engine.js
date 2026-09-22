@@ -81,6 +81,11 @@
     return out;
   }
 
+  function idsForMemoryForm(value){
+    const primary=idsForPrimaryForm(value);
+    return primary.length?primary:idsForAnyForm(value);
+  }
+
   function idsForLegacyToken(value){
     const token=String(value||"");
     if(D.some(card=>card.id===token))return [token];
@@ -124,7 +129,7 @@
 
     for(const [legacyKey,stored] of Object.entries(old.cards)){
       const {entity,dir}=splitLegacyKey(legacyKey);
-      for(const id of idsForPrimaryForm(entity)){
+      for(const id of idsForMemoryForm(entity)){
         const nextKey=keyFor(id,dir);
         const prior=next.cards[nextKey];
         if(!prior){
@@ -139,7 +144,7 @@
 
     for(const row of old.logs){
       if(!Array.isArray(row)||!row[1])continue;
-      const ids=idsForPrimaryForm(row[1]);
+      const ids=idsForMemoryForm(row[1]);
       for(const id of ids){
         const copy=clone(row);
         copy[1]=id;
@@ -150,7 +155,7 @@
     if(next.logs.length>MAX_LOGS)next.logs=next.logs.slice(-MAX_LOGS);
 
     for(const [form,value] of Object.entries(old.reverseProgress)){
-      for(const id of idsForPrimaryForm(form)){
+      for(const id of idsForMemoryForm(form)){
         next.reverseProgress[id]=Math.max(Number(next.reverseProgress[id])||0,Number(value)||0);
       }
     }
