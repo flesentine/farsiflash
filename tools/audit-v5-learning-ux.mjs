@@ -41,6 +41,12 @@ need(sync,'JSON.stringify(upgradeMemory(payload.memory))','upgrade cloud payload
 need(sync,'function idsForMemoryForm(value)','sync primary-first alias fallback');
 need(storage,'![5,6].includes(Number(memory.version))','history compaction supports v5 and v6');
 
+// The inline legacy fallback scheduler must never overwrite FSRS memory.
+need(index,'FSRS_STATE_KEY="farsi2000-v5"','FSRS-owned storage key');
+need(index,'FALLBACK_STATE_KEY="farsi2000-v5-fallback"','separate fallback storage key');
+need(index,'localStorage.setItem(FALLBACK_STATE_KEY','fallback writes only to fallback key');
+forbid(index,'function save(){localStorage.setItem(FSRS_STATE_KEY','fallback overwrite of FSRS memory');
+
 // Header counts keep the stricter FSRS semantic.
 need(index,'<span id="learning">0</span> learning','learning header count');
 need(memory,'if(m.state===State.Review)known++;','Review state known threshold');
