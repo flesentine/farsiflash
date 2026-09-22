@@ -40,7 +40,7 @@ ts-fsrs/dist/index.mjs:
   function compact(){
     const raw=localStorage.getItem(MEMORY_KEY);
     const memory=parse(raw);
-    if(!memory||memory.version!==5||!Array.isArray(memory.logs))return false;
+    if(!memory||![5,6].includes(Number(memory.version))||!Array.isArray(memory.logs))return false;
     if(memory.logs.length<=MAX_LOGS&&raw.length<=TARGET_CHARS)return false;
 
     let keep=Math.min(memory.logs.length,MAX_LOGS);
@@ -187,6 +187,9 @@ ts-fsrs/dist/index.mjs:
   const STATE_KEY_V5="farsi2000-v5";
   const LEGACY_KEY="farsi2000-v4";
   const DIR_PREF="farsi2000-direction";
+  const MEMORY_VERSION=6;
+  const KEY_MODE="id";
+  const KEY_SEP="\u241f";
   const MAX_LOGS=30000;
   const REVIEW_CHUNK=24;
   const AUTO_REVERSE_GOODS=4;
@@ -200,7 +203,14 @@ ts-fsrs/dist/index.mjs:
   const parse=(raw,fallback)=>{try{return JSON.parse(raw)}catch{return fallback}};
   const dirNow=()=>localStorage.getItem(DIR_PREF)==="en"?"en":"fa";
   const activeDirNow=()=>window.FARSI_ACTIVE_DIRECTION==="en"?"en":dirNow();
-  const keyFor=(fa,dir=dirNow())=>`${fa}\u241f${dir}`;
+  const keyFor=(id,dir=dirNow())=>`${id}${KEY_SEP}${dir}`;
+  const normalizeFa=value=>String(value||"")
+    .normalize("NFC")
+    .replace(/[\u064B-\u0652\u0670]/g,"")
+    .replace(/\u200c/g,"")
+    .replace(/ي/g,"ی")
+    .replace(/ك/g,"ک")
+    .trim();
   const asMs=v=>{const n=Date.parse(v);return Number.isFinite(n)?n:Infinity};
   const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
   const hasOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
@@ -224,59 +234,187 @@ ts-fsrs/dist/index.mjs:
 
   function normalizeMemory(state){
     if(!state.reverseProgress||typeof state.reverseProgress!=="object"||Array.isArray(state.reverseProgress))state.reverseProgress={};
+    if(!Array.isArray(state.logs))state.logs=[];
+    if(!state.cards||typeof state.cards!=="object"||Array.isArray(state.cards))state.cards={};
     return state;
+  }
+
+  function idsForPrimaryForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    return D.filter(card=>normalizeFa(card.fa)===target).map(card=>card.id);
+  }
+
+  function idsForAnyForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    const out=[];
+    const seen=new Set();
+    for(const card of D){
+      for(const form of [card.fa,card.spokenFa,card.formalFa]){
+        if(normalizeFa(form)!==target)continue;
+        if(!seen.has(card.id)){seen.add(card.id);out.push(card.id)}
+        break;
+      }
+    }
+    return out;
+  }
+
+  function idsForMemoryForm(value){
+    const primary=idsForPrimaryForm(value);
+    return primary.length?primary:idsForAnyForm(value);
+  }
+
+  function idsForLegacyToken(value){
+    const token=String(value||"");
+    if(D.some(card=>card.id===token))return [token];
+    return idsForAnyForm(token);
+  }
+
+  function splitLegacyKey(key){
+    const raw=String(key||"");
+    const at=raw.lastIndexOf(KEY_SEP);
+    if(at<0)return {entity:raw,dir:"fa"};
+    return {entity:raw.slice(0,at),dir:raw.slice(at+KEY_SEP.length)||"fa"};
+  }
+
+  function makeReviewCard(State,days,now){
+    return serializeCard({
+      due:new Date(now+days*(.72+Math.random()*.42)*86400000),
+      stability:days,
+      difficulty:5,
+      elapsed_days:0,
+      scheduled_days:days,
+      reps:Math.max(2,days>=30?6:days>=14?5:days>=7?4:days>=3?3:2),
+      lapses:0,
+      learning_steps:0,
+      state:State.Review,
+      last_review:new Date(now),
+    });
+  }
+
+  function upgradeFsrsV5(state){
+    const old=normalizeMemory(clone(state));
+    const next={
+      ...old,
+      version:MEMORY_VERSION,
+      keyMode:KEY_MODE,
+      cards:{},
+      logs:[],
+      reverseProgress:{},
+      migratedKeySchemaFrom:"fa",
+      migratedKeySchemaAt:new Date().toISOString(),
+    };
+
+    for(const [legacyKey,stored] of Object.entries(old.cards)){
+      const {entity,dir}=splitLegacyKey(legacyKey);
+      for(const id of idsForMemoryForm(entity)){
+        const nextKey=keyFor(id,dir);
+        const prior=next.cards[nextKey];
+        if(!prior){
+          next.cards[nextKey]=clone(stored);
+          continue;
+        }
+        const priorTime=Date.parse(prior.last_review||"")||0;
+        const storedTime=Date.parse(stored?.last_review||"")||0;
+        if(storedTime>priorTime)next.cards[nextKey]=clone(stored);
+      }
+    }
+
+    for(const row of old.logs){
+      if(!Array.isArray(row)||!row[1])continue;
+      const ids=idsForMemoryForm(row[1]);
+      for(const id of ids){
+        const copy=clone(row);
+        copy[1]=id;
+        next.logs.push(copy);
+      }
+    }
+    next.logs.sort((a,b)=>(Number(a?.[0])||0)-(Number(b?.[0])||0));
+    if(next.logs.length>MAX_LOGS)next.logs=next.logs.slice(-MAX_LOGS);
+
+    for(const [form,value] of Object.entries(old.reverseProgress)){
+      for(const id of idsForMemoryForm(form)){
+        next.reverseProgress[id]=Math.max(Number(next.reverseProgress[id])||0,Number(value)||0);
+      }
+    }
+    return normalizeMemory(next);
+  }
+
+  function migrateKnownState(source,State,sourceName){
+    const now=Date.now();
+    const intervals=[1,3,7,14,30];
+    const next={
+      version:MEMORY_VERSION,
+      keyMode:KEY_MODE,
+      cards:{},
+      logs:[],
+      reverseProgress:{},
+      createdAt:new Date(now).toISOString(),
+      migratedFrom:sourceName,
+      migratedAt:new Date(now).toISOString(),
+    };
+    const oldReview=source?.review||{};
+    for(const token of source?.known||[]){
+      const ids=idsForLegacyToken(token);
+      const level=Math.max(1,Math.min(5,Number(oldReview[token])||1));
+      const days=intervals[level-1];
+      for(const id of ids)next.cards[keyFor(id,"fa")]=makeReviewCard(State,days,now);
+    }
+    return next;
   }
 
   function saveMemory(){
     if(!memState)return;
     normalizeMemory(memState);
+    memState.version=MEMORY_VERSION;
+    memState.keyMode=KEY_MODE;
     if(memState.logs.length>MAX_LOGS)memState.logs=memState.logs.slice(-MAX_LOGS);
     localStorage.setItem(STATE_KEY_V5,JSON.stringify(memState));
   }
 
   function migrateLegacy(State){
     const existing=parse(localStorage.getItem(STATE_KEY_V5),null);
-    if(existing&&existing.version===5&&existing.cards&&Array.isArray(existing.logs))return normalizeMemory(existing);
-
-    const now=Date.now();
-    const next={version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date(now).toISOString(),migratedFrom:null};
-    const old=parse(localStorage.getItem(LEGACY_KEY),null);
-    if(old&&Array.isArray(old.known)){
-      const oldReview=old.review||{};
-      const intervals=[1,3,7,14,30];
-      for(const fa of old.known){
-        const level=Math.max(1,Math.min(5,Number(oldReview[fa])||1));
-        const days=intervals[level-1];
-        const jitter=.72+Math.random()*.42;
-        const due=new Date(now+days*jitter*86400000);
-        next.cards[keyFor(fa,"fa")]=serializeCard({
-          due,
-          stability:days,
-          difficulty:5,
-          elapsed_days:0,
-          scheduled_days:days,
-          reps:Math.max(2,level+1),
-          lapses:0,
-          learning_steps:0,
-          state:State.Review,
-          last_review:new Date(now),
-        });
-      }
-      next.migratedFrom="farsi2000-v4";
-      next.migratedAt=new Date(now).toISOString();
+    if(existing&&existing.version===MEMORY_VERSION&&existing.keyMode===KEY_MODE&&existing.cards&&Array.isArray(existing.logs)){
+      return normalizeMemory(existing);
     }
+
+    if(existing&&existing.version===5&&existing.cards&&Array.isArray(existing.logs)){
+      const upgraded=upgradeFsrsV5(existing);
+      localStorage.setItem(STATE_KEY_V5,JSON.stringify(upgraded));
+      return upgraded;
+    }
+
+    if(existing&&Array.isArray(existing.known)){
+      const migrated=migrateKnownState(existing,State,"farsi2000-v5-legacy");
+      localStorage.setItem(STATE_KEY_V5,JSON.stringify(migrated));
+      return migrated;
+    }
+
+    const old=parse(localStorage.getItem(LEGACY_KEY),null);
+    const next=old&&Array.isArray(old.known)
+      ?migrateKnownState(old,State,"farsi2000-v4")
+      :{
+          version:MEMORY_VERSION,
+          keyMode:KEY_MODE,
+          cards:{},
+          logs:[],
+          reverseProgress:{},
+          createdAt:new Date().toISOString(),
+          migratedFrom:null,
+        };
     localStorage.setItem(STATE_KEY_V5,JSON.stringify(next));
     return next;
   }
 
   function cardState(c,dir=dirNow()){
-    return memState.cards[keyFor(c.fa,dir)]||null;
+    return memState.cards[keyFor(c.id,dir)]||null;
   }
 
   function progressFor(c){
     normalizeMemory(memState);
-    if(hasOwn(memState.reverseProgress,c.fa)){
-      const n=Number(memState.reverseProgress[c.fa])||0;
+    if(hasOwn(memState.reverseProgress,c.id)){
+      const n=Number(memState.reverseProgress[c.id])||0;
       return Math.max(0,Math.min(AUTO_REVERSE_GOODS,n));
     }
 
@@ -286,7 +424,7 @@ ts-fsrs/dist/index.mjs:
     let streak=0;
     for(let n=memState.logs.length-1;n>=0;n--){
       const row=memState.logs[n];
-      if(!Array.isArray(row)||row[1]!==c.fa||row[2]!=="fa")continue;
+      if(!Array.isArray(row)||row[1]!==c.id||row[2]!=="fa")continue;
       const mode=row[10]||"normal";
       if(mode==="reverse"){
         streak=row[3]==="again"?AUTO_REVERSE_GOODS:0;
@@ -300,8 +438,8 @@ ts-fsrs/dist/index.mjs:
         break;
       }
     }
-    memState.reverseProgress[c.fa]=Math.min(AUTO_REVERSE_GOODS,streak);
-    return memState.reverseProgress[c.fa];
+    memState.reverseProgress[c.id]=Math.min(AUTO_REVERSE_GOODS,streak);
+    return memState.reverseProgress[c.id];
   }
 
   function knownIds(State,dir=dirNow()){
@@ -371,11 +509,15 @@ ts-fsrs/dist/index.mjs:
 
   function counts(State){
     const d=dirNow();
-    const knownSet=knownIds(State,d);
-    let seen=0;
-    for(const c of D)if(cardState(c,d))seen++;
-    const known=knownSet.size;
-    return {known,seen,left:TOTAL-known};
+    let known=0,learning=0,seen=0;
+    for(const c of D){
+      const m=cardState(c,d);
+      if(!m)continue;
+      seen++;
+      if(m.state===State.Review)known++;
+      else learning++;
+    }
+    return {known,learning,seen,left:TOTAL-known-learning};
   }
 
   function nextDueText(){
@@ -410,7 +552,7 @@ ts-fsrs/dist/index.mjs:
 
   function compactLog(c,dir,rating,responseMs,before,next,retrievability,mode="normal"){
     memState.logs.push([
-      Date.now(),c.fa,dir,rating,Math.round(responseMs),
+      Date.now(),c.id,dir,rating,Math.round(responseMs),
       before?.due||null,next.due,
       Number(next.stability||0),Number(next.difficulty||0),
       Number.isFinite(retrievability)?Number(retrievability.toFixed(4)):null,
@@ -450,6 +592,7 @@ ts-fsrs/dist/index.mjs:
           E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><p>${nextDueText()||"No review is due right now."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
+          E.learning.textContent=n.learning;
           E.leftCount.textContent=n.left;
           shownAt=performance.now();
           return;
@@ -468,6 +611,7 @@ ts-fsrs/dist/index.mjs:
       if(autoReverse&&c)E.stageName.textContent=`${c.stage} · Recall Farsi`;
       const n=counts(State);
       E.known.textContent=n.known;
+      E.learning.textContent=n.learning;
       E.leftCount.textContent=n.left;
       shownAt=performance.now();
     };
@@ -478,11 +622,11 @@ ts-fsrs/dist/index.mjs:
       if(!c)return;
       const dir=dirNow();
       const autoReverse=dir==="fa"&&!!c._autoReverse;
-      const k=keyFor(c.fa,dir);
+      const k=keyFor(c.id,dir);
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
-      const hadReverseProgress=hasOwn(memState.reverseProgress,c.fa);
-      const oldReverseProgress=hadReverseProgress?memState.reverseProgress[c.fa]:undefined;
+      const hadReverseProgress=hasOwn(memState.reverseProgress,c.id);
+      const oldReverseProgress=hadReverseProgress?memState.reverseProgress[c.id]:undefined;
       const progressBefore=dir==="fa"?progressFor(c):0;
       const responseMs=Math.max(0,performance.now()-shownAt);
       grading=true;
@@ -500,9 +644,9 @@ ts-fsrs/dist/index.mjs:
           if(autoReverse){
             // Passing the harder production test resets the recognition streak.
             // Failing keeps reverse recall armed for the next FSRS retry.
-            memState.reverseProgress[c.fa]=know?0:AUTO_REVERSE_GOODS;
+            memState.reverseProgress[c.id]=know?0:AUTO_REVERSE_GOODS;
           }else{
-            memState.reverseProgress[c.fa]=know
+            memState.reverseProgress[c.id]=know
               ?Math.min(AUTO_REVERSE_GOODS,progressBefore+1)
               :0;
           }
@@ -537,13 +681,13 @@ ts-fsrs/dist/index.mjs:
       if(u.oldStored)memState.cards[u.key]=u.oldStored;else delete memState.cards[u.key];
       memState.logs.length=u.oldLogLen;
       if(u.dir==="fa"){
-        if(u.hadReverseProgress)memState.reverseProgress[u.card.fa]=u.oldReverseProgress;
-        else delete memState.reverseProgress[u.card.fa];
+        if(u.hadReverseProgress)memState.reverseProgress[u.card.id]=u.oldReverseProgress;
+        else delete memState.reverseProgress[u.card.id];
       }
       saveMemory();
       localStorage.setItem(DIR_PREF,u.dir);
       makeDeck();
-      Q=Q.filter(x=>x.fa!==u.card.fa);
+      Q=Q.filter(x=>x.id!==u.card.id);
       Q.unshift(u.card);
       i=0;
       memoryLast=null;
@@ -553,7 +697,7 @@ ts-fsrs/dist/index.mjs:
 
     E.reset.onclick=()=>{
       if(!confirm("Reset all progress?"))return;
-      memState={version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
+      memState={version:MEMORY_VERSION,keyMode:KEY_MODE,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
       localStorage.setItem(STATE_KEY_V5,JSON.stringify(memState));
       localStorage.removeItem("farsi2000-v4");
       localStorage.removeItem("farsi2000-v3");
@@ -1022,6 +1166,127 @@ ts-fsrs/dist/index.mjs:
       localStorage.setItem(PHON_PREF,hidePhonetics?"1":"0");
       syncPhonetics(phoneticsBtn);
     };
+  });
+})();
+// Show the v5 example trio only on the revealed answer side.
+// FA→EN: examples live on the meaning/back face.
+// EN→FA: examples live on the Persian/front face after reveal.
+(()=>{
+  if(window.__farsiExamplesUiV1)return;
+  window.__farsiExamplesUiV1=true;
+
+  const STYLE_ID="farsiExampleStylesV1";
+
+  function installStyles(){
+    if(document.getElementById(STYLE_ID))return;
+    const style=document.createElement("style");
+    style.id=STYLE_ID;
+    style.textContent=`
+      .example-block{
+        position:absolute;
+        left:24px;
+        right:24px;
+        display:none;
+        text-align:center;
+        pointer-events:none;
+        color:#7d766d;
+        line-height:1.35;
+        overflow-wrap:normal;
+        word-break:normal;
+        hyphens:none;
+      }
+      .example-front{bottom:24px}
+      .example-back{bottom:78px}
+      body.english-first .example-front,
+      body.farsi-first .example-back{display:block}
+      body.english-first .face:not(.back).example-ready{padding-bottom:158px}
+      body.farsi-first .face.back.example-ready{padding-bottom:184px}
+      .example-fa{
+        font-family:Tahoma,"Geeza Pro","Noto Naskh Arabic",sans-serif;
+        direction:rtl;
+        font-size:19px;
+        color:#5f5951;
+      }
+      .example-roman{
+        margin-top:3px;
+        font-size:13px;
+        font-weight:650;
+        color:#8a8379;
+      }
+      .example-en{
+        margin-top:3px;
+        font-size:13px;
+        color:#8a8379;
+      }
+      body.hide-phonetics .example-roman{display:none}
+      @media(max-width:430px){
+        .example-block{left:18px;right:18px}
+        .example-front{bottom:18px}
+        .example-back{bottom:70px}
+        body.english-first .face:not(.back).example-ready{padding-bottom:142px}
+        body.farsi-first .face.back.example-ready{padding-bottom:168px}
+        .example-fa{font-size:17px}
+        .example-roman,.example-en{font-size:12px}
+      }
+      @media(max-height:620px){
+        .example-fa{font-size:16px}
+        .example-roman,.example-en{font-size:11px}
+        body.english-first .face:not(.back).example-ready{padding-bottom:132px}
+        body.farsi-first .face.back.example-ready{padding-bottom:154px}
+      }
+      @media(prefers-color-scheme:dark){
+        .example-block{color:#a49b90}
+        .example-fa{color:#d0c8bd}
+        .example-roman,.example-en{color:#a49b90}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureBlock(face,kind){
+    if(!face)return null;
+    let block=face.querySelector(`.example-${kind}`);
+    if(block)return block;
+    block=document.createElement("div");
+    block.className=`example-block example-${kind}`;
+    block.innerHTML='<div class="example-fa" dir="rtl"></div><div class="example-roman"></div><div class="example-en"></div>';
+    face.appendChild(block);
+    face.classList.add("example-ready");
+    return block;
+  }
+
+  function fill(block,card){
+    if(!block)return;
+    const fa=String(card?.exampleFa||"").trim();
+    const roman=String(card?.exampleRoman||"").trim();
+    const en=String(card?.exampleEn||"").trim();
+    block.querySelector(".example-fa").textContent=fa;
+    block.querySelector(".example-roman").textContent=roman;
+    block.querySelector(".example-en").textContent=en;
+    block.hidden=!(fa&&en);
+  }
+
+  function syncExamples(){
+    if(typeof E==="undefined"||!E?.card||!E.card.isConnected||!Q?.length)return;
+    const card=current();
+    if(!card)return;
+    const front=E.card.querySelector(".face:not(.back)");
+    const back=E.card.querySelector(".face.back");
+    fill(ensureBlock(front,"front"),card);
+    fill(ensureBlock(back,"back"),card);
+    requestAnimationFrame(()=>window.fitCardText?.());
+  }
+
+  window.addEventListener("load",()=>{
+    installStyles();
+    if(typeof render!=="function")return;
+    const baseRender=render;
+    render=function(){
+      const result=baseRender();
+      syncExamples();
+      return result;
+    };
+    syncExamples();
   });
 })();
 (()=>{
@@ -1647,6 +1912,9 @@ ts-fsrs/dist/index.mjs:
   const ENDPOINT="https://qifvbdwdawmuwptdxgvu.supabase.co/functions/v1/farsi-sync";
   const MEMORY_KEY="farsi2000-v5";
   const LEGACY_KEY="farsi2000-v4";
+  const MEMORY_VERSION=6;
+  const KEY_MODE="id";
+  const KEY_SEP="\u241f";
   const DIR_KEY="farsi2000-direction";
   const PHON_KEY="farsi2000-hide-phonetics";
   const SYNC_CODE_KEY="farsi2000-sync-code";
@@ -1674,6 +1942,94 @@ ts-fsrs/dist/index.mjs:
   const codeRaw=()=>String(localStorage.getItem(SYNC_CODE_KEY)||"").replace(/[^0-9a-f]/gi,"").toLowerCase();
   const validCode=code=>/^[0-9a-f]{32}$/.test(String(code||"").replace(/[^0-9a-f]/gi,"").toLowerCase());
   const formatCode=code=>String(code||"").replace(/[^0-9a-f]/gi,"").toUpperCase().match(/.{1,4}/g)?.join("-")||"";
+
+  const normalizeFa=value=>String(value||"")
+    .normalize("NFC")
+    .replace(/[\u064B-\u0652\u0670]/g,"")
+    .replace(/\u200c/g,"")
+    .replace(/ي/g,"ی")
+    .replace(/ك/g,"ک")
+    .trim();
+  const memoryKey=(id,dir="fa")=>`${id}${KEY_SEP}${dir}`;
+
+  function idsForPrimaryForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    return D.filter(card=>normalizeFa(card.fa)===target).map(card=>card.id);
+  }
+
+  function idsForAnyForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    const out=[];
+    const seen=new Set();
+    for(const card of D){
+      for(const form of [card.fa,card.spokenFa,card.formalFa]){
+        if(normalizeFa(form)!==target)continue;
+        if(!seen.has(card.id)){seen.add(card.id);out.push(card.id)}
+        break;
+      }
+    }
+    return out;
+  }
+
+  function idsForMemoryForm(value){
+    const primary=idsForPrimaryForm(value);
+    return primary.length?primary:idsForAnyForm(value);
+  }
+
+  function splitLegacyMemoryKey(key){
+    const raw=String(key||"");
+    const at=raw.lastIndexOf(KEY_SEP);
+    if(at<0)return {entity:raw,dir:"fa"};
+    return {entity:raw.slice(0,at),dir:raw.slice(at+KEY_SEP.length)||"fa"};
+  }
+
+  function upgradeMemory(memory){
+    if(!memory||typeof memory!=="object")return memory;
+    if(memory.version===MEMORY_VERSION&&memory.keyMode===KEY_MODE)return clone(memory);
+    if(memory.version!==5||!memory.cards||!Array.isArray(memory.logs))return clone(memory);
+
+    const out={
+      ...clone(memory),
+      version:MEMORY_VERSION,
+      keyMode:KEY_MODE,
+      cards:{},
+      logs:[],
+      reverseProgress:{},
+      migratedKeySchemaFrom:"fa",
+      migratedKeySchemaAt:memory.migratedKeySchemaAt||new Date().toISOString(),
+    };
+
+    for(const [legacyKey,stored] of Object.entries(memory.cards||{})){
+      const {entity,dir}=splitLegacyMemoryKey(legacyKey);
+      for(const id of idsForMemoryForm(entity)){
+        const key=memoryKey(id,dir);
+        const prior=out.cards[key];
+        if(!prior){out.cards[key]=clone(stored);continue}
+        const a=asTime(prior.last_review),b=asTime(stored?.last_review);
+        if(b>a)out.cards[key]=clone(stored);
+      }
+    }
+
+    for(const row of memory.logs||[]){
+      if(!Array.isArray(row)||!row[1])continue;
+      for(const id of idsForMemoryForm(row[1])){
+        const copy=clone(row);
+        copy[1]=id;
+        out.logs.push(copy);
+      }
+    }
+    out.logs.sort((a,b)=>(Number(a?.[0])||0)-(Number(b?.[0])||0));
+    out.logs=out.logs.slice(-30000);
+
+    for(const [form,value] of Object.entries(memory.reverseProgress||{})){
+      for(const id of idsForMemoryForm(form)){
+        out.reverseProgress[id]=Math.max(Number(out.reverseProgress[id])||0,Number(value)||0);
+      }
+    }
+    return out;
+  }
 
   function randomCode(){
     const bytes=new Uint8Array(16);
@@ -1703,11 +2059,16 @@ ts-fsrs/dist/index.mjs:
   }
 
   function localPayload(){
+    const stored=parse(localStorage.getItem(MEMORY_KEY),null);
+    const memory=upgradeMemory(stored);
+    if(stored&&memory&&JSON.stringify(stored)!==JSON.stringify(memory)){
+      localStorage.setItem(MEMORY_KEY,JSON.stringify(memory));
+    }
     return {
       version:1,
       savedAt:localUpdatedAt||Date.now(),
       resetAt:Number(localStorage.getItem(RESET_AT_KEY))||0,
-      memory:parse(localStorage.getItem(MEMORY_KEY),null),
+      memory,
       legacy:parse(localStorage.getItem(LEGACY_KEY),null),
       settings:{
         direction:localStorage.getItem(DIR_KEY)==="en"?"en":"fa",
@@ -1717,7 +2078,7 @@ ts-fsrs/dist/index.mjs:
   }
 
   function emptyMemory(){
-    return {version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
+    return {version:MEMORY_VERSION,keyMode:KEY_MODE,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
   }
 
   function latestLogTimes(memory){
@@ -1732,9 +2093,11 @@ ts-fsrs/dist/index.mjs:
 
   function mergeMemory(a,b){
     if(!a&&!b)return null;
+    a=upgradeMemory(a);
+    b=upgradeMemory(b);
     if(!a)return clone(b);
     if(!b)return clone(a);
-    if(a.version!==5||b.version!==5){
+    if(a.version!==MEMORY_VERSION||b.version!==MEMORY_VERSION||a.keyMode!==KEY_MODE||b.keyMode!==KEY_MODE){
       const at=Number(a?.logs?.at?.(-1)?.[0])||0;
       const bt=Number(b?.logs?.at?.(-1)?.[0])||0;
       return clone(at>=bt?a:b);
@@ -1814,7 +2177,7 @@ ts-fsrs/dist/index.mjs:
     if(before===after)return false;
     applying=true;
     try{
-      if(payload.memory)localStorage.setItem(MEMORY_KEY,JSON.stringify(payload.memory));
+      if(payload.memory)localStorage.setItem(MEMORY_KEY,JSON.stringify(upgradeMemory(payload.memory)));
       else localStorage.removeItem(MEMORY_KEY);
       if(payload.legacy)localStorage.setItem(LEGACY_KEY,JSON.stringify(payload.legacy));
       else localStorage.removeItem(LEGACY_KEY);
