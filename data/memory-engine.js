@@ -319,11 +319,15 @@
 
   function counts(State){
     const d=dirNow();
-    const knownSet=knownIds(State,d);
-    let seen=0;
-    for(const c of D)if(cardState(c,d))seen++;
-    const known=knownSet.size;
-    return {known,seen,left:TOTAL-known};
+    let known=0,learning=0,seen=0;
+    for(const c of D){
+      const m=cardState(c,d);
+      if(!m)continue;
+      seen++;
+      if(m.state===State.Review)known++;
+      else learning++;
+    }
+    return {known,learning,seen,left:TOTAL-known-learning};
   }
 
   function nextDueText(){
@@ -398,6 +402,7 @@
           E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><p>${nextDueText()||"No review is due right now."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
+          E.learning.textContent=n.learning;
           E.leftCount.textContent=n.left;
           shownAt=performance.now();
           return;
@@ -416,6 +421,7 @@
       if(autoReverse&&c)E.stageName.textContent=`${c.stage} · Recall Farsi`;
       const n=counts(State);
       E.known.textContent=n.known;
+      E.learning.textContent=n.learning;
       E.leftCount.textContent=n.left;
       shownAt=performance.now();
     };
