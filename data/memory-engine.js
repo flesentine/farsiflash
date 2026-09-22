@@ -223,7 +223,7 @@
 
   function progressFor(c){
     normalizeMemory(memState);
-    if(hasOwn(memState.reverseProgress,c.fa)){
+    if(hasOwn(memState.reverseProgress,c.id)){
       const n=Number(memState.reverseProgress[c.id])||0;
       return Math.max(0,Math.min(AUTO_REVERSE_GOODS,n));
     }
@@ -429,7 +429,7 @@
       const k=keyFor(c.id,dir);
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
-      const hadReverseProgress=hasOwn(memState.reverseProgress,c.fa);
+      const hadReverseProgress=hasOwn(memState.reverseProgress,c.id);
       const oldReverseProgress=hadReverseProgress?memState.reverseProgress[c.id]:undefined;
       const progressBefore=dir==="fa"?progressFor(c):0;
       const responseMs=Math.max(0,performance.now()-shownAt);
@@ -485,7 +485,7 @@
       if(u.oldStored)memState.cards[u.key]=u.oldStored;else delete memState.cards[u.key];
       memState.logs.length=u.oldLogLen;
       if(u.dir==="fa"){
-        if(u.hadReverseProgress)memState.reverseProgress[u.card.fa]=u.oldReverseProgress;
+        if(u.hadReverseProgress)memState.reverseProgress[u.card.id]=u.oldReverseProgress;
         else delete memState.reverseProgress[u.card.id];
       }
       saveMemory();
