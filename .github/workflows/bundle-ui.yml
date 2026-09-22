@@ -12,6 +12,7 @@ on:
       - "data/grade-animation-fix.js"
       - "data/audio-ui.js"
       - "data/reading-mode.js"
+      - "data/examples-ui.js"
       - "data/responsive-ui.js"
       - "data/background-ui.js"
       - "data/audio-quality-lock.js"
@@ -50,6 +51,7 @@ jobs:
               Path("data/memory-engine.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/grade-animation-fix.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/examples-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/background-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-quality-lock.js").read_text(encoding="utf-8").rstrip() + "\n",
@@ -92,6 +94,7 @@ jobs:
             data/memory-engine.js \
             data/grade-animation-fix.js \
             data/reading-mode.js \
+            data/examples-ui.js \
             data/responsive-ui.js \
             data/background-ui.js \
             data/audio-quality-lock.js \
@@ -109,6 +112,7 @@ jobs:
               "__farsiKeyboardGuardV1",
               "__farsiStorageGuardV1",
               "__farsiMemoryEngineV6",
+              "__farsiExamplesUiV1",
               "__farsiCardShellMotionV6",
               "__farsiCloudSyncV2",
           ]
