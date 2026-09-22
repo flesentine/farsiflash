@@ -51,6 +51,26 @@
     return D.filter(card=>normalizeFa(card.fa)===target).map(card=>card.id);
   }
 
+  function idsForAnyForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    const out=[];
+    const seen=new Set();
+    for(const card of D){
+      for(const form of [card.fa,card.spokenFa,card.formalFa]){
+        if(normalizeFa(form)!==target)continue;
+        if(!seen.has(card.id)){seen.add(card.id);out.push(card.id)}
+        break;
+      }
+    }
+    return out;
+  }
+
+  function idsForMemoryForm(value){
+    const primary=idsForPrimaryForm(value);
+    return primary.length?primary:idsForAnyForm(value);
+  }
+
   function splitLegacyMemoryKey(key){
     const raw=String(key||"");
     const at=raw.lastIndexOf(KEY_SEP);
@@ -76,7 +96,7 @@
 
     for(const [legacyKey,stored] of Object.entries(memory.cards||{})){
       const {entity,dir}=splitLegacyMemoryKey(legacyKey);
-      for(const id of idsForPrimaryForm(entity)){
+      for(const id of idsForMemoryForm(entity)){
         const key=memoryKey(id,dir);
         const prior=out.cards[key];
         if(!prior){out.cards[key]=clone(stored);continue}
@@ -87,7 +107,7 @@
 
     for(const row of memory.logs||[]){
       if(!Array.isArray(row)||!row[1])continue;
-      for(const id of idsForPrimaryForm(row[1])){
+      for(const id of idsForMemoryForm(row[1])){
         const copy=clone(row);
         copy[1]=id;
         out.logs.push(copy);
@@ -97,7 +117,7 @@
     out.logs=out.logs.slice(-30000);
 
     for(const [form,value] of Object.entries(memory.reverseProgress||{})){
-      for(const id of idsForPrimaryForm(form)){
+      for(const id of idsForMemoryForm(form)){
         out.reverseProgress[id]=Math.max(Number(out.reverseProgress[id])||0,Number(value)||0);
       }
     }
