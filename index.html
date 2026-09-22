@@ -40,7 +40,7 @@ main{display:grid;place-items:center;min-height:0}
 <body>
 <div class="app">
 <header>
-  <div class="progress"><span id="stageName">Start Here</span> · <span id="known">0</span> known · <span id="leftCount">2000</span> left</div>
+  <div class="progress"><span id="stageName">Start Here</span> · <span id="known">0</span> known · <span id="learning">0</span> learning · <span id="leftCount">2000</span> left</div>
   <div class="header-actions"><button class="tiny desktop-fullscreen" id="fullscreen" aria-label="Enter full screen" title="Full screen">⛶</button><a class="tiny" href="https://github.com/flesentine/farsiflash/blob/main/data/v5/README.md" target="_blank" rel="noopener" title="About the v5 curriculum">v5</a><button class="tiny" id="reset" aria-label="Reset all progress">reset</button></div>
 </header>
 <main id="main"><div class="loading"><strong>Farsi 2000 · v5</strong><span>loading…</span></div></main>
@@ -56,9 +56,9 @@ const OLD_D=(window.FARSI_CHUNKS||[]).flat();
 const STATIC_D=(window.FARSI_MILLER_CHUNKS||[]).flat();
 window.FARSI_CHUNKS=[];window.FARSI_MILLER_CHUNKS=[];
 const V5=window.FARSI_V5_DECK||[];
-const TOTAL=2000,STATE_KEY="farsi2000-v5",V4_STATE_KEY="farsi2000-v4",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
+const TOTAL=2000,FSRS_STATE_KEY="farsi2000-v5",FALLBACK_STATE_KEY="farsi2000-v5-fallback",V4_STATE_KEY="farsi2000-v4",OLD_KEYS=["farsi2000-v3","farsi2000-v2","farsi2000-v1"];
 const $=id=>document.getElementById(id);
-const E={main:$("main"),stageName:$("stageName"),known:$("known"),leftCount:$("leftCount"),reset:$("reset"),fullscreen:$("fullscreen"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
+const E={main:$("main"),stageName:$("stageName"),known:$("known"),learning:$("learning"),leftCount:$("leftCount"),reset:$("reset"),fullscreen:$("fullscreen"),again:$("again"),knowBtn:$("knowBtn"),undo:$("undo")};
 const CURRICULUM=window.FARSI_PATH||[],AUDIO=window.FARSI_AUDIO||{};
 function baseFa(s){return String(s||"").replace(/[\u064B-\u0652\u0670]/g,"").replace(/\u200c/g,"").replace(/ي/g,"ی").replace(/ك/g,"ک")}
 function buildLearningDeck(){
@@ -76,8 +76,18 @@ function legacyFa(raw){if(typeof raw==="string"&&!/^\d+$/.test(raw))return raw;c
 function idForLegacy(raw){const fa=legacyFa(raw);return fa?V5_BY_FORM.get(baseFa(fa))||null:null}
 function mapLegacyObject(source){const out={};for(const [raw,value] of Object.entries(source||{})){const id=idForLegacy(raw);if(id)out[id]=value}return out}
 function migrateState(){
-  const v5=parseJSON(localStorage.getItem(STATE_KEY),null);
-  if(v5&&Array.isArray(v5.known)){K=new Set(v5.known);miss=v5.miss||{};review=v5.review||{};due=v5.due||{};steps=Number(v5.steps)||0;return}
+  const fallback=parseJSON(localStorage.getItem(FALLBACK_STATE_KEY),null);
+  if(fallback&&Array.isArray(fallback.known)){K=new Set(fallback.known);miss=fallback.miss||{};review=fallback.review||{};due=fallback.due||{};steps=Number(fallback.steps)||0;return}
+
+  // A pre-FSRS v5 state may still use the old {known,review,...} shape.
+  // Read it for fallback display, but never overwrite the FSRS-owned key.
+  const legacyV5=parseJSON(localStorage.getItem(FSRS_STATE_KEY),null);
+  if(legacyV5&&Array.isArray(legacyV5.known)){
+    K=new Set(legacyV5.known);miss=legacyV5.miss||{};review=legacyV5.review||{};due=legacyV5.due||{};steps=Number(legacyV5.steps)||0;
+    save();
+    return;
+  }
+
   let old=parseJSON(localStorage.getItem(V4_STATE_KEY),null);
   if(!old){for(const key of OLD_KEYS){const x=parseJSON(localStorage.getItem(key),null);if(x){old=x;break}}}
   const knownIds=[];
@@ -85,7 +95,7 @@ function migrateState(){
   else if(old&&Array.isArray(old.known)){for(const raw of old.known){const id=idForLegacy(raw);if(id)knownIds.push(id)}miss=mapLegacyObject(old.miss);review=mapLegacyObject(old.review);due=mapLegacyObject(old.due);steps=Number(old.steps)||0}
   K=new Set(knownIds);save()
 }
-function save(){localStorage.setItem(STATE_KEY,JSON.stringify({known:[...K],miss,review,due,steps}))}
+function save(){localStorage.setItem(FALLBACK_STATE_KEY,JSON.stringify({known:[...K],miss,review,due,steps}))}
 function gapFor(level){const bands=[[18,28],[40,60],[75,110],[120,170],[180,260]];const [a,b]=bands[Math.max(0,Math.min(4,(level||1)-1))];return a+Math.floor(Math.random()*(b-a+1))}
 function shuffle(a){for(let n=a.length-1;n>0;n--){const j=Math.floor(Math.random()*(n+1));[a[n],a[j]]=[a[j],a[n]]}return a}
 function makeDeck(){const unseen=D.filter(c=>!K.has(c.id));Q=[];for(let p=0;p<unseen.length;){const stage=unseen[p].stage,group=[];while(p<unseen.length&&unseen[p].stage===stage)group.push(unseen[p++]);for(let n=0;n<group.length;n+=24)Q.push(...shuffle(group.slice(n,n+24)))}for(const c of [...Q]){const copies=Math.min(miss[c.id]||0,2);for(let r=0;r<copies;r++){const first=Q.findIndex(x=>x.fa===c.fa),gap=8+Math.floor(Math.random()*25);Q.splice(Math.min(first+gap+r*7,Q.length),0,c)}}const knownCards=D.filter(c=>K.has(c.id)).sort((a,b)=>(due[a.id]||0)-(due[b.id]||0));for(const c of knownCards){const level=review[c.id]||1;if(!due[c.id])due[c.id]=steps+gapFor(level);const offset=Math.max(1,(due[c.id]||steps+1)-steps);Q.splice(Math.min(offset,Q.length),0,c)}i=0;save()}
@@ -93,7 +103,7 @@ function current(){return Q[i]}
 function cardTransform(x=0,tilt=0){return `translateX(${x}px) rotate(${tilt}deg)${flip?" rotateY(180deg)":""}`}
 function mountCard(){E.main.innerHTML=`<div class="stage" id="stage"><div class="sw left" id="left">AGAIN ←</div><div class="sw right" id="right">KNOW →</div><button class="speak" id="speak" aria-label="Hear Persian pronunciation" aria-keyshortcuts="A" title="Hear Persian (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4.5 3.5a5 5 0 0 1 0 7M18 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="card" id="card" role="button" tabindex="0"><section class="face"><div class="hint">tap · ↑ ↓ to flip</div><div class="roman" id="roman"></div><div class="farsi" id="fa" dir="rtl"></div></section><section class="face back"><div class="hint">meaning</div><div class="english" id="en"></div><div class="mini"><span id="mr"></span><br><span id="mf" dir="rtl"></span></div></section></div></div>`;Object.assign(E,{stage:$("stage"),card:$("card"),roman:$("roman"),fa:$("fa"),en:$("en"),mr:$("mr"),mf:$("mf"),left:$("left"),right:$("right"),speak:$("speak")});E.stage.onpointerdown=e=>{if(!Q.length||e.target.closest(".speak"))return;down=true;start=e.clientX;dx=0;suppress=false;E.stage.setPointerCapture?.(e.pointerId);E.card.classList.add("drag")};E.stage.onpointermove=e=>{if(!down)return;dx=e.clientX-start;if(Math.abs(dx)>14)suppress=true;E.card.style.transform=cardTransform(dx,dx/28);const n=Math.min(Math.abs(dx)/110,1);E.left.style.opacity=dx<0?n:0;E.right.style.opacity=dx>0?n:0};E.stage.onpointerup=endPointer;E.stage.onpointercancel=endPointer;E.stage.onlostpointercapture=endPointer;E.speak.onpointerdown=e=>e.stopPropagation();E.speak.onclick=e=>{e.stopPropagation();speakFarsi()}}
 function stopAudio(){audioEl.pause();audioEl.currentTime=0;E.speak?.classList.remove("playing");if("speechSynthesis"in window)speechSynthesis.cancel()}
-function render(){if(!Q.length){makeDeck();if(!Q.length){E.main.innerHTML='<div class="done"><h1>2000 ✓</h1><p>You know the whole deck.</p></div>';E.known.textContent=TOTAL;E.leftCount.textContent=0;return}}if(!E.card||!document.body.contains(E.card))mountCard();i=Math.min(i,Q.length-1);const c=current();flip=false;E.card.classList.remove("flip");E.card.style.transform="";E.card.style.opacity=1;E.roman.textContent=c.roman;E.fa.textContent=c.fa;E.en.textContent=c.en;E.mr.textContent=c.roman;E.mf.textContent=c.fa;E.stageName.textContent=c.stage||"Common Words";E.known.textContent=K.size;E.leftCount.textContent=TOTAL-Number(E.known.textContent);E.left.style.opacity=E.right.style.opacity=0;stopAudio()}
+function render(){if(!Q.length){makeDeck();if(!Q.length){E.main.innerHTML='<div class="done"><h1>2000 ✓</h1><p>You know the whole deck.</p></div>';E.known.textContent=TOTAL;E.learning.textContent=0;E.leftCount.textContent=0;return}}if(!E.card||!document.body.contains(E.card))mountCard();i=Math.min(i,Q.length-1);const c=current();flip=false;E.card.classList.remove("flip");E.card.style.transform="";E.card.style.opacity=1;E.roman.textContent=c.roman;E.fa.textContent=c.fa;E.en.textContent=c.en;E.mr.textContent=c.roman;E.mf.textContent=c.fa;E.stageName.textContent=c.stage||"Common Words";E.known.textContent=K.size;E.learning.textContent=0;E.leftCount.textContent=TOTAL-Number(E.known.textContent);E.left.style.opacity=E.right.style.opacity=0;stopAudio()}
 function turn(){if(!Q.length)return;flip=!flip;E.card.style.transform="";E.card.classList.toggle("flip",flip)}
 function pushMissedCopies(c,count){const minGap=8,maxGap=Math.min(32,Q.length);for(let n=0;n<count;n++){const gap=minGap+Math.floor(Math.random()*Math.max(1,maxGap-minGap+1));Q.splice(Math.min(i+gap,Q.length),0,c)}}
 function grade(know){if(!Q.length)return;stopAudio();const c=current(),key=c.id,oldMiss=miss[key]||0,wasKnown=K.has(key),oldReview=review[key]||0,oldDue=due[key]||0,oldSteps=steps;last={card:c,wasKnown,oldMiss,oldReview,oldDue,oldSteps};const dir=know?1:-1;E.card.style.transition="transform .18s ease,opacity .16s";E.card.style.transform=cardTransform(dir*innerWidth,dir*9);E.card.style.opacity=0;setTimeout(()=>{Q.splice(i,1);steps++;if(know){K.add(key);delete miss[key];review[key]=Math.min((wasKnown?oldReview:0)+1,5);Q=Q.filter(x=>x.id!==key);const gap=gapFor(review[key]);due[key]=steps+gap;Q.splice(Math.min(i+gap,Q.length),0,c)}else{K.delete(key);delete review[key];delete due[key];miss[key]=Math.min(oldMiss+1,4);pushMissedCopies(c,1+Math.min(miss[key],2))}save();if(i>=Q.length)i=0;E.undo.classList.add("show");E.card.style.transition="none";render();requestAnimationFrame(()=>{if(E.card)E.card.style.transition=""})},165)}
@@ -108,7 +118,7 @@ function syncFullscreenButton(){if(!E.fullscreen)return;const active=!!document.
 choosePersianVoice();if("speechSynthesis"in window&&"onvoiceschanged"in speechSynthesis)speechSynthesis.onvoiceschanged=choosePersianVoice;
 E.again.onclick=()=>grade(false);E.knowBtn.onclick=()=>grade(true);E.undo.onclick=undo;E.fullscreen.onclick=toggleFullscreen;document.addEventListener("fullscreenchange",syncFullscreenButton);window.addEventListener("resize",syncFullscreenButton);syncFullscreenButton();
 document.onkeydown=e=>{if(e.code==="Space"||e.key==="Enter"||e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();turn()}else if(e.key==="ArrowLeft"){e.preventDefault();grade(false)}else if(e.key==="ArrowRight"){e.preventDefault();grade(true)}else if(e.key.toLowerCase()==="a"&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();speakFarsi()}else if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}};
-E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};review={};due={};steps=0;localStorage.removeItem(STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
+E.reset.onclick=()=>{if(confirm("Reset all progress?")){K=new Set;miss={};review={};due={};steps=0;localStorage.removeItem(FALLBACK_STATE_KEY);save();makeDeck();i=0;last=null;E.undo.classList.remove("show");render()}};
 migrateState();
 if(D.length!==TOTAL){console.error(`v5 deck has ${D.length} cards; expected ${TOTAL}`);E.main.innerHTML=`<div class="loading error"><strong>Couldn’t load the v5 word list</strong><span>Please reload. Your progress is safe.</span></div>`}else{const ids=new Set(D.map(c=>c.id));K=new Set([...K].filter(id=>ids.has(id)));const cleanMiss={};for(const [id,n] of Object.entries(miss))if(ids.has(id))cleanMiss[id]=n;miss=cleanMiss;review=Object.fromEntries(Object.entries(review).filter(([id])=>ids.has(id)));due=Object.fromEntries(Object.entries(due).filter(([id])=>ids.has(id)));save();makeDeck();render()}
 </script>

@@ -15,7 +15,7 @@
   function compact(){
     const raw=localStorage.getItem(MEMORY_KEY);
     const memory=parse(raw);
-    if(!memory||memory.version!==5||!Array.isArray(memory.logs))return false;
+    if(!memory||![5,6].includes(Number(memory.version))||!Array.isArray(memory.logs))return false;
     if(memory.logs.length<=MAX_LOGS&&raw.length<=TARGET_CHARS)return false;
 
     let keep=Math.min(memory.logs.length,MAX_LOGS);

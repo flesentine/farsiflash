@@ -36,7 +36,8 @@ for(const [i,card] of deck.entries()){
 
 for(const required of [
   '<script src="data/v5-deck.js?v=5"></script>',
-  'STATE_KEY="farsi2000-v5"',
+  'FSRS_STATE_KEY="farsi2000-v5"',
+  'FALLBACK_STATE_KEY="farsi2000-v5-fallback"',
   'V4_STATE_KEY="farsi2000-v4"',
   'let D=V5.slice()',
   'function idForLegacy(raw)',
@@ -45,6 +46,8 @@ for(const required of [
 ]) if(!index.includes(required)) fail(`index missing v5 live invariant: ${required}`);
 
 if(index.includes('localStorage.removeItem(V4_STATE_KEY)')) fail('live v5 must not delete the v4 rollback state');
+if(index.includes('function save(){localStorage.setItem(FSRS_STATE_KEY')) fail('inline fallback scheduler must never overwrite FSRS-owned farsi2000-v5 state');
+if(!index.includes('function save(){localStorage.setItem(FALLBACK_STATE_KEY')) fail('inline fallback scheduler must persist only to its fallback key');
 if(index.includes('let D=buildLearningDeck()')) fail('live page still initializes from v4 buildLearningDeck');
 
 const inlineStart=index.indexOf('const OLD_D=');

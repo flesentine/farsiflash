@@ -226,6 +226,26 @@ The only remaining effective-deck repeated-form warning is the pre-existing firs
 
 The original `data/miller-*.js` files remain archival source data. v5 loads them through `tools/lib/v5-miller.mjs`, which applies the 39 confirmed spelling repairs in `miller-spelling-overrides.json`. CI also tracks 9 manually reviewed heuristic exceptions and fails on newly unresolved suspicious spellings.
 
+## Learning UX and stable memory
+
+The live study engine now uses **FSRS memory schema v6**, keyed by permanent v5 concept IDs rather than mutable Persian surface text. Card scheduling, review logs, and reverse-recall progress use `concept-id␟direction` / concept-ID keys.
+
+Existing FSRS v5 state is upgraded automatically. The migration prefers the exact old primary Persian form and only falls back to the card's spoken/formal aliases when no primary match survives. If an old surface form was genuinely shared by multiple concepts, its previously shared scheduling state is copied to those concept IDs once and then diverges independently going forward.
+
+Cloud sync upgrades old v5 memory before merging it with v6 memory, and history compaction accepts both schemas during the transition. The inline non-FSRS fallback scheduler now writes to `farsi2000-v5-fallback`, so it cannot overwrite the FSRS-owned `farsi2000-v5` record during page startup.
+
+The header separates the scheduler states instead of weakening the meaning of “known”:
+
+- **known** = FSRS `Review`
+- **learning** = scheduled but still in Learning/Relearning
+- **left** = neither known nor currently learning
+
+The original short-term FSRS steps remain approximately **1 minute → 10 minutes** before a new card graduates into Review. A single “Know” answer therefore does not immediately inflate the known count.
+
+Step-19 examples are now visible in the app on the **revealed answer side only**. FA→EN shows the example with the English answer; EN→FA keeps examples hidden on the English prompt and shows them only after the Persian answer is revealed. The Romanized example follows the existing phonetics visibility setting.
+
+CI now protects the stable-ID schema, v5→v6 migration path, cloud-sync upgrade, fallback-state isolation, strict known/learning semantics, complete example trios, and answer-side example placement.
+
 ## Live v5 release
 
 At the user's explicit request, v5 is being made the default before the originally planned hidden-preview/native-review sequence.
@@ -239,7 +259,10 @@ The release CI gate validates:
 - 2,000 generated v5 browser cards
 - 2,000 unique stable IDs
 - live-page JavaScript syntax
-- v5 default state key
+- FSRS v6 stable-ID memory keys and v5→v6 migration
+- separate fallback and FSRS storage keys
+- strict Review=known plus separate Learning/Relearning count
+- answer-side Step-19 example display
 - preserved v4 rollback state
 - safe exact-only progress migration
 - the full curriculum, register, modernity, Romanization, examples, and Miller audits
