@@ -12,7 +12,7 @@
   const KEY_MODE="id";
   const KEY_SEP="\u241f";
   const MAX_LOGS=30000;
-  const REVIEW_CHUNK=24;
+  const DAILY_NEW_LIMIT=24;
   const AUTO_REVERSE_GOODS=4;
 
   let memState=null;
@@ -302,6 +302,29 @@
     return out;
   }
 
+  function localDayStart(now=Date.now()){
+    const d=new Date(now);
+    d.setHours(0,0,0,0);
+    return d.getTime();
+  }
+
+  function introducedTodayIds(now=Date.now()){
+    const firstIntroducedAt=new Map();
+    for(const row of memState.logs){
+      if(!Array.isArray(row)||!row[1]||row[5]!==null)continue;
+      const t=Number(row[0])||0;
+      if(!t)continue;
+      const prior=firstIntroducedAt.get(row[1]);
+      if(prior==null||t<prior)firstIntroducedAt.set(row[1],t);
+    }
+    const start=localDayStart(now);
+    return new Set([...firstIntroducedAt].filter(([,t])=>t>=start&&t<=now).map(([id])=>id));
+  }
+
+  function dailyNewSlots(now=Date.now()){
+    return Math.max(0,DAILY_NEW_LIMIT-introducedTodayIds(now).size);
+  }
+
   function memoryMakeDeck(State){
     const d=dirNow(),now=Date.now();
     const dueCards=[];
@@ -316,10 +339,11 @@
     }
     dueCards.sort((a,b)=>asMs(cardState(a,d).due)-asMs(cardState(b,d).due));
 
+    const newSlots=dailyNewSlots(now);
     let newChunk=[];
-    if(unseen.length){
+    if(unseen.length&&newSlots>0){
       const stage=unseen[0].stage;
-      newChunk=shuffleCopy(unseen.filter(c=>c.stage===stage).slice(0,REVIEW_CHUNK))
+      newChunk=shuffleCopy(unseen.filter(c=>c.stage===stage).slice(0,Math.min(DAILY_NEW_LIMIT,newSlots)))
         .map(c=>({...c,_autoReverse:false}));
     }
 
@@ -551,6 +575,8 @@
       counts:counts(State),
       cards:Object.keys(memState.cards).length,
       reviews:memState.logs.length,
+      newToday:introducedTodayIds().size,
+      newRemainingToday:dailyNewSlots(),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
