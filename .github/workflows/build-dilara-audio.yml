@@ -16,8 +16,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: farsi-dilara-rebuild
-  cancel-in-progress: true
+  group: farsi-main-writer
+  cancel-in-progress: false
 
 jobs:
   rebuild:
@@ -26,6 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -36,7 +37,19 @@ jobs:
         run: python tools/build_dilara_audio.py
       - name: Audit full v5 Persian audio set
         run: python tools/audit_audio.py
+      - name: Detect generated audio changes
+        id: audio_changes
+        shell: bash
+        run: |
+          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json data/audio-quality-lock.js data/audio-audit.txt
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Dilara audio already current."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Bust browser audio-manifest cache
+        if: steps.audio_changes.outputs.changed == 'true'
         shell: bash
         run: |
           python - <<'PY'
@@ -51,15 +64,11 @@ jobs:
           p.write_text(s, encoding="utf-8")
           PY
       - name: Commit verified Dilara audio
+        if: steps.audio_changes.outputs.changed == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add audio/natural data/audio-manifest.js data/elevenlabs-voice.json data/audio-quality-lock.js data/audio-audit.txt index.html
-          if git diff --cached --quiet; then
-            echo "Dilara audio already current."
-            exit 0
-          fi
+          git add index.html
           git commit -m "Replace all Persian audio with Microsoft Dilara"
-          git pull --rebase origin main
           git push origin main
