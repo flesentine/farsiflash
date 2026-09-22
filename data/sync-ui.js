@@ -5,6 +5,9 @@
   const ENDPOINT="https://qifvbdwdawmuwptdxgvu.supabase.co/functions/v1/farsi-sync";
   const MEMORY_KEY="farsi2000-v5";
   const LEGACY_KEY="farsi2000-v4";
+  const MEMORY_VERSION=6;
+  const KEY_MODE="id";
+  const KEY_SEP="\u241f";
   const DIR_KEY="farsi2000-direction";
   const PHON_KEY="farsi2000-hide-phonetics";
   const SYNC_CODE_KEY="farsi2000-sync-code";
@@ -32,6 +35,83 @@
   const codeRaw=()=>String(localStorage.getItem(SYNC_CODE_KEY)||"").replace(/[^0-9a-f]/gi,"").toLowerCase();
   const validCode=code=>/^[0-9a-f]{32}$/.test(String(code||"").replace(/[^0-9a-f]/gi,"").toLowerCase());
   const formatCode=code=>String(code||"").replace(/[^0-9a-f]/gi,"").toUpperCase().match(/.{1,4}/g)?.join("-")||"";
+
+  const normalizeFa=value=>String(value||"")
+    .normalize("NFC")
+    .replace(/[\u064B-\u0652\u0670]/g,"")
+    .replace(/\u200c/g,"")
+    .replace(/ي/g,"ی")
+    .replace(/ك/g,"ک")
+    .trim();
+  const memoryKey=(id,dir="fa")=>`${id}${KEY_SEP}${dir}`;
+
+  function idsForForm(value){
+    const target=normalizeFa(value);
+    if(!target)return [];
+    const out=[];
+    const seen=new Set();
+    for(const card of D){
+      for(const form of [card.fa,card.spokenFa,card.formalFa]){
+        if(normalizeFa(form)!==target)continue;
+        if(!seen.has(card.id)){seen.add(card.id);out.push(card.id)}
+        break;
+      }
+    }
+    return out;
+  }
+
+  function splitLegacyMemoryKey(key){
+    const raw=String(key||"");
+    const at=raw.lastIndexOf(KEY_SEP);
+    if(at<0)return {entity:raw,dir:"fa"};
+    return {entity:raw.slice(0,at),dir:raw.slice(at+KEY_SEP.length)||"fa"};
+  }
+
+  function upgradeMemory(memory){
+    if(!memory||typeof memory!=="object")return memory;
+    if(memory.version===MEMORY_VERSION&&memory.keyMode===KEY_MODE)return clone(memory);
+    if(memory.version!==5||!memory.cards||!Array.isArray(memory.logs))return clone(memory);
+
+    const out={
+      ...clone(memory),
+      version:MEMORY_VERSION,
+      keyMode:KEY_MODE,
+      cards:{},
+      logs:[],
+      reverseProgress:{},
+      migratedKeySchemaFrom:"fa",
+      migratedKeySchemaAt:memory.migratedKeySchemaAt||new Date().toISOString(),
+    };
+
+    for(const [legacyKey,stored] of Object.entries(memory.cards||{})){
+      const {entity,dir}=splitLegacyMemoryKey(legacyKey);
+      for(const id of idsForForm(entity)){
+        const key=memoryKey(id,dir);
+        const prior=out.cards[key];
+        if(!prior){out.cards[key]=clone(stored);continue}
+        const a=asTime(prior.last_review),b=asTime(stored?.last_review);
+        if(b>a)out.cards[key]=clone(stored);
+      }
+    }
+
+    for(const row of memory.logs||[]){
+      if(!Array.isArray(row)||!row[1])continue;
+      for(const id of idsForForm(row[1])){
+        const copy=clone(row);
+        copy[1]=id;
+        out.logs.push(copy);
+      }
+    }
+    out.logs.sort((a,b)=>(Number(a?.[0])||0)-(Number(b?.[0])||0));
+    out.logs=out.logs.slice(-30000);
+
+    for(const [form,value] of Object.entries(memory.reverseProgress||{})){
+      for(const id of idsForForm(form)){
+        out.reverseProgress[id]=Math.max(Number(out.reverseProgress[id])||0,Number(value)||0);
+      }
+    }
+    return out;
+  }
 
   function randomCode(){
     const bytes=new Uint8Array(16);
@@ -61,11 +141,16 @@
   }
 
   function localPayload(){
+    const stored=parse(localStorage.getItem(MEMORY_KEY),null);
+    const memory=upgradeMemory(stored);
+    if(stored&&memory&&JSON.stringify(stored)!==JSON.stringify(memory)){
+      localStorage.setItem(MEMORY_KEY,JSON.stringify(memory));
+    }
     return {
       version:1,
       savedAt:localUpdatedAt||Date.now(),
       resetAt:Number(localStorage.getItem(RESET_AT_KEY))||0,
-      memory:parse(localStorage.getItem(MEMORY_KEY),null),
+      memory,
       legacy:parse(localStorage.getItem(LEGACY_KEY),null),
       settings:{
         direction:localStorage.getItem(DIR_KEY)==="en"?"en":"fa",
@@ -75,7 +160,7 @@
   }
 
   function emptyMemory(){
-    return {version:5,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
+    return {version:MEMORY_VERSION,keyMode:KEY_MODE,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
   }
 
   function latestLogTimes(memory){
@@ -90,9 +175,11 @@
 
   function mergeMemory(a,b){
     if(!a&&!b)return null;
+    a=upgradeMemory(a);
+    b=upgradeMemory(b);
     if(!a)return clone(b);
     if(!b)return clone(a);
-    if(a.version!==5||b.version!==5){
+    if(a.version!==MEMORY_VERSION||b.version!==MEMORY_VERSION||a.keyMode!==KEY_MODE||b.keyMode!==KEY_MODE){
       const at=Number(a?.logs?.at?.(-1)?.[0])||0;
       const bt=Number(b?.logs?.at?.(-1)?.[0])||0;
       return clone(at>=bt?a:b);
@@ -172,7 +259,7 @@
     if(before===after)return false;
     applying=true;
     try{
-      if(payload.memory)localStorage.setItem(MEMORY_KEY,JSON.stringify(payload.memory));
+      if(payload.memory)localStorage.setItem(MEMORY_KEY,JSON.stringify(upgradeMemory(payload.memory)));
       else localStorage.removeItem(MEMORY_KEY);
       if(payload.legacy)localStorage.setItem(LEGACY_KEY,JSON.stringify(payload.legacy));
       else localStorage.removeItem(LEGACY_KEY);
