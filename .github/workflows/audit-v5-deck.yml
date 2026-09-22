@@ -3,6 +3,7 @@ name: Audit v5 curriculum
 on:
   push:
     branches:
+      - main
       - feature/v5-curriculum-foundation
     paths:
       - 'data/v5/**'
@@ -25,6 +26,7 @@ on:
       - 'tools/audit_v5_audio_source.py'
       - 'data/memory-engine.js'
       - 'data/sync-ui.js'
+      - 'data/sync-qr-ui.js'
       - 'data/storage-guard.js'
       - 'data/examples-ui.js'
       - 'tools/audit-known-count.mjs'
@@ -57,6 +59,7 @@ on:
       - 'tools/audit_v5_audio_source.py'
       - 'data/memory-engine.js'
       - 'data/sync-ui.js'
+      - 'data/sync-qr-ui.js'
       - 'data/storage-guard.js'
       - 'data/examples-ui.js'
       - 'tools/audit-known-count.mjs'
@@ -108,7 +111,7 @@ jobs:
       - name: Audit v5 audio source
         run: python tools/audit_v5_audio_source.py
       - name: Check memory and learning UI syntax
-        run: node --check data/memory-engine.js && node --check data/sync-ui.js && node --check data/storage-guard.js && node --check data/examples-ui.js
+        run: node --check data/memory-engine.js && node --check data/sync-ui.js && node --check data/sync-qr-ui.js && node --check data/storage-guard.js && node --check data/examples-ui.js
       - name: Audit v5 known count
         run: node tools/audit-known-count.mjs
       - name: Audit v5 stable memory and learning UX
