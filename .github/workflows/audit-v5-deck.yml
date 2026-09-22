@@ -24,7 +24,11 @@ on:
       - 'tools/audit-card-text-fit.mjs'
       - 'tools/audit_v5_audio_source.py'
       - 'data/memory-engine.js'
+      - 'data/sync-ui.js'
+      - 'data/storage-guard.js'
+      - 'data/examples-ui.js'
       - 'tools/audit-known-count.mjs'
+      - 'tools/audit-v5-learning-ux.mjs'
       - 'tools/build_natural_audio.py'
       - 'tools/build_dilara_audio.py'
       - 'tools/audit_audio.py'
@@ -52,7 +56,11 @@ on:
       - 'tools/audit-card-text-fit.mjs'
       - 'tools/audit_v5_audio_source.py'
       - 'data/memory-engine.js'
+      - 'data/sync-ui.js'
+      - 'data/storage-guard.js'
+      - 'data/examples-ui.js'
       - 'tools/audit-known-count.mjs'
+      - 'tools/audit-v5-learning-ux.mjs'
       - 'tools/build_natural_audio.py'
       - 'tools/build_dilara_audio.py'
       - 'tools/audit_audio.py'
@@ -99,10 +107,12 @@ jobs:
         run: python -m py_compile tools/build_natural_audio.py tools/build_dilara_audio.py tools/audit_audio.py tools/audit_v5_audio_source.py
       - name: Audit v5 audio source
         run: python tools/audit_v5_audio_source.py
-      - name: Check memory engine syntax
-        run: node --check data/memory-engine.js
+      - name: Check memory and learning UI syntax
+        run: node --check data/memory-engine.js && node --check data/sync-ui.js && node --check data/storage-guard.js && node --check data/examples-ui.js
       - name: Audit v5 known count
         run: node tools/audit-known-count.mjs
+      - name: Audit v5 stable memory and learning UX
+        run: node tools/audit-v5-learning-ux.mjs
       - name: Audit v5 learner Romanization
         run: node tools/audit-v5-romanization.mjs
       - name: Audit and normalize Miller source spellings
