@@ -24,6 +24,7 @@ def rebuild_bundle():
     for rel in [
         "data/audio-ui.js",
         "data/reading-mode.js",
+        "data/examples-ui.js",
         "data/responsive-ui.js",
         "data/audio-quality-lock.js",
     ]:
