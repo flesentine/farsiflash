@@ -65,6 +65,17 @@ need(memory,'newToday:introducedTodayIds().size','daily introduction debug count
 need(memory,'newRemainingToday:dailyNewSlots()','daily remaining debug count');
 forbid(memory,'const REVIEW_CHUNK=24;','replenishing 24-card window');
 
+// Learner-facing Today status stays wired to real FSRS state.
+need(index,'id="todayStatus">New 0/24 · Reviews 0','today progress header');
+need(index,'.today-status{margin-top:2px;font-size:11px','today progress styling');
+need(memory,'function dueReviewCount(now=Date.now(),dir=dirNow())','due review counter');
+need(memory,'function updateTodayStatus(now=Date.now())','today progress updater');
+need(memory,'el.textContent=`New ${introduced}/${DAILY_NEW_LIMIT} · Reviews ${due}`','today progress copy');
+need(memory,'updateTodayStatus();\n          shownAt=performance.now();','caught-up today progress refresh');
+need(memory,'updateTodayStatus();\n      shownAt=performance.now();','active-card today progress refresh');
+need(memory,'setInterval(()=>updateTodayStatus(),30000);','time-based due refresh');
+need(memory,'reviewsDue:dueReviewCount()','today debug due count');
+
 // Examples are present, answer-side only, and bundled.
 need(examples,'window.__farsiExamplesUiV1=true','example UI guard');
 need(examples,'body.english-first .example-front','EN→FA examples only on revealed front');
@@ -103,4 +114,4 @@ if(errors.length){
   console.error(`\nV5 learning UX audit failed: ${errors.length} issue(s)`);
   process.exit(1);
 }
-console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily new-card pacing, separate learning count, and answer-side examples are all wired.');
+console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status, separate learning count, and answer-side examples are all wired.');
