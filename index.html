@@ -11,7 +11,7 @@ html,body{margin:0;height:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f1ea;color:#1c1b19;overflow:hidden;user-select:none;-webkit-user-select:none}
 .app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;padding:max(16px,env(safe-area-inset-top)) 18px max(14px,env(safe-area-inset-bottom))}
 header{height:40px;display:flex;align-items:center;justify-content:space-between;font-size:13px;letter-spacing:.035em;color:#746f67}
-.header-actions{display:flex;align-items:center;gap:2px}button,a{font:inherit}button{border:0;background:transparent;color:inherit;cursor:pointer}.tiny{padding:8px;color:#746f67;text-decoration:none;border-radius:10px}.progress{font-variant-numeric:tabular-nums}
+.header-actions{display:flex;align-items:center;gap:2px}button,a{font:inherit}button{border:0;background:transparent;color:inherit;cursor:pointer}.tiny{padding:8px;color:#746f67;text-decoration:none;border-radius:10px}.progress{font-variant-numeric:tabular-nums;min-width:0;line-height:1.2}.progress-main,.today-status{width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.today-status{margin-top:2px;font-size:11px;color:#aaa398}
 .desktop-fullscreen{display:none;font-size:19px;line-height:1;padding:8px 9px}
 main{display:grid;place-items:center;min-height:0}
 .stage{width:min(88vw,480px);height:min(66dvh,590px);perspective:1200px;position:relative;touch-action:none;transition:width .22s ease,height .22s ease}
@@ -40,7 +40,7 @@ main{display:grid;place-items:center;min-height:0}
 <body>
 <div class="app">
 <header>
-  <div class="progress"><span id="stageName">Start Here</span> · <span id="known">0</span> known · <span id="learning">0</span> learning · <span id="leftCount">2000</span> left</div>
+  <div class="progress"><div class="progress-main"><span id="stageName">Start Here</span> · <span id="known">0</span> known · <span id="learning">0</span> learning · <span id="leftCount">2000</span> left</div><div class="today-status" id="todayStatus">New 0/24 · Reviews 0</div></div>
   <div class="header-actions"><button class="tiny desktop-fullscreen" id="fullscreen" aria-label="Enter full screen" title="Full screen">⛶</button><a class="tiny" href="https://github.com/flesentine/farsiflash/blob/main/data/v5/README.md" target="_blank" rel="noopener" title="About the v5 curriculum">v5</a><button class="tiny" id="reset" aria-label="Reset all progress">reset</button></div>
 </header>
 <main id="main"><div class="loading"><strong>Farsi 2000 · v5</strong><span>loading…</span></div></main>
