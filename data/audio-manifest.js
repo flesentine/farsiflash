@@ -504,6 +504,24 @@ ts-fsrs/dist/index.mjs:
     return Math.max(0,DAILY_NEW_LIMIT-introducedTodayIds(now).size);
   }
 
+  function dueReviewCount(now=Date.now(),dir=dirNow()){
+    let due=0;
+    for(const c of D){
+      const m=cardState(c,dir);
+      if(m&&asMs(m.due)<=now)due++;
+    }
+    return due;
+  }
+
+  function updateTodayStatus(now=Date.now()){
+    const el=document.getElementById("todayStatus");
+    if(!el)return;
+    const introduced=introducedTodayIds(now).size;
+    const due=dueReviewCount(now);
+    el.textContent=`New ${introduced}/${DAILY_NEW_LIMIT} · Reviews ${due}`;
+    el.title=`${introduced} new concepts introduced today; ${due} review${due===1?"":"s"} due now`;
+  }
+
   function memoryMakeDeck(State){
     const d=dirNow(),now=Date.now();
     const dueCards=[];
@@ -618,6 +636,7 @@ ts-fsrs/dist/index.mjs:
           E.known.textContent=n.known;
           E.learning.textContent=n.learning;
           E.leftCount.textContent=n.left;
+          updateTodayStatus();
           shownAt=performance.now();
           return;
         }
@@ -637,6 +656,7 @@ ts-fsrs/dist/index.mjs:
       E.known.textContent=n.known;
       E.learning.textContent=n.learning;
       E.leftCount.textContent=n.left;
+      updateTodayStatus();
       shownAt=performance.now();
     };
 
@@ -756,6 +776,7 @@ ts-fsrs/dist/index.mjs:
       reviews:memState.logs.length,
       newToday:introducedTodayIds().size,
       newRemainingToday:dailyNewSlots(),
+      reviewsDue:dueReviewCount(),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
@@ -763,6 +784,8 @@ ts-fsrs/dist/index.mjs:
 
     makeDeck();
     render();
+    setInterval(()=>updateTodayStatus(),30000);
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")updateTodayStatus()});
     document.documentElement.dataset.memoryEngine="fsrs6-reverse-recall";
   });
 })();
