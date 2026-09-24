@@ -399,7 +399,7 @@
       const row=memState.logs[n];
       if(!Array.isArray(row)||!row[1])continue;
       const t=Number(row[0])||0;
-      if(t<since)break;
+      if(t<since)continue;
       if(t>now)continue;
       const rating=row[3];
       if(rating!=="again"&&rating!=="good")continue;
