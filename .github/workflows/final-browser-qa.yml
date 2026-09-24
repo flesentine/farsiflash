@@ -35,6 +35,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Build current UI bundle for QA
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path("data/audio-manifest.js")
+          first = manifest.read_text(encoding="utf-8").splitlines()[0]
+          if not first.startswith("window.FARSI_AUDIO="):
+              raise SystemExit("audio manifest does not start with FARSI_AUDIO mapping")
+          modules = [
+              "fsrs-browser.js", "keyboard-guard.js", "storage-guard.js",
+              "audio-ui.js", "memory-engine.js", "grade-animation-fix.js",
+              "reading-mode.js", "examples-ui.js", "responsive-ui.js",
+              "pwa-ui.js", "background-ui.js", "audio-quality-lock.js",
+              "sync-ui.js", "sync-qr-ui.js",
+          ]
+          chunks = [first.rstrip() + "\n"]
+          chunks += [Path("data", name).read_text(encoding="utf-8").rstrip() + "\n" for name in modules]
+          manifest.write_text("".join(chunks), encoding="utf-8")
+          PY
       - name: Run desktop + iPhone Chromium QA
         run: node tools/final-browser-qa.mjs
       - name: Upload QA screenshots
