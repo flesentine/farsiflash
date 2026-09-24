@@ -136,6 +136,30 @@ need(memory,'trouble:troubleWords()','trouble debug state');
 need(index,'.trouble-summary{margin-top:14px;padding-top:14px','trouble summary styling');
 need(memory,'Q=[...spreadDueByStage(dueCards),...newChunk];','trouble words do not alter scheduling queue');
 
+// Progress overview is a read-only projection of the active-direction FSRS state.
+need(index,'class="progress" role="button" tabindex="0" aria-label="View progress overview"','progress header trigger');
+need(index,'id="progressOverlay" aria-hidden="true"','progress modal shell');
+need(index,'id="progressOverviewBody"','progress modal body');
+need(index,'.progress-overlay{position:fixed;inset:0;z-index:1000','progress overlay styling');
+need(index,'@media(max-width:500px){.progress-panel{width:94vw','progress mobile layout');
+need(memory,'function progressOverview(State,dir=dirNow())','progress overview calculator');
+need(memory,'stage={name,total:0,known:0,learning:0,unseen:0};','stage progress buckets');
+need(memory,'else if(m.state===State.Review){known++;stage.known++}','FSRS Review counts as known in overview');
+need(memory,'else{learning++;stage.learning++}','FSRS learning states count as learning in overview');
+need(memory,'masteredPct:total?Math.round(known*100/total):0','mastered percentage');
+need(memory,'startedPct:total?Math.round((known+learning)*100/total):0','started percentage');
+need(memory,'function renderProgressOverview(State)','progress overview renderer');
+need(memory,'Known</span>','known progress metric');
+need(memory,'Learning</span>','learning progress metric');
+need(memory,'Unseen</span>','unseen progress metric');
+need(memory,'<div class="progress-section-title">Stages</div>','stage progress section');
+need(memory,'function openProgressOverview(State)','progress modal opener');
+need(memory,'function closeProgressOverview()','progress modal closer');
+need(memory,'progressTrigger?.addEventListener("click",()=>openProgressOverview(State));','click progress trigger');
+need(memory,'if(e.key==="Escape")','keyboard modal close');
+need(memory,'progress:progressOverview(State)','progress debug state');
+need(memory,'Q=[...spreadDueByStage(dueCards),...newChunk];','progress overview does not alter scheduling queue');
+
 // Examples are present, answer-side only, and bundled.
 need(examples,'window.__farsiExamplesUiV1=true','example UI guard');
 need(examples,'body.english-first .example-front','EN→FA examples only on revealed front');
@@ -174,4 +198,4 @@ if(errors.length){
   console.error(`\nV5 learning UX audit failed: ${errors.length} issue(s)`);
   process.exit(1);
 }
-console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status/streak, session stats, trouble words, caught-up summary, separate learning count, and answer-side examples are all wired.');
+console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status/streak, session stats, trouble words, progress overview, caught-up summary, separate learning count, and answer-side examples are all wired.');
