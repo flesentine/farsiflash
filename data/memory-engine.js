@@ -787,6 +787,7 @@
       E.undo.classList.remove("show");
       render();
     };
+    E.undo.onclick=undo;
 
     const progressTrigger=document.querySelector(".progress");
     const progressOverlay=document.getElementById("progressOverlay");
