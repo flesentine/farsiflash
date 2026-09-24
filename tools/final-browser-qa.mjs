@@ -274,6 +274,9 @@ async function main(){
     assert(caught.includes("Caught up ✓"),"Caught-up title missing");
     assert(caught.includes("24/24"),"Caught-up new count missing");
     assert(caught.includes("24 answers"),"Caught-up session count missing");
+    const caughtColors=await evaluate(`(()=>({title:getComputedStyle(document.querySelector(".done h1")).color,session:getComputedStyle(document.querySelector(".done .session-summary")).color}))()`);
+    assert(caughtColors.title==="rgb(255, 250, 243)","Caught-up title lost light-on-photo contrast");
+    assert(caughtColors.session==="rgb(226, 217, 206)","Caught-up session copy lost light-on-photo contrast");
     const actionsVisibility=await evaluate('getComputedStyle(document.querySelector(".actions")).visibility');
     assert(actionsVisibility==="hidden","Grade actions are visible while caught up");
     await screenshot("desktop-caught-up.png");
