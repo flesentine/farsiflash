@@ -73,8 +73,20 @@ need(memory,'function updateTodayStatus(now=Date.now())','today progress updater
 need(memory,'el.textContent=`New ${introduced}/${DAILY_NEW_LIMIT} · Reviews ${due}`','today progress copy');
 need(memory,'updateTodayStatus();\n          shownAt=performance.now();','caught-up today progress refresh');
 need(memory,'updateTodayStatus();\n      shownAt=performance.now();','active-card today progress refresh');
-need(memory,'setInterval(()=>updateTodayStatus(),30000);','time-based due refresh');
+need(memory,'setInterval(()=>{if(document.body.classList.contains("caught-up"))render();else updateTodayStatus()},30000);','time-based due refresh and caught-up resume');
 need(memory,'reviewsDue:dueReviewCount()','today debug due count');
+
+// Caught-up screen summarizes today's work and resumes when reviews become due.
+need(index,'.done-summary{display:grid;grid-template-columns:1fr 1fr','caught-up summary layout');
+need(index,'.caught-up .actions{visibility:hidden}','caught-up action hiding');
+need(memory,'function reviewsCompletedToday(now=Date.now(),dir=dirNow())','daily completed-review counter');
+need(memory,'row[2]!==dir||row[5]===null','review-only direction-aware daily count');
+need(memory,'document.body.classList.add("caught-up")','caught-up state class');
+need(memory,'<strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span>','caught-up new summary');
+need(memory,'<strong>${completed}</strong><span>reviews today</span>','caught-up review summary');
+need(memory,'document.body.classList.remove("caught-up")','caught-up state cleared for active card');
+need(memory,'reviewsToday:reviewsCompletedToday()','caught-up debug review count');
+need(memory,'if(document.body.classList.contains("caught-up"))render();else updateTodayStatus()','caught-up timed resume');
 
 // Examples are present, answer-side only, and bundled.
 need(examples,'window.__farsiExamplesUiV1=true','example UI guard');
@@ -114,4 +126,4 @@ if(errors.length){
   console.error(`\nV5 learning UX audit failed: ${errors.length} issue(s)`);
   process.exit(1);
 }
-console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status, separate learning count, and answer-side examples are all wired.');
+console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status, caught-up summary, separate learning count, and answer-side examples are all wired.');
