@@ -261,6 +261,7 @@ async function main(){
 
     console.log("QA desktop: 24-new daily cap and caught-up summary");
     for(let n=1;n<=24;n++){
+      await waitFor('!document.querySelector(".card-shell")?.classList.contains("is-answering")',`card ready ${n}/24`,5000);
       await click("#knowBtn");
       await waitFor(`window.FARSI_MEMORY_DEBUG().session.answers===${n}`,`grade ${n}/24`,5000);
     }
