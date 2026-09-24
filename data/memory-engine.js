@@ -14,6 +14,8 @@
   const MAX_LOGS=30000;
   const DAILY_NEW_LIMIT=24;
   const AUTO_REVERSE_GOODS=4;
+  const TROUBLE_LOOKBACK_DAYS=30;
+  const TROUBLE_RECENT_ATTEMPTS=8;
 
   let memState=null;
   let scheduler=null;
@@ -390,6 +392,65 @@
     };
   }
 
+  function troubleWords(now=Date.now(),limit=3){
+    const since=now-TROUBLE_LOOKBACK_DAYS*86400000;
+    const recentById=new Map();
+    for(let n=memState.logs.length-1;n>=0;n--){
+      const row=memState.logs[n];
+      if(!Array.isArray(row)||!row[1])continue;
+      const t=Number(row[0])||0;
+      if(t<since)break;
+      if(t>now)continue;
+      const rating=row[3];
+      if(rating!=="again"&&rating!=="good")continue;
+      let attempts=recentById.get(row[1]);
+      if(!attempts){attempts=[];recentById.set(row[1],attempts)}
+      if(attempts.length<TROUBLE_RECENT_ATTEMPTS){
+        attempts.push({rating,dir:row[2]==="en"?"en":"fa",time:t});
+      }
+    }
+
+    const cardById=new Map(D.map(card=>[card.id,card]));
+    const out=[];
+    for(const [id,attempts] of recentById){
+      const againAttempts=attempts.filter(a=>a.rating==="again");
+      if(againAttempts.length<2)continue;
+
+      let score=0;
+      for(let n=0;n<attempts.length;n++){
+        const weight=Math.max(.45,1-n*.08);
+        score+=attempts[n].rating==="again"?2.5*weight:-.75*weight;
+      }
+      if(score<=0)continue;
+
+      const card=cardById.get(id);
+      if(!card)continue;
+      const againFa=againAttempts.filter(a=>a.dir==="fa").length;
+      const againEn=againAttempts.length-againFa;
+      out.push({
+        id,
+        fa:card.fa,
+        en:card.en,
+        roman:card.roman,
+        again:againAttempts.length,
+        attempts:attempts.length,
+        score:Number(score.toFixed(2)),
+        direction:againFa&&againEn?"Mixed":againEn?"EN→FA":"FA→EN",
+        lastAgain:Math.max(...againAttempts.map(a=>a.time)),
+      });
+    }
+
+    return out
+      .sort((a,b)=>b.score-a.score||b.again-a.again||b.lastAgain-a.lastAgain)
+      .slice(0,limit);
+  }
+
+  function escapeHtml(value){
+    return String(value??"").replace(/[&<>"']/g,ch=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[ch]));
+  }
+
   function updateTodayStatus(now=Date.now()){
     const el=document.getElementById("todayStatus");
     if(!el)return;
@@ -514,13 +575,17 @@
           const completed=reviewsCompletedToday(now);
           const streak=studyStreak(now).count;
           const session=sessionStats();
+          const trouble=troubleWords(now);
           window.FARSI_ACTIVE_DIRECTION=dirNow();
           window.FARSI_AUTO_REVERSE=false;
           document.body.classList.add("caught-up");
           const sessionText=session.answers
             ?`<strong>${session.answers}</strong> answers · <strong>${session.newConcepts}</strong> new · <strong>${session.againRate}%</strong> Again · <strong>${session.direction}</strong>`
             :"No answers yet.";
-          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div><div class="done-stat"><strong>${streak}</strong><span>day streak</span></div></div><p class="session-summary"><span class="session-label">This session</span>${sessionText}</p><p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
+          const troubleText=trouble.length
+            ?`<div class="trouble-summary"><span class="session-label">Trouble words</span><div class="trouble-list">${trouble.map(word=>`<div class="trouble-item"><div class="trouble-word"><strong dir="rtl">${escapeHtml(word.fa)}</strong><span>${escapeHtml(word.en)}</span></div><small>${word.again} Again · ${word.direction}</small></div>`).join("")}</div></div>`
+            :"";
+          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div><div class="done-stat"><strong>${streak}</strong><span>day streak</span></div></div><p class="session-summary"><span class="session-label">This session</span>${sessionText}</p>${troubleText}<p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
           E.learning.textContent=n.learning;
@@ -680,6 +745,7 @@
       reviewsToday:reviewsCompletedToday(),
       streak:studyStreak(),
       session:sessionStats(),
+      trouble:troubleWords(),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
