@@ -100,6 +100,23 @@ need(memory,'study today to keep it','non-punitive streak reminder');
 need(memory,'<strong>${streak}</strong><span>day streak</span>','caught-up streak summary');
 need(memory,'streak:studyStreak()','streak debug state');
 
+// Session stats are in-memory only, undo-safe, and summarize the current app session.
+need(memory,'let sessionEvents=[];','session-local event store');
+need(memory,'function sessionStats()','session stats calculator');
+need(memory,'newConcepts:newIds.size','distinct new concepts per session');
+need(memory,'againRate:answers?Math.round(again*100/answers):0','session Again percentage');
+need(memory,'direction:faToEn&&enToFa?"Mixed":enToFa?"EN→FA":faToEn?"FA→EN":"—"','session direction summary');
+need(memory,'const oldSessionLen=sessionEvents.length;','undo session checkpoint');
+need(memory,'const conceptWasSeen=!!memState.cards[keyFor(c.id,"fa")]||!!memState.cards[keyFor(c.id,"en")];','concept-level new detection');
+need(memory,'sessionEvents.push({','session grade event');
+need(memory,'direction:autoReverse?"en":dir','effective recall direction tracking');
+need(memory,'sessionEvents.length=u.oldSessionLen;','undo rewinds session stats');
+need(memory,'memoryLast=null;last=null;sessionEvents=[];','progress reset clears session');
+need(memory,'session:sessionStats()','session debug state');
+need(memory,'<span class="session-label">This session</span>','caught-up session label');
+need(memory,'<strong>${session.answers}</strong> answers · <strong>${session.newConcepts}</strong> new · <strong>${session.againRate}%</strong> Again · <strong>${session.direction}</strong>','caught-up session metrics');
+need(index,'.session-summary{margin:16px 0 0;padding-top:14px','session summary styling');
+
 // Examples are present, answer-side only, and bundled.
 need(examples,'window.__farsiExamplesUiV1=true','example UI guard');
 need(examples,'body.english-first .example-front','EN→FA examples only on revealed front');
@@ -138,4 +155,4 @@ if(errors.length){
   console.error(`\nV5 learning UX audit failed: ${errors.length} issue(s)`);
   process.exit(1);
 }
-console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status/streak, caught-up summary, separate learning count, and answer-side examples are all wired.');
+console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status/streak, session stats, caught-up summary, separate learning count, and answer-side examples are all wired.');
