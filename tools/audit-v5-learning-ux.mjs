@@ -73,7 +73,7 @@ need(memory,'function updateTodayStatus(now=Date.now())','today progress updater
 need(memory,'el.textContent=`New ${introduced}/${DAILY_NEW_LIMIT} · Reviews ${due}`','today progress copy');
 need(memory,'updateTodayStatus();\n          shownAt=performance.now();','caught-up today progress refresh');
 need(memory,'updateTodayStatus();\n      shownAt=performance.now();','active-card today progress refresh');
-need(memory,'setInterval(()=>updateTodayStatus(),30000);','time-based due refresh');
+need(memory,'setInterval(()=>{if(document.body.classList.contains("caught-up"))render();else updateTodayStatus()},30000);','time-based due refresh and caught-up resume');
 need(memory,'reviewsDue:dueReviewCount()','today debug due count');
 
 // Caught-up screen summarizes today's work and resumes when reviews become due.
