@@ -14,6 +14,7 @@ on:
       - "data/reading-mode.js"
       - "data/examples-ui.js"
       - "data/responsive-ui.js"
+      - "data/pwa-ui.js"
       - "data/background-ui.js"
       - "data/audio-quality-lock.js"
       - "data/sync-ui.js"
@@ -58,6 +59,7 @@ jobs:
               Path("data/reading-mode.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/examples-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/responsive-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
+              Path("data/pwa-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/background-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/audio-quality-lock.js").read_text(encoding="utf-8").rstrip() + "\n",
               Path("data/sync-ui.js").read_text(encoding="utf-8").rstrip() + "\n",
@@ -80,7 +82,7 @@ jobs:
           standalone = [
               "fsrs-browser.js", "keyboard-guard.js", "storage-guard.js",
               "memory-engine.js", "grade-animation-fix.js", "reading-mode.js",
-              "examples-ui.js", "audio-ui.js", "responsive-ui.js", "background-ui.js",
+              "examples-ui.js", "audio-ui.js", "responsive-ui.js", "pwa-ui.js", "background-ui.js",
               "sync-ui.js", "sync-qr-ui.js",
           ]
           for name in standalone:
@@ -101,6 +103,7 @@ jobs:
             data/reading-mode.js \
             data/examples-ui.js \
             data/responsive-ui.js \
+            data/pwa-ui.js \
             data/background-ui.js \
             data/audio-quality-lock.js \
             data/sync-ui.js \
@@ -118,6 +121,7 @@ jobs:
               "__farsiStorageGuardV1",
               "__farsiMemoryEngineV6",
               "__farsiExamplesUiV1",
+              "__farsiPwaUiV1",
               "__farsiCardShellMotionV6",
               "__farsiCloudSyncV2",
           ]
