@@ -9,6 +9,7 @@
 
   const STYLE_ID="farsiCardShellMotionStylesV6";
   let answering=false;
+  let motionGeneration=0;
 
   function mobileSafeMotion(){
     return window.matchMedia("(max-width:700px) and (orientation:portrait)").matches;
@@ -191,7 +192,7 @@
     return shell;
   }
 
-  function animateMobileAnswer(shell,move){
+  function animateMobileAnswer(shell,move,generation){
     shell.style.transform="";
     shell.style.opacity="1";
     shell.style.left="0px";
@@ -203,6 +204,7 @@
     // The scheduler renders the next card at about 200ms. Re-enter as soon as
     // the new content exists, with a shorter settle distance and faster timing.
     setTimeout(()=>{
+      if(generation!==motionGeneration)return;
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
       nextShell.classList.remove("is-answering");
@@ -216,13 +218,14 @@
         nextShell.style.left="0px";
       }));
       setTimeout(()=>{
+        if(generation!==motionGeneration)return;
         if(nextShell.isConnected)resetShell(nextShell);
         answering=false;
       },170);
     },205);
   }
 
-  function animateDesktopAnswer(shell,move){
+  function animateDesktopAnswer(shell,move,generation){
     shell.style.left="";
     shell.style.transition="transform .22s cubic-bezier(.35,.05,.65,.95),opacity .18s ease";
     requestAnimationFrame(()=>{
@@ -231,6 +234,7 @@
     });
 
     setTimeout(()=>{
+      if(generation!==motionGeneration)return;
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
       nextShell.classList.remove("is-answering");
@@ -244,6 +248,7 @@
         nextShell.style.opacity="1";
       }));
       setTimeout(()=>{
+        if(generation!==motionGeneration)return;
         if(nextShell.isConnected)resetShell(nextShell);
         answering=false;
       },240);
@@ -253,11 +258,18 @@
   function animateAnswer(move){
     const shell=ensureShell();
     if(!shell)return false;
+    const generation=++motionGeneration;
     answering=true;
     shell.classList.add("is-answering");
-    if(mobileSafeMotion())animateMobileAnswer(shell,move);
-    else animateDesktopAnswer(shell,move);
+    if(mobileSafeMotion())animateMobileAnswer(shell,move,generation);
+    else animateDesktopAnswer(shell,move,generation);
     return true;
+  }
+
+  function cancelAnswerMotion(){
+    motionGeneration++;
+    answering=false;
+    resetShell(ensureShell());
   }
 
   window.addEventListener("load",()=>{
@@ -276,6 +288,8 @@
       window.dispatchEvent(new CustomEvent("farsi:graded",{detail:{know}}));
       return result;
     };
+
+    window.addEventListener("farsi:undo",cancelAnswerMotion);
 
     if(E?.main){
       new MutationObserver(()=>ensureShell()).observe(E.main,{childList:true});
