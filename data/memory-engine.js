@@ -334,6 +334,17 @@
     return due;
   }
 
+  function reviewsCompletedToday(now=Date.now(),dir=dirNow()){
+    const start=localDayStart(now);
+    let count=0;
+    for(const row of memState.logs){
+      if(!Array.isArray(row)||row[2]!==dir||row[5]===null)continue;
+      const t=Number(row[0])||0;
+      if(t>=start&&t<=now)count++;
+    }
+    return count;
+  }
+
   function updateTodayStatus(now=Date.now()){
     const el=document.getElementById("todayStatus");
     if(!el)return;
@@ -449,10 +460,13 @@
       if(!Q.length){
         makeDeck();
         if(!Q.length){
-          const n=counts(State);
+          const n=counts(State),now=Date.now();
+          const introduced=introducedTodayIds(now).size;
+          const completed=reviewsCompletedToday(now);
           window.FARSI_ACTIVE_DIRECTION=dirNow();
           window.FARSI_AUTO_REVERSE=false;
-          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><p>${nextDueText()||"No review is due right now."}</p></div>`;
+          document.body.classList.add("caught-up");
+          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div></div><p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
           E.learning.textContent=n.learning;
@@ -463,6 +477,7 @@
         }
       }
 
+      document.body.classList.remove("caught-up");
       const c=current();
       const globalDir=dirNow();
       const autoReverse=globalDir==="fa"&&!!c?._autoReverse;
@@ -598,6 +613,7 @@
       newToday:introducedTodayIds().size,
       newRemainingToday:dailyNewSlots(),
       reviewsDue:dueReviewCount(),
+      reviewsToday:reviewsCompletedToday(),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
@@ -605,8 +621,8 @@
 
     makeDeck();
     render();
-    setInterval(()=>updateTodayStatus(),30000);
-    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")updateTodayStatus()});
+    setInterval(()=>{if(document.body.classList.contains("caught-up"))render();else updateTodayStatus()},30000);
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState!=="visible")return;if(document.body.classList.contains("caught-up"))render();else updateTodayStatus()});
     document.documentElement.dataset.memoryEngine="fsrs6-reverse-recall";
   });
 })();
