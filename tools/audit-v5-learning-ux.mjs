@@ -160,6 +160,13 @@ need(memory,'function closeProgressOverview()','progress modal closer');
 need(memory,'progressTrigger?.addEventListener("click",()=>openProgressOverview(State));','click progress trigger');
 need(memory,'if(e.key==="Escape")','keyboard modal close');
 need(memory,'progress:progressOverview(State)','progress debug state');
+need(examples,'.example-back{bottom:118px}','example block clears lower word pair');
+need(examples,'.example-fa{','example Persian typography');
+need(examples,'line-height:1.65;','comfortable Persian example leading');
+need(examples,'margin-top:7px;','Persian-to-romanization spacing');
+need(examples,'.face.back.example-ready .mini{','answer word-pair spacing');
+need(examples,'gap:7px;','answer word-pair gap');
+need(examples,'.face.back.example-ready .mini br{display:none}','deterministic word-pair line spacing');
 need(memory,'Q=[...spreadDueByStage(dueCards),...newChunk];','progress overview does not alter scheduling queue');
 
 // Examples are present, answer-side only, and bundled.
