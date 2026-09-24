@@ -504,6 +504,31 @@ ts-fsrs/dist/index.mjs:
     return Math.max(0,DAILY_NEW_LIMIT-introducedTodayIds(now).size);
   }
 
+  function previousLocalDayStart(start){
+    const d=new Date(start);
+    d.setDate(d.getDate()-1);
+    return d.getTime();
+  }
+
+  function studyStreak(now=Date.now()){
+    const activeDays=new Set();
+    for(const row of memState.logs){
+      if(!Array.isArray(row))continue;
+      const t=Number(row[0])||0;
+      if(t>0&&t<=now)activeDays.add(localDayStart(t));
+    }
+
+    const today=localDayStart(now);
+    const yesterday=previousLocalDayStart(today);
+    let cursor=activeDays.has(today)?today:(activeDays.has(yesterday)?yesterday:null);
+    let count=0;
+    while(cursor!=null&&activeDays.has(cursor)){
+      count++;
+      cursor=previousLocalDayStart(cursor);
+    }
+    return {count,studiedToday:activeDays.has(today)};
+  }
+
   function dueReviewCount(now=Date.now(),dir=dirNow()){
     let due=0;
     for(const c of D){
@@ -529,8 +554,12 @@ ts-fsrs/dist/index.mjs:
     if(!el)return;
     const introduced=introducedTodayIds(now).size;
     const due=dueReviewCount(now);
-    el.textContent=`New ${introduced}/${DAILY_NEW_LIMIT} · Reviews ${due}`;
-    el.title=`${introduced} new concepts introduced today; ${due} review${due===1?"":"s"} due now`;
+    const streak=studyStreak(now);
+    el.textContent=`New ${introduced}/${DAILY_NEW_LIMIT} · Reviews ${due} · Streak ${streak.count}`;
+    const streakText=streak.count
+      ?`${streak.count}-day study streak${streak.studiedToday?"":"; study today to keep it"}`
+      :"no active study streak yet";
+    el.title=`${introduced} new concepts introduced today; ${due} review${due===1?"":"s"} due now; ${streakText}`;
   }
 
   function memoryMakeDeck(State){
@@ -642,10 +671,11 @@ ts-fsrs/dist/index.mjs:
           const n=counts(State),now=Date.now();
           const introduced=introducedTodayIds(now).size;
           const completed=reviewsCompletedToday(now);
+          const streak=studyStreak(now).count;
           window.FARSI_ACTIVE_DIRECTION=dirNow();
           window.FARSI_AUTO_REVERSE=false;
           document.body.classList.add("caught-up");
-          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div></div><p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
+          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div><div class="done-stat"><strong>${streak}</strong><span>day streak</span></div></div><p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
           E.learning.textContent=n.learning;
@@ -793,6 +823,7 @@ ts-fsrs/dist/index.mjs:
       newRemainingToday:dailyNewSlots(),
       reviewsDue:dueReviewCount(),
       reviewsToday:reviewsCompletedToday(),
+      streak:studyStreak(),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
