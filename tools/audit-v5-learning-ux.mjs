@@ -117,6 +117,25 @@ need(memory,'<span class="session-label">This session</span>','caught-up session
 need(memory,'<strong>${session.answers}</strong> answers · <strong>${session.newConcepts}</strong> new · <strong>${session.againRate}%</strong> Again · <strong>${session.direction}</strong>','caught-up session metrics');
 need(index,'.session-summary{margin:16px 0 0;padding-top:14px','session summary styling');
 
+// Trouble words use recent review evidence for display only; FSRS remains the only scheduler.
+need(memory,'const TROUBLE_LOOKBACK_DAYS=30;','30-day trouble lookback');
+need(memory,'const TROUBLE_RECENT_ATTEMPTS=8;','bounded recent trouble attempts');
+need(memory,'function troubleWords(now=Date.now(),limit=3)','trouble word calculator');
+need(memory,'if(t<since)continue;','synced-log-safe trouble lookback');
+need(memory,'if(attempts.length<TROUBLE_RECENT_ATTEMPTS)','recent attempt cap');
+need(memory,'if(againAttempts.length<2)continue;','repeated miss threshold');
+need(memory,'score+=attempts[n].rating==="again"?2.5*weight:-.75*weight;','success lowers trouble score');
+need(memory,'if(score<=0)continue;','recovered words leave trouble list');
+need(memory,'const cardById=new Map(D.map(card=>[card.id,card]));','stable-ID trouble lookup');
+need(memory,'.slice(0,limit);','top trouble limit');
+need(memory,'function escapeHtml(value)','safe trouble word rendering');
+need(memory,'const trouble=troubleWords(now);','caught-up trouble calculation');
+need(memory,'<span class="session-label">Trouble words</span>','trouble words heading');
+need(memory,'${word.again} Again · ${word.direction}','trouble evidence display');
+need(memory,'trouble:troubleWords()','trouble debug state');
+need(index,'.trouble-summary{margin-top:14px;padding-top:14px','trouble summary styling');
+need(memory,'Q=[...spreadDueByStage(dueCards),...newChunk];','trouble words do not alter scheduling queue');
+
 // Examples are present, answer-side only, and bundled.
 need(examples,'window.__farsiExamplesUiV1=true','example UI guard');
 need(examples,'body.english-first .example-front','EN→FA examples only on revealed front');
@@ -155,4 +174,4 @@ if(errors.length){
   console.error(`\nV5 learning UX audit failed: ${errors.length} issue(s)`);
   process.exit(1);
 }
-console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status/streak, session stats, caught-up summary, separate learning count, and answer-side examples are all wired.');
+console.log('V5 learning UX audit passed: stable-ID FSRS+sync, daily pacing/status/streak, session stats, trouble words, caught-up summary, separate learning count, and answer-side examples are all wired.');
