@@ -262,8 +262,18 @@ async function main(){
     console.log("QA desktop: 24-new daily cap and caught-up summary");
     for(let n=1;n<=24;n++){
       await waitFor('!document.querySelector(".card-shell")?.classList.contains("is-answering")',`card ready ${n}/24`,5000);
+      if(n<=3){
+        const before=await evaluate(`(()=>({n:${n},session:window.FARSI_MEMORY_DEBUG().session,card:window.FARSI_MEMORY_DEBUG().currentCard,shells:[...document.querySelectorAll(".card-shell")].map(x=>({answering:x.classList.contains("is-answering"),connected:x.isConnected})),undo:document.getElementById("undo")?.className,knowDisabled:document.getElementById("knowBtn")?.disabled}))()`);
+        console.log("GRADE DEBUG BEFORE",JSON.stringify(before));
+      }
       await click("#knowBtn");
-      await waitFor(`window.FARSI_MEMORY_DEBUG().session.answers===${n}`,`grade ${n}/24`,5000);
+      try{
+        await waitFor(`window.FARSI_MEMORY_DEBUG().session.answers===${n}`,`grade ${n}/24`,5000);
+      }catch(error){
+        const after=await evaluate(`(()=>({n:${n},session:window.FARSI_MEMORY_DEBUG().session,card:window.FARSI_MEMORY_DEBUG().currentCard,shells:[...document.querySelectorAll(".card-shell")].map(x=>({answering:x.classList.contains("is-answering"),connected:x.isConnected,transform:x.style.transform,left:x.style.left,opacity:x.style.opacity})),undo:document.getElementById("undo")?.className,body:document.body.className}))()`);
+        console.error("GRADE DEBUG AFTER",JSON.stringify(after));
+        throw error;
+      }
     }
     await waitFor('document.body.classList.contains("caught-up")',"caught-up screen",10000);
     d=await debug();
