@@ -965,7 +965,9 @@ ts-fsrs/dist/index.mjs:
       memoryLast=null;
       E.undo.classList.remove("show");
       render();
+      window.dispatchEvent(new CustomEvent("farsi:undo"));
     };
+    E.undo.onclick=undo;
 
     const progressTrigger=document.querySelector(".progress");
     const progressOverlay=document.getElementById("progressOverlay");
@@ -1063,6 +1065,7 @@ ts-fsrs/dist/index.mjs:
 
   const STYLE_ID="farsiCardShellMotionStylesV6";
   let answering=false;
+  let motionGeneration=0;
 
   function mobileSafeMotion(){
     return window.matchMedia("(max-width:700px) and (orientation:portrait)").matches;
@@ -1245,7 +1248,7 @@ ts-fsrs/dist/index.mjs:
     return shell;
   }
 
-  function animateMobileAnswer(shell,move){
+  function animateMobileAnswer(shell,move,generation){
     shell.style.transform="";
     shell.style.opacity="1";
     shell.style.left="0px";
@@ -1257,9 +1260,11 @@ ts-fsrs/dist/index.mjs:
     // The scheduler renders the next card at about 200ms. Re-enter as soon as
     // the new content exists, with a shorter settle distance and faster timing.
     setTimeout(()=>{
+      if(generation!==motionGeneration)return;
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
       nextShell.classList.remove("is-answering");
+      answering=false;
       nextShell.style.transform="";
       nextShell.style.opacity="1";
       nextShell.style.transition="none";
@@ -1270,13 +1275,14 @@ ts-fsrs/dist/index.mjs:
         nextShell.style.left="0px";
       }));
       setTimeout(()=>{
+        if(generation!==motionGeneration)return;
         if(nextShell.isConnected)resetShell(nextShell);
         answering=false;
       },170);
     },205);
   }
 
-  function animateDesktopAnswer(shell,move){
+  function animateDesktopAnswer(shell,move,generation){
     shell.style.left="";
     shell.style.transition="transform .22s cubic-bezier(.35,.05,.65,.95),opacity .18s ease";
     requestAnimationFrame(()=>{
@@ -1285,9 +1291,11 @@ ts-fsrs/dist/index.mjs:
     });
 
     setTimeout(()=>{
+      if(generation!==motionGeneration)return;
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
       nextShell.classList.remove("is-answering");
+      answering=false;
       nextShell.style.transition="none";
       nextShell.style.transform=`translateX(${-move*28}px) rotate(0deg)`;
       nextShell.style.opacity=".45";
@@ -1298,6 +1306,7 @@ ts-fsrs/dist/index.mjs:
         nextShell.style.opacity="1";
       }));
       setTimeout(()=>{
+        if(generation!==motionGeneration)return;
         if(nextShell.isConnected)resetShell(nextShell);
         answering=false;
       },240);
@@ -1307,11 +1316,18 @@ ts-fsrs/dist/index.mjs:
   function animateAnswer(move){
     const shell=ensureShell();
     if(!shell)return false;
+    const generation=++motionGeneration;
     answering=true;
     shell.classList.add("is-answering");
-    if(mobileSafeMotion())animateMobileAnswer(shell,move);
-    else animateDesktopAnswer(shell,move);
+    if(mobileSafeMotion())animateMobileAnswer(shell,move,generation);
+    else animateDesktopAnswer(shell,move,generation);
     return true;
+  }
+
+  function cancelAnswerMotion(){
+    motionGeneration++;
+    answering=false;
+    resetShell(ensureShell());
   }
 
   window.addEventListener("load",()=>{
@@ -1330,6 +1346,8 @@ ts-fsrs/dist/index.mjs:
       window.dispatchEvent(new CustomEvent("farsi:graded",{detail:{know}}));
       return result;
     };
+
+    window.addEventListener("farsi:undo",cancelAnswerMotion);
 
     if(E?.main){
       new MutationObserver(()=>ensureShell()).observe(E.main,{childList:true});
@@ -1902,15 +1920,17 @@ ts-fsrs/dist/index.mjs:
   }
 
   async function requestInstall(){
+    if(isIos()){
+      showIosInstallHelp();
+      return;
+    }
     if(deferredInstall){
       const prompt=deferredInstall;
       deferredInstall=null;
       await prompt.prompt();
       try{await prompt.userChoice}catch{}
       syncInstallButton();
-      return;
     }
-    if(isIos())showIosInstallHelp();
   }
 
   window.addEventListener("beforeinstallprompt",event=>{
@@ -2086,6 +2106,12 @@ ts-fsrs/dist/index.mjs:
       .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
       .farsi{color:#f4e9dc!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
       .mini,.hint{color:#e2d9ce!important}
+      .done{color:#e2d9ce!important;text-shadow:0 1px 8px rgba(0,0,0,.68)}
+      .done h1{color:#fffaf3!important;text-shadow:0 2px 16px rgba(0,0,0,.62)}
+      .done .session-summary,.done .done-next{color:#e2d9ce!important}
+      .done .session-summary,.done .trouble-summary{border-color:rgba(255,255,255,.20)!important}
+      .done .session-summary strong,.done .trouble-word strong{color:#fffaf3!important}
+      .done .session-label,.done .trouble-word span,.done .trouble-item small{color:#d8d0c5!important}
       .speak{color:#faf5ed!important;background:rgba(16,16,14,.48)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 4px 18px rgba(0,0,0,.28)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
       .sw{background:rgba(14,14,12,.66)!important;border:1px solid rgba(255,255,255,.12)}
       @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.13)!important}}
