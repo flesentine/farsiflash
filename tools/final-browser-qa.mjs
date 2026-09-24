@@ -325,8 +325,9 @@ async function main(){
     await cdp.send("Network.emulateNetworkConditions",{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
     await cdp.send("Page.reload",{ignoreCache:true});
     await waitFor('document.querySelector(".card")&&window.FARSI_MEMORY_DEBUG',"offline cached card",15000);
-    const offline=await evaluate(`(()=>({online:navigator.onLine,engine:window.FARSI_MEMORY_DEBUG().scheduler,counts:window.FARSI_MEMORY_DEBUG().counts,manifest:document.querySelector('link[rel="manifest"]')?.getAttribute("href")}))()`);
-    assert(offline.online===false,"Offline emulation did not report offline");
+    const offline=await evaluate(`(()=>({engine:window.FARSI_MEMORY_DEBUG().scheduler,counts:window.FARSI_MEMORY_DEBUG().counts,manifest:document.querySelector('link[rel="manifest"]')?.getAttribute("href")}))()`);
+    const offlineProbe=await evaluate('fetch("./__qa-offline-probe__?t="+Date.now(),{cache:"no-store"}).then(r=>({ok:r.ok,status:r.status})).catch(()=>({error:true}))');
+    assert(offlineProbe?.error===true||offlineProbe?.ok===false,"Offline network probe unexpectedly succeeded");
     assert(offline.engine==="FSRS-6","Offline reload did not restore FSRS app");
     assert(offline.counts.known+offline.counts.learning+offline.counts.left===2000,"Offline progress counts are invalid");
     assert(offline.manifest==="manifest.webmanifest","Offline page lost manifest link");
