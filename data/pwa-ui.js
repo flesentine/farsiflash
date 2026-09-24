@@ -36,15 +36,17 @@
   }
 
   async function requestInstall(){
+    if(isIos()){
+      showIosInstallHelp();
+      return;
+    }
     if(deferredInstall){
       const prompt=deferredInstall;
       deferredInstall=null;
       await prompt.prompt();
       try{await prompt.userChoice}catch{}
       syncInstallButton();
-      return;
     }
-    if(isIos())showIosInstallHelp();
   }
 
   window.addEventListener("beforeinstallprompt",event=>{

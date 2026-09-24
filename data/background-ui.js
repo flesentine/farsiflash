@@ -144,6 +144,12 @@
       .roman,.english{color:#fffaf3!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
       .farsi{color:#f4e9dc!important;text-shadow:0 2px 18px rgba(0,0,0,.34)}
       .mini,.hint{color:#e2d9ce!important}
+      .done{color:#e2d9ce!important;text-shadow:0 1px 8px rgba(0,0,0,.68)}
+      .done h1{color:#fffaf3!important;text-shadow:0 2px 16px rgba(0,0,0,.62)}
+      .done .session-summary,.done .done-next{color:#e2d9ce!important}
+      .done .session-summary,.done .trouble-summary{border-color:rgba(255,255,255,.20)!important}
+      .done .session-summary strong,.done .trouble-word strong{color:#fffaf3!important}
+      .done .session-label,.done .trouble-word span,.done .trouble-item small{color:#d8d0c5!important}
       .speak{color:#faf5ed!important;background:rgba(16,16,14,.48)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 4px 18px rgba(0,0,0,.28)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
       .sw{background:rgba(14,14,12,.66)!important;border:1px solid rgba(255,255,255,.12)}
       @media(hover:hover){.grade:hover,.undo.show:hover,.speak:hover,.tiny:hover{background:rgba(255,255,255,.13)!important}}

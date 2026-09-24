@@ -1,0 +1,66 @@
+name: Final browser QA
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "data/**"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "icons/**"
+      - "tools/final-browser-qa.mjs"
+      - ".github/workflows/final-browser-qa.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "data/**"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "icons/**"
+      - "tools/final-browser-qa.mjs"
+      - ".github/workflows/final-browser-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build current UI bundle for QA
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path("data/audio-manifest.js")
+          first = manifest.read_text(encoding="utf-8").splitlines()[0]
+          if not first.startswith("window.FARSI_AUDIO="):
+              raise SystemExit("audio manifest does not start with FARSI_AUDIO mapping")
+          modules = [
+              "fsrs-browser.js", "keyboard-guard.js", "storage-guard.js",
+              "audio-ui.js", "memory-engine.js", "grade-animation-fix.js",
+              "reading-mode.js", "examples-ui.js", "responsive-ui.js",
+              "pwa-ui.js", "background-ui.js", "audio-quality-lock.js",
+              "sync-ui.js", "sync-qr-ui.js",
+          ]
+          chunks = [first.rstrip() + "\n"]
+          chunks += [Path("data", name).read_text(encoding="utf-8").rstrip() + "\n" for name in modules]
+          manifest.write_text("".join(chunks), encoding="utf-8")
+          PY
+      - name: Run desktop + iPhone Chromium QA
+        run: node tools/final-browser-qa.mjs
+      - name: Upload QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: farsi-final-browser-qa
+          path: qa-artifacts/*.png
+          if-no-files-found: ignore

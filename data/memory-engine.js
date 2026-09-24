@@ -786,7 +786,9 @@
       memoryLast=null;
       E.undo.classList.remove("show");
       render();
+      window.dispatchEvent(new CustomEvent("farsi:undo"));
     };
+    E.undo.onclick=undo;
 
     const progressTrigger=document.querySelector(".progress");
     const progressOverlay=document.getElementById("progressOverlay");

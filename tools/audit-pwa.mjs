@@ -41,7 +41,9 @@ need(pwa,'window.addEventListener("beforeinstallprompt"',"browser install prompt
 need(pwa,'window.addEventListener("appinstalled"',"installed-state cleanup");
 need(pwa,'matchMedia("(display-mode: standalone)")',"standalone detection");
 need(pwa,'Tap Share, then choose <b>Add to Home Screen</b>.',"iOS install instructions");
-need(pwa,'if(isIos())showIosInstallHelp();',"iOS install fallback");
+need(pwa,'if(isIos()){',"iOS install branch");
+need(pwa,'showIosInstallHelp();',"iOS install fallback");
+if(pwa.indexOf('if(isIos()){')>pwa.indexOf('if(deferredInstall){'))errors.push("iOS install guidance must take priority over browser install prompt");
 
 need(sw,'const CACHE_NAME="farsi2000-shell-v1";',"versioned shell cache");
 need(sw,'"./index.html"',"offline index");
