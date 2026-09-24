@@ -208,6 +208,7 @@
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
       nextShell.classList.remove("is-answering");
+      answering=false;
       nextShell.style.transform="";
       nextShell.style.opacity="1";
       nextShell.style.transition="none";
