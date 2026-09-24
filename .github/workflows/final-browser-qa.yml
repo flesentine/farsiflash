@@ -1,0 +1,46 @@
+name: Final browser QA
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "data/**"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "icons/**"
+      - "tools/final-browser-qa.mjs"
+      - ".github/workflows/final-browser-qa.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "data/**"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "icons/**"
+      - "tools/final-browser-qa.mjs"
+      - ".github/workflows/final-browser-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run desktop + iPhone Chromium QA
+        run: node tools/final-browser-qa.mjs
+      - name: Upload QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: farsi-final-browser-qa
+          path: qa-artifacts/*.png
+          if-no-files-found: ignore
