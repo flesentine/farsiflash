@@ -199,6 +199,7 @@ ts-fsrs/dist/index.mjs:
   let memoryLast=null;
   let grading=false;
   let shownAt=performance.now();
+  let sessionEvents=[];
 
   const parse=(raw,fallback)=>{try{return JSON.parse(raw)}catch{return fallback}};
   const dirNow=()=>localStorage.getItem(DIR_PREF)==="en"?"en":"fa";
@@ -549,6 +550,25 @@ ts-fsrs/dist/index.mjs:
     return count;
   }
 
+  function sessionStats(){
+    const newIds=new Set();
+    let again=0,faToEn=0,enToFa=0;
+    for(const event of sessionEvents){
+      if(event.rating==="again")again++;
+      if(event.newConcept)newIds.add(event.id);
+      if(event.direction==="en")enToFa++;
+      else if(event.direction==="fa")faToEn++;
+    }
+    const answers=sessionEvents.length;
+    return {
+      answers,
+      newConcepts:newIds.size,
+      again,
+      againRate:answers?Math.round(again*100/answers):0,
+      direction:faToEn&&enToFa?"Mixed":enToFa?"EN→FA":faToEn?"FA→EN":"—",
+    };
+  }
+
   function updateTodayStatus(now=Date.now()){
     const el=document.getElementById("todayStatus");
     if(!el)return;
@@ -672,10 +692,14 @@ ts-fsrs/dist/index.mjs:
           const introduced=introducedTodayIds(now).size;
           const completed=reviewsCompletedToday(now);
           const streak=studyStreak(now).count;
+          const session=sessionStats();
           window.FARSI_ACTIVE_DIRECTION=dirNow();
           window.FARSI_AUTO_REVERSE=false;
           document.body.classList.add("caught-up");
-          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div><div class="done-stat"><strong>${streak}</strong><span>day streak</span></div></div><p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
+          const sessionText=session.answers
+            ?`<strong>${session.answers}</strong> answers · <strong>${session.newConcepts}</strong> new · <strong>${session.againRate}%</strong> Again · <strong>${session.direction}</strong>`
+            :"No answers yet.";
+          E.main.innerHTML=`<div class="done"><h1>Caught up ✓</h1><div class="done-summary"><div class="done-stat"><strong>${introduced}/${DAILY_NEW_LIMIT}</strong><span>new today</span></div><div class="done-stat"><strong>${completed}</strong><span>reviews today</span></div><div class="done-stat"><strong>${streak}</strong><span>day streak</span></div></div><p class="session-summary"><span class="session-label">This session</span>${sessionText}</p><p class="done-next">${nextDueText()||"No review is scheduled yet."}</p></div>`;
           E.stageName.textContent=dirNow()==="fa"?"FA→EN":"EN→FA";
           E.known.textContent=n.known;
           E.learning.textContent=n.learning;
@@ -714,6 +738,8 @@ ts-fsrs/dist/index.mjs:
       const k=keyFor(c.id,dir);
       const oldStored=clone(memState.cards[k]||null);
       const oldLogLen=memState.logs.length;
+      const oldSessionLen=sessionEvents.length;
+      const conceptWasSeen=!!memState.cards[keyFor(c.id,"fa")]||!!memState.cards[keyFor(c.id,"en")];
       const hadReverseProgress=hasOwn(memState.reverseProgress,c.id);
       const oldReverseProgress=hadReverseProgress?memState.reverseProgress[c.id]:undefined;
       const progressBefore=dir==="fa"?progressFor(c):0;
@@ -741,8 +767,15 @@ ts-fsrs/dist/index.mjs:
           }
         }
 
-        compactLog(c,dir,know?"good":"again",responseMs,oldStored,next,retrievability,autoReverse?"reverse":"normal");
-        memoryLast={card:c,dir,key:k,oldStored,oldLogLen,hadReverseProgress,oldReverseProgress};
+        const rating=know?"good":"again";
+        compactLog(c,dir,rating,responseMs,oldStored,next,retrievability,autoReverse?"reverse":"normal");
+        sessionEvents.push({
+          id:c.id,
+          rating,
+          newConcept:!conceptWasSeen,
+          direction:autoReverse?"en":dir,
+        });
+        memoryLast={card:c,dir,key:k,oldStored,oldLogLen,oldSessionLen,hadReverseProgress,oldReverseProgress};
         saveMemory();
 
         const move=know?1:-1;
@@ -769,6 +802,7 @@ ts-fsrs/dist/index.mjs:
       const u=memoryLast;
       if(u.oldStored)memState.cards[u.key]=u.oldStored;else delete memState.cards[u.key];
       memState.logs.length=u.oldLogLen;
+      sessionEvents.length=u.oldSessionLen;
       if(u.dir==="fa"){
         if(u.hadReverseProgress)memState.reverseProgress[u.card.id]=u.oldReverseProgress;
         else delete memState.reverseProgress[u.card.id];
@@ -793,7 +827,7 @@ ts-fsrs/dist/index.mjs:
       localStorage.removeItem("farsi2000-v2");
       localStorage.removeItem("farsi2000-v1");
       K=new Set();miss={};review={};due={};steps=0;
-      memoryLast=null;last=null;
+      memoryLast=null;last=null;sessionEvents=[];
       E.undo.classList.remove("show");
       makeDeck();render();
     };
@@ -824,6 +858,7 @@ ts-fsrs/dist/index.mjs:
       reviewsDue:dueReviewCount(),
       reviewsToday:reviewsCompletedToday(),
       streak:studyStreak(),
+      session:sessionStats(),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
