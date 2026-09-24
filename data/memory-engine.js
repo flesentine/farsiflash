@@ -673,6 +673,7 @@
           E.learning.textContent=n.learning;
           E.leftCount.textContent=n.left;
           updateTodayStatus();
+          if(document.getElementById("progressOverlay")?.classList.contains("open"))renderProgressOverview(State);
           shownAt=performance.now();
           return;
         }
