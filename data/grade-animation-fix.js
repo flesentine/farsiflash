@@ -239,6 +239,7 @@
       const nextShell=ensureShell()||shell;
       if(!nextShell?.isConnected){answering=false;return}
       nextShell.classList.remove("is-answering");
+      answering=false;
       nextShell.style.transition="none";
       nextShell.style.transform=`translateX(${-move*28}px) rotate(0deg)`;
       nextShell.style.opacity=".45";
