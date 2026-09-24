@@ -111,6 +111,7 @@ need(memory,'const conceptWasSeen=!!memState.cards[keyFor(c.id,"fa")]||!!memStat
 need(memory,'sessionEvents.push({','session grade event');
 need(memory,'direction:autoReverse?"en":dir','effective recall direction tracking');
 need(memory,'sessionEvents.length=u.oldSessionLen;','undo rewinds session stats');
+need(memory,'E.undo.onclick=undo;','visible Undo button rebound to FSRS undo');
 need(memory,'memoryLast=null;last=null;sessionEvents=[];','progress reset clears session');
 need(memory,'session:sessionStats()','session debug state');
 need(memory,'<span class="session-label">This session</span>','caught-up session label');
