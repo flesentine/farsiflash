@@ -451,6 +451,88 @@
     }[ch]));
   }
 
+  function progressOverview(State,dir=dirNow()){
+    const stages=[];
+    const byStage=new Map();
+    let known=0,learning=0,unseen=0;
+
+    for(const c of D){
+      const name=c.stage||"Common Words";
+      let stage=byStage.get(name);
+      if(!stage){
+        stage={name,total:0,known:0,learning:0,unseen:0};
+        byStage.set(name,stage);
+        stages.push(stage);
+      }
+      stage.total++;
+
+      const m=cardState(c,dir);
+      if(!m){unseen++;stage.unseen++}
+      else if(m.state===State.Review){known++;stage.known++}
+      else{learning++;stage.learning++}
+    }
+
+    const total=D.length||TOTAL;
+    return {
+      direction:dir==="fa"?"FA→EN":"EN→FA",
+      total,
+      known,
+      learning,
+      unseen,
+      masteredPct:total?Math.round(known*100/total):0,
+      startedPct:total?Math.round((known+learning)*100/total):0,
+      stages,
+    };
+  }
+
+  function renderProgressOverview(State){
+    const body=document.getElementById("progressOverviewBody");
+    if(!body)return;
+    const data=progressOverview(State);
+    const knownPct=data.total?data.known*100/data.total:0;
+    const learningPct=data.total?data.learning*100/data.total:0;
+    const direction=document.getElementById("progressDirection");
+    if(direction)direction.textContent=data.direction;
+    body.innerHTML=`
+      <div class="progress-big-number">${data.masteredPct}% <span>mastered</span></div>
+      <div class="progress-bar" aria-label="${data.known} known, ${data.learning} learning, ${data.unseen} unseen">
+        <span class="progress-bar-known" style="width:${knownPct}%"></span>
+        <span class="progress-bar-learning" style="width:${learningPct}%"></span>
+      </div>
+      <div class="progress-summary-grid">
+        <div class="progress-summary-stat"><strong>${data.known}</strong><span>Known</span></div>
+        <div class="progress-summary-stat"><strong>${data.learning}</strong><span>Learning</span></div>
+        <div class="progress-summary-stat"><strong>${data.unseen}</strong><span>Unseen</span></div>
+      </div>
+      <div class="progress-section-title">Stages</div>
+      <div class="progress-stage-list">${data.stages.map(stage=>{
+        const known=stage.total?stage.known*100/stage.total:0;
+        const learning=stage.total?stage.learning*100/stage.total:0;
+        return `<div class="progress-stage-row"><div class="progress-stage-head"><span class="progress-stage-name">${escapeHtml(stage.name)}</span><span class="progress-stage-counts">${stage.known} known · ${stage.learning} learning · ${stage.unseen} unseen</span></div><div class="progress-stage-bar"><span class="progress-stage-known" style="width:${known}%"></span><span class="progress-stage-learning" style="width:${learning}%"></span></div></div>`;
+      }).join("")}</div>
+      <p class="progress-footnote">${data.startedPct}% of the 2,000-concept deck has been started. “Known” means FSRS has graduated the card to Review; Learning includes active learning/relearning.</p>
+    `;
+  }
+
+  function openProgressOverview(State){
+    const overlay=document.getElementById("progressOverlay");
+    if(!overlay)return;
+    renderProgressOverview(State);
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden","false");
+    document.body.classList.add("progress-open");
+    document.getElementById("progressClose")?.focus();
+  }
+
+  function closeProgressOverview(){
+    const overlay=document.getElementById("progressOverlay");
+    if(!overlay)return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden","true");
+    document.body.classList.remove("progress-open");
+    document.querySelector(".progress")?.focus();
+  }
+
   function updateTodayStatus(now=Date.now()){
     const el=document.getElementById("todayStatus");
     if(!el)return;
@@ -612,6 +694,7 @@
       E.learning.textContent=n.learning;
       E.leftCount.textContent=n.left;
       updateTodayStatus();
+      if(document.getElementById("progressOverlay")?.classList.contains("open"))renderProgressOverview(State);
       shownAt=performance.now();
     };
 
@@ -704,6 +787,36 @@
       render();
     };
 
+    const progressTrigger=document.querySelector(".progress");
+    const progressOverlay=document.getElementById("progressOverlay");
+    const progressClose=document.getElementById("progressClose");
+    progressTrigger?.addEventListener("click",()=>openProgressOverview(State));
+    progressTrigger?.addEventListener("keydown",e=>{
+      if(e.key!=="Enter"&&e.key!==" ")return;
+      e.preventDefault();
+      openProgressOverview(State);
+    });
+    progressClose?.addEventListener("click",closeProgressOverview);
+    progressOverlay?.addEventListener("click",e=>{if(e.target===progressOverlay)closeProgressOverview()});
+    window.addEventListener("keydown",e=>{
+      if(!progressOverlay?.classList.contains("open"))return;
+      if(e.key==="Escape"){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeProgressOverview();
+        return;
+      }
+      if(e.key==="Tab")return;
+      if((e.key==="Enter"||e.key===" ")&&e.target===progressClose){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeProgressOverview();
+        return;
+      }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    },true);
+
     E.reset.onclick=()=>{
       if(!confirm("Reset all progress?"))return;
       memState={version:MEMORY_VERSION,keyMode:KEY_MODE,cards:{},logs:[],reverseProgress:{},createdAt:new Date().toISOString(),migratedFrom:null};
@@ -746,6 +859,7 @@
       streak:studyStreak(),
       session:sessionStats(),
       trouble:troubleWords(),
+      progress:progressOverview(State),
       next:nextDueText(),
       retention:.90,
       scheduler:"FSRS-6",
