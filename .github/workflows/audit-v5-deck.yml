@@ -35,6 +35,12 @@ on:
       - 'tools/build_dilara_audio.py'
       - 'tools/audit_audio.py'
       - 'tools/audit-miller-source.mjs'
+      - 'tools/audit-pwa.mjs'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'icons/**'
+      - 'data/pwa-ui.js'
+      - '.github/workflows/bundle-ui.yml'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
   pull_request:
@@ -68,6 +74,12 @@ on:
       - 'tools/build_dilara_audio.py'
       - 'tools/audit_audio.py'
       - 'tools/audit-miller-source.mjs'
+      - 'tools/audit-pwa.mjs'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'icons/**'
+      - 'data/pwa-ui.js'
+      - '.github/workflows/bundle-ui.yml'
       - 'tools/lib/**'
       - '.github/workflows/audit-v5-deck.yml'
 
@@ -116,6 +128,8 @@ jobs:
         run: node tools/audit-known-count.mjs
       - name: Audit v5 stable memory and learning UX
         run: node tools/audit-v5-learning-ux.mjs
+      - name: Audit PWA install and offline support
+        run: node --check sw.js && node --check data/pwa-ui.js && node tools/audit-pwa.mjs
       - name: Audit v5 learner Romanization
         run: node tools/audit-v5-romanization.mjs
       - name: Audit and normalize Miller source spellings
