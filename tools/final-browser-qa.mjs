@@ -11,6 +11,23 @@ const BASE=`http://127.0.0.1:${PORT}/`;
 const ARTIFACT_DIR=path.join(ROOT,"qa-artifacts");
 fs.mkdirSync(ARTIFACT_DIR,{recursive:true});
 
+function rebuildRuntimeBundle(){
+  const manifestPath=path.join(ROOT,"data","audio-manifest.js");
+  const first=fs.readFileSync(manifestPath,"utf8").split(/\r?\n/)[0];
+  if(!first.startsWith("window.FARSI_AUDIO="))throw new Error("audio manifest mapping is missing");
+  const modules=[
+    "fsrs-browser.js","keyboard-guard.js","storage-guard.js","audio-ui.js",
+    "memory-engine.js","grade-animation-fix.js","reading-mode.js","examples-ui.js",
+    "responsive-ui.js","pwa-ui.js","background-ui.js","audio-quality-lock.js",
+    "sync-ui.js","sync-qr-ui.js",
+  ];
+  const chunks=[first.trimEnd()+"\n"];
+  for(const name of modules){
+    chunks.push(fs.readFileSync(path.join(ROOT,"data",name),"utf8").trimEnd()+"\n");
+  }
+  fs.writeFileSync(manifestPath,chunks.join(""),"utf8");
+}
+
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function assert(condition,message){
   if(!condition)throw new Error(message);
@@ -94,6 +111,7 @@ class CDP {
 }
 
 async function main(){
+  rebuildRuntimeBundle();
   const chrome=chromeBinary();
   const server=spawn("python3",["-m","http.server",String(PORT),"--bind","127.0.0.1"],{
     cwd:ROOT,stdio:["ignore","pipe","pipe"]
